@@ -499,7 +499,7 @@ export default function NaskahShow({ naskah, steps, adminTransitions, statusOpti
                                             active
                                                 ? 'border-primary bg-primary/10 font-semibold text-primary'
                                                 : done
-                                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                                  ? 'border-cobalt-surface/30 bg-lavender-wash text-foreground'
                                                   : 'border-border bg-muted/40 text-muted-foreground'
                                         }`}
                                     >

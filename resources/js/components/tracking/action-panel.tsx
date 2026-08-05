@@ -55,9 +55,9 @@ function IdentityFields({
                             key={jenis}
                             type="button"
                             onClick={() => form.setData('jenis_identitas', jenis)}
-                            className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
+                            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
                                 form.data.jenis_identitas === jenis
-                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    ? 'border-cobalt-surface/40 bg-lavender-wash text-foreground'
                                     : 'border-input bg-background hover:bg-accent'
                             }`}
                         >

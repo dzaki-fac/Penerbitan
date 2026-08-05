@@ -28,8 +28,6 @@ Route::post('tracking/{naskah}/isbn/reject', [TrackingController::class, 'reject
 Route::post('tracking/{naskah}/diambil', [TrackingController::class, 'markDiambil'])->name('tracking.diambil');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
-
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 

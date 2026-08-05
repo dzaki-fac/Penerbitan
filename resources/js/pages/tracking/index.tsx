@@ -23,13 +23,13 @@ export default function TrackingIndex() {
 
             <div className="flex flex-1 flex-col items-center justify-center py-16">
                 <div className="mx-auto max-w-xl text-center">
-                    <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    <span className="inline-flex items-center rounded-full bg-lavender-wash px-4 py-1 text-sm font-medium tracking-[0.004em] text-foreground">
                         Tracking Penerbitan
                     </span>
-                    <h1 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
+                    <h1 className="mt-6 text-4xl font-semibold tracking-[0.016em] sm:text-5xl">
                         Lacak Proses Penerbitan Naskah Anda
                     </h1>
-                    <p className="mt-4 text-muted-foreground">
+                    <p className="mt-5 text-lg text-muted-foreground">
                         Masukkan NIM atau NIP untuk melihat seluruh naskah dan
                         perkembangan proses penerbitan Anda.
                     </p>
@@ -37,7 +37,7 @@ export default function TrackingIndex() {
 
                 <form
                     onSubmit={submit}
-                    className="mt-10 w-full max-w-lg space-y-6 rounded-2xl border bg-card p-6 shadow-sm"
+                    className="mt-10 w-full max-w-lg space-y-6 rounded-xl border border-border bg-card p-6"
                 >
                     <div className="grid gap-2">
                         <Label htmlFor="jenis_identitas">Jenis Identitas</Label>
@@ -47,9 +47,9 @@ export default function TrackingIndex() {
                                     key={jenis}
                                     type="button"
                                     onClick={() => setData('jenis_identitas', jenis)}
-                                    className={`rounded-md border px-4 py-2.5 text-sm font-medium transition-colors ${
+                                    className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
                                         data.jenis_identitas === jenis
-                                            ? 'border-primary bg-primary text-primary-foreground'
+                                            ? 'border-cobalt-surface/40 bg-lavender-wash text-foreground'
                                             : 'border-input bg-background hover:bg-accent'
                                     }`}
                                 >

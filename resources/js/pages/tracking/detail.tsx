@@ -39,7 +39,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                     Kembali ke daftar naskah
                 </Link>
 
-                <div className="rounded-2xl border bg-card p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -50,7 +50,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                     <Badge variant="outline">{naskah.kategori}</Badge>
                                 )}
                             </div>
-                            <h1 className="text-2xl font-bold">{naskah.judul}</h1>
+                            <h1 className="text-2xl font-semibold tracking-[0.008em]">
+                                {naskah.judul}
+                            </h1>
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
                             <div className="flex items-center justify-end gap-1.5">
@@ -94,12 +96,12 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                             return (
                                 <div
                                     key={step.value}
-                                    className={`rounded-md border p-2 text-center text-xs transition-colors ${
+                                    className={`rounded-lg border p-2 text-center text-xs transition-colors ${
                                         active
                                             ? 'border-primary bg-primary/10 font-semibold text-primary'
                                             : done
-                                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-400'
-                                              : 'border-border bg-muted/40 text-muted-foreground'
+                                              ? 'border-cobalt-surface/30 bg-lavender-wash text-foreground'
+                                              : 'border-border bg-background text-muted-foreground'
                                     }`}
                                 >
                                     <div className="flex items-center justify-center gap-1">
@@ -127,7 +129,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                 )}
 
                 {action && (
-                    <Card className="border-primary/30">
+                    <Card className="border-primary/40">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-sm">
                                 <PenLine className="size-4 text-muted-foreground" />
