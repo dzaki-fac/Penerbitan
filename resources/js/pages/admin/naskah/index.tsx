@@ -1,0 +1,246 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import admin from '@/routes/admin';
+import { create, destroy, edit, show } from '@/routes/admin/naskah';
+import type { NaskahCard } from '@/types';
+
+type Paginated<T> = {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    links: Array<{ url: string | null; label: string; active: boolean } | null>;
+};
+
+type Props = {
+    naskahs: Paginated<NaskahCard>;
+    filters: { search: string; status: string };
+    statuses: Array<{ value: string; label: string }>;
+};
+
+export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
+    const [search, setSearch] = useState(filters.search);
+    const [status, setStatus] = useState(filters.status);
+
+    function applyFilters() {
+        router.get(admin.naskah.index(), { search, status }, { preserveState: true, replace: true });
+    }
+
+    function resetFilters() {
+        setSearch('');
+        setStatus('');
+        router.get(admin.naskah.index(), {}, { preserveState: true, replace: true });
+    }
+
+    function goTo(url: string) {
+        router.get(url, {}, { preserveState: true });
+    }
+
+    function remove(id: number) {
+        if (confirm('Hapus naskah ini?')) {
+            router.delete(destroy(id));
+        }
+    }
+
+    return (
+        <>
+            <Head title="Data Naskah" />
+
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h1 className="text-lg font-semibold">Data Naskah</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Naskah berasal dari Google Form yang diimpor oleh admin.
+                        </p>
+                    </div>
+                    <Button asChild>
+                        <Link href={create()}>
+                            <Plus />
+                            Tambah Naskah
+                        </Link>
+                    </Button>
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Filter</CardTitle>
+                        <CardDescription>
+                            {naskahs.total} naskah ditemukan.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="grid min-w-56 flex-1 gap-2">
+                                <Label htmlFor="search">Cari</Label>
+                                <Input
+                                    id="search"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                    placeholder="Judul, nama penulis, atau nomor identitas"
+                                />
+                            </div>
+                            <div className="grid min-w-40 gap-2">
+                                <Label>Status</Label>
+                                <Select value={status || undefined} onValueChange={(v) => setStatus(v)}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Semua status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua status</SelectItem>
+                                        {statuses.map((s) => (
+                                            <SelectItem key={s.value} value={s.value}>
+                                                {s.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button onClick={applyFilters}>
+                                <Search />
+                                Terapkan
+                            </Button>
+                            <Button variant="ghost" onClick={resetFilters}>
+                                Reset
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b bg-muted/50 text-left text-xs text-muted-foreground">
+                                        <th className="px-4 py-3 font-medium">Judul</th>
+                                        <th className="px-4 py-3 font-medium">Penulis</th>
+                                        <th className="px-4 py-3 font-medium">Tanggal</th>
+                                        <th className="px-4 py-3 font-medium">Status</th>
+                                        <th className="px-4 py-3 font-medium">Progress</th>
+                                        <th className="px-4 py-3 text-right font-medium">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {naskahs.data.map((naskah) => (
+                                        <tr key={naskah.id} className="border-b last:border-0">
+                                            <td className="max-w-60 px-4 py-3">
+                                                <p className="truncate font-medium">{naskah.judul}</p>
+                                                {naskah.kategori && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {naskah.kategori}
+                                                    </p>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <p>{naskah.penulis}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {naskah.identitas}
+                                                </p>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                {naskah.tanggal_pengajuan}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <Badge variant="secondary">
+                                                    {naskah.status.label}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                                                        <div
+                                                            className="h-full rounded-full bg-primary"
+                                                            style={{ width: `${naskah.progress}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {naskah.progress}%
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex justify-end gap-1">
+                                                    <Button asChild variant="ghost" size="icon" title="Detail">
+                                                        <Link href={show(naskah.id)}>
+                                                            <Eye />
+                                                        </Link>
+                                                    </Button>
+                                                    <Button asChild variant="ghost" size="icon" title="Edit">
+                                                        <Link href={edit(naskah.id)}>
+                                                            <Pencil />
+                                                        </Link>
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Hapus"
+                                                        onClick={() => remove(naskah.id)}
+                                                        className="text-destructive hover:text-destructive"
+                                                    >
+                                                        <Trash2 />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {naskahs.data.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                                                Tidak ada naskah ditemukan.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {naskahs.last_page > 1 && (
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3">
+                                <p className="text-xs text-muted-foreground">
+                                    Halaman {naskahs.current_page} dari {naskahs.last_page}
+                                </p>
+                                <div className="flex gap-1">
+                                    {naskahs.links
+                                        .filter((link): link is NonNullable<typeof link> => link !== null)
+                                        .map((link, index) => (
+                                            <Button
+                                                key={index}
+                                                variant={link.active ? 'default' : 'outline'}
+                                                size="sm"
+                                                className="min-w-8 px-2"
+                                                disabled={!link.url || link.active}
+                                                onClick={() => link.url && goTo(link.url)}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                            />
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </>
+    );
+}
+
+NaskahIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'Dashboard',
+            href: admin.dashboard(),
+        },
+        {
+            title: 'Data Naskah',
+            href: admin.naskah.index(),
+        },
+    ],
+};
