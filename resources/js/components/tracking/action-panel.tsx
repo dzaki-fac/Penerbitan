@@ -17,8 +17,14 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { diambil, revisi } from '@/routes/tracking';
-import { approve as approveIsbn, reject as rejectIsbn } from '@/routes/tracking/isbn';
-import { approve as approveLayout, reject as rejectLayout } from '@/routes/tracking/layout';
+import {
+    approve as approveIsbn,
+    reject as rejectIsbn,
+} from '@/routes/tracking/isbn';
+import {
+    approve as approveLayout,
+    reject as rejectLayout,
+} from '@/routes/tracking/layout';
 import type { NaskahDetail, TrackingAction } from '@/types';
 
 type Props = {
@@ -54,7 +60,9 @@ function IdentityFields({
                         <button
                             key={jenis}
                             type="button"
-                            onClick={() => form.setData('jenis_identitas', jenis)}
+                            onClick={() =>
+                                form.setData('jenis_identitas', jenis)
+                            }
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
                                 form.data.jenis_identitas === jenis
                                     ? 'border-cobalt-surface/40 bg-lavender-wash text-foreground'
@@ -71,7 +79,9 @@ function IdentityFields({
                 <Input
                     id="nomor_identitas"
                     value={form.data.nomor_identitas}
-                    onChange={(e) => form.setData('nomor_identitas', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('nomor_identitas', e.target.value)
+                    }
                 />
                 <InputError message={errors.nomor_identitas} />
             </div>
@@ -136,7 +146,9 @@ function ApproveDialog({
                 <form onSubmit={onSubmit} className="space-y-4">
                     <IdentityFields form={form} errors={form.errors} />
                     <DialogFooter>
-                        <SubmitButton processing={form.processing}>Konfirmasi</SubmitButton>
+                        <SubmitButton processing={form.processing}>
+                            Konfirmasi
+                        </SubmitButton>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -190,14 +202,18 @@ function RejectDialog({
                         <Textarea
                             id="catatan"
                             value={form.data.catatan}
-                            onChange={(e) => form.setData('catatan', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('catatan', e.target.value)
+                            }
                             placeholder={placeholder}
                             rows={3}
                         />
                         <InputError message={form.errors.catatan} />
                     </div>
                     <DialogFooter>
-                        <SubmitButton processing={form.processing}>Ajukan Revisi</SubmitButton>
+                        <SubmitButton processing={form.processing}>
+                            Ajukan Revisi
+                        </SubmitButton>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -233,8 +249,8 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
                 <DialogHeader>
                     <DialogTitle>Upload Revisi</DialogTitle>
                     <DialogDescription>
-                        Unggah dokumen revisi yang diminta oleh admin. File PDF, Word, atau ZIP
-                        (maksimal 20 MB).
+                        Unggah dokumen revisi yang diminta oleh admin. File PDF,
+                        Word, atau ZIP (maksimal 20 MB).
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
@@ -245,7 +261,12 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
                             id="file"
                             type="file"
                             accept=".pdf,.doc,.docx,.zip"
-                            onChange={(e) => form.setData('file', e.target.files?.[0] ?? null)}
+                            onChange={(e) =>
+                                form.setData(
+                                    'file',
+                                    e.target.files?.[0] ?? null,
+                                )
+                            }
                         />
                         <InputError message={form.errors.file} />
                     </div>
@@ -254,14 +275,18 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Textarea
                             id="catatan_penulis"
                             value={form.data.catatan_penulis}
-                            onChange={(e) => form.setData('catatan_penulis', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('catatan_penulis', e.target.value)
+                            }
                             placeholder="Jelaskan perubahan yang dilakukan (opsional)"
                             rows={3}
                         />
                         <InputError message={form.errors.catatan_penulis} />
                     </div>
                     <DialogFooter>
-                        <SubmitButton processing={form.processing}>Unggah</SubmitButton>
+                        <SubmitButton processing={form.processing}>
+                            Unggah
+                        </SubmitButton>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -283,46 +308,63 @@ export function ActionPanel({ naskah, action }: Props) {
     }
 
     if (action.jenis === 'review') {
-        const isLayout = naskah.status.value === 'menunggu_review_layout';
+        const isMergedReview =
+            naskah.status.value === 'menunggu_review_editing_layout';
         const isIsbn = naskah.status.value === 'menunggu_persetujuan_isbn';
 
         return (
             <div className="flex flex-wrap items-center gap-3">
                 <ApproveDialog
                     naskah={naskah}
-                    title={isLayout ? 'Setujui Layout' : 'Setujui'}
+                    title={
+                        isMergedReview ? 'Setujui Naskah & Layout' : 'Setujui'
+                    }
                     description={
-                        isLayout
-                            ? 'Konfirmasi bahwa Anda menyetujui hasil layout naskah.'
+                        isMergedReview
+                            ? 'Konfirmasi bahwa Anda menyetujui hasil editing dan layout naskah.'
                             : 'Konfirmasi persetujuan Anda terhadap data yang diajukan.'
                     }
                     submit={
-                        isLayout
+                        isMergedReview
                             ? approveLayout.url(naskah.id)
                             : isIsbn
                               ? approveIsbn.url(naskah.id)
                               : '#'
                     }
-                    buttonLabel={isLayout ? 'Setujui Layout' : 'Setujui'}
+                    buttonLabel={
+                        isMergedReview ? 'Setujui Naskah & Layout' : 'Setujui'
+                    }
                     icon={<Check />}
                 />
                 <RejectDialog
                     naskah={naskah}
-                    title={isLayout ? 'Ajukan Revisi Layout' : 'Ajukan Revisi'}
+                    title={
+                        isMergedReview
+                            ? 'Ajukan Revisi Naskah & Layout'
+                            : 'Ajukan Revisi'
+                    }
                     description="Jelaskan alasan revisi agar dapat ditindaklanjuti admin."
                     submit={
-                        isLayout
+                        isMergedReview
                             ? rejectLayout.url(naskah.id)
                             : isIsbn
                               ? rejectIsbn.url(naskah.id)
                               : '#'
                     }
-                    buttonLabel={isLayout ? 'Ajukan Revisi Layout' : 'Ajukan Revisi'}
+                    buttonLabel={
+                        isMergedReview
+                            ? 'Ajukan Revisi Naskah & Layout'
+                            : 'Ajukan Revisi'
+                    }
                     placeholder="Tuliskan catatan revisi Anda"
                 />
-                {isLayout && naskah.layout?.preview_pdf_link && (
+                {isMergedReview && naskah.layout?.preview_pdf_link && (
                     <Button asChild variant="outline">
-                        <a href={naskah.layout.preview_pdf_link} target="_blank" rel="noreferrer">
+                        <a
+                            href={naskah.layout.preview_pdf_link}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
                             <RotateCcw />
                             Preview PDF
                         </a>

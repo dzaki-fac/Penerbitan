@@ -30,6 +30,8 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
         { label: 'Selesai', value: stats.selesai, icon: CircleCheck },
     ];
 
+    const maxCount = Math.max(...statuses.map((s) => s.count), 1);
+
     return (
         <>
             <Head title="Dashboard Admin" />
@@ -57,30 +59,45 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="space-y-1">
                             {statuses.map((status) => (
                                 <Link
                                     key={status.value}
-                                    href={naskahIndex({ query: { status: status.value } })}
-                                    className="rounded-md border p-3 transition-colors hover:border-primary/50 hover:bg-accent/50"
+                                    href={naskahIndex({
+                                        query: { status: status.value },
+                                    })}
+                                    title={`Lihat naskah berstatus "${status.label}"`}
+                                    className="group flex items-center gap-3 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50"
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium line-clamp-2">
-                                            {status.label}
-                                        </span>
-                                        <Badge variant="secondary" className="ml-2 shrink-0">
-                                            {status.count}
-                                        </Badge>
-                                    </div>
-                                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                    <span
+                                        title={status.label}
+                                        className="w-44 shrink-0 truncate text-xs font-medium text-muted-foreground group-hover:text-foreground"
+                                    >
+                                        {status.label}
+                                    </span>
+                                    <div className="h-4 flex-1 overflow-hidden rounded-sm bg-muted">
                                         <div
-                                            className="h-full rounded-full bg-primary"
-                                            style={{ width: `${status.progress}%` }}
+                                            className="h-full rounded-sm bg-gradient-to-r from-primary/60 to-primary transition-all duration-500 group-hover:from-primary/80"
+                                            style={{
+                                                width: status.count
+                                                    ? `${Math.max((status.count / maxCount) * 100, 4)}%`
+                                                    : '0%',
+                                            }}
                                         />
                                     </div>
+                                    <Badge
+                                        variant="secondary"
+                                        className="w-9 shrink-0 justify-center"
+                                    >
+                                        {status.count}
+                                    </Badge>
                                 </Link>
                             ))}
                         </div>
+                        <p className="mt-3 text-xs text-muted-foreground">
+                            Klik salah satu baris untuk melihat daftar naskah pada
+                            status tersebut.
+                        </p>
                     </CardContent>
                 </Card>
 

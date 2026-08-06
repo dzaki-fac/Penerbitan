@@ -10,10 +10,11 @@ import {
     PenLine,
     User,
 } from 'lucide-react';
+import CollapsibleCard from '@/components/collapsible-card';
 import { ActionPanel } from '@/components/tracking/action-panel';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { search } from '@/routes/tracking';
 import type { NaskahDetail, TrackingAction, WorkflowStep } from '@/types';
 
@@ -25,6 +26,14 @@ type Props = {
 
 export default function TrackingDetail({ naskah, steps, action }: Props) {
     const currentIndex = steps.findIndex((s) => s.value === naskah.status.value);
+
+    const historyByStep = new Map<string, NaskahDetail['histories'][number]>();
+
+    for (const history of naskah.histories) {
+        if (!historyByStep.has(history.ke_status.value)) {
+            historyByStep.set(history.ke_status.value, history);
+        }
+    }
 
     return (
         <>
@@ -88,110 +97,153 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         <History className="size-4 text-muted-foreground" />
                         Progress Workflow
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                    <ol className="space-y-0">
                         {steps.map((step, index) => {
                             const done = index < currentIndex;
                             const active = index === currentIndex;
+                            const isLast = index === steps.length - 1;
+                            const history = historyByStep.get(step.value);
 
                             return (
-                                <div
-                                    key={step.value}
-                                    className={`rounded-lg border p-2 text-center text-xs transition-colors ${
-                                        active
-                                            ? 'border-primary bg-primary/10 font-semibold text-primary'
-                                            : done
-                                              ? 'border-cobalt-surface/30 bg-lavender-wash text-foreground'
-                                              : 'border-border bg-background text-muted-foreground'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1">
-                                        {done && <Check className="size-3" />}
-                                        <span className="line-clamp-2">{step.label}</span>
+                                <li key={step.value} className="relative flex gap-4">
+                                    <div className="flex flex-col items-center">
+                                        <span
+                                            className={cn(
+                                                'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                active
+                                                    ? 'border-primary bg-primary/10 text-primary'
+                                                    : done
+                                                      ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
+                                                      : 'border-border bg-background text-muted-foreground',
+                                            )}
+                                        >
+                                            {done ? (
+                                                <Check className="size-4" />
+                                            ) : (
+                                                <span className="text-xs font-semibold">
+                                                    {index + 1}
+                                                </span>
+                                            )}
+                                        </span>
+                                        {!isLast && (
+                                            <span
+                                                className={cn(
+                                                    'my-1 w-0.5 flex-1 rounded-full',
+                                                    done ? 'bg-primary/40' : 'bg-border',
+                                                )}
+                                            />
+                                        )}
                                     </div>
-                                </div>
+
+                                    <div className={cn('min-w-0 flex-1 pt-1', !isLast && 'pb-6')}>
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                            <span
+                                                className={cn(
+                                                    'text-sm font-medium',
+                                                    active
+                                                        ? 'text-primary'
+                                                        : done
+                                                          ? 'text-foreground'
+                                                          : 'text-muted-foreground',
+                                                )}
+                                            >
+                                                {step.label}
+                                            </span>
+                                            {active && (
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="bg-primary/10 text-primary"
+                                                >
+                                                    Sedang berjalan
+                                                </Badge>
+                                            )}
+                                            {history && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {history.waktu}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {history?.catatan && (
+                                            <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                <p className="text-sm text-muted-foreground">
+                                                    <span className="font-medium text-foreground">
+                                                        Catatan admin
+                                                        {history.admin
+                                                            ? ` (${history.admin})`
+                                                            : ''}
+                                                        :
+                                                    </span>{' '}
+                                                    {history.catatan}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </li>
                             );
                         })}
-                    </div>
+                    </ol>
                 </div>
 
                 {naskah.catatan_admin && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                                <MessageSquareText className="size-4 text-muted-foreground" />
-                                Catatan Admin
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm">{naskah.catatan_admin}</p>
-                        </CardContent>
-                    </Card>
+                    <CollapsibleCard
+                        title="Catatan Admin"
+                        icon={<MessageSquareText className="size-4 text-muted-foreground" />}
+                    >
+                        <p className="text-sm">{naskah.catatan_admin}</p>
+                    </CollapsibleCard>
                 )}
 
                 {action && (
-                    <Card className="border-primary/40">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                                <PenLine className="size-4 text-muted-foreground" />
-                                Aksi Penulis
-                            </CardTitle>
-                            <CardDescription>
-                                Aksi dilakukan tanpa login, cukup dengan NIM/NIP.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ActionPanel naskah={naskah} action={action} />
-                        </CardContent>
-                    </Card>
+                    <CollapsibleCard
+                        title="Aksi Penulis"
+                        description="Aksi dilakukan tanpa login, cukup dengan NIM/NIP."
+                        icon={<PenLine className="size-4 text-muted-foreground" />}
+                        className="border-primary/40"
+                    >
+                        <ActionPanel naskah={naskah} action={action} />
+                    </CollapsibleCard>
                 )}
 
                 <div className="grid gap-6 lg:grid-cols-2">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                                <FileText className="size-4 text-muted-foreground" />
-                                Daftar Dokumen
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {naskah.dokumens.map((dokumen) => (
-                                <div
-                                    key={dokumen.id}
-                                    className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="truncate font-medium">
-                                            {dokumen.nama_dokumen}
+                    <CollapsibleCard
+                        title="Daftar Dokumen"
+                        icon={<FileText className="size-4 text-muted-foreground" />}
+                        contentClassName="space-y-3"
+                    >
+                        {naskah.dokumens.map((dokumen) => (
+                            <div
+                                key={dokumen.id}
+                                className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                            >
+                                <div className="min-w-0">
+                                    <p className="truncate font-medium">
+                                        {dokumen.nama_dokumen}
+                                    </p>
+                                    {dokumen.catatan && (
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                            {dokumen.catatan}
                                         </p>
-                                        {dokumen.catatan && (
-                                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                                {dokumen.catatan}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <Badge
-                                        variant={
-                                            dokumen.status.value === 'lengkap'
-                                                ? 'secondary'
-                                                : 'outline'
-                                        }
-                                        className="shrink-0"
-                                    >
-                                        {dokumen.status.label}
-                                    </Badge>
+                                    )}
                                 </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                                <Badge
+                                    variant={
+                                        dokumen.status.value === 'lengkap'
+                                            ? 'secondary'
+                                            : 'outline'
+                                    }
+                                    className="shrink-0"
+                                >
+                                    {dokumen.status.label}
+                                </Badge>
+                            </div>
+                        ))}
+                    </CollapsibleCard>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                                <LayoutTemplate className="size-4 text-muted-foreground" />
-                                Layout &amp; ISBN
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                    <CollapsibleCard
+                        title="Layout &amp; ISBN"
+                        icon={<LayoutTemplate className="size-4 text-muted-foreground" />}
+                        contentClassName="space-y-4"
+                    >
                             <div className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Layout</span>
@@ -263,53 +315,47 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                     </p>
                                 )}
                             </div>
-                        </CardContent>
-                    </Card>
+                    </CollapsibleCard>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-sm">
-                            <History className="size-4 text-muted-foreground" />
-                            Riwayat Aktivitas
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ol className="relative border-s border-border ps-6">
-                            {naskah.histories.map((history) => (
-                                <li key={history.id} className="mb-6 last:mb-0">
-                                    <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-primary" />
-                                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <span className="font-medium">
-                                            {history.ke_status.label}
+                <CollapsibleCard
+                    title="Riwayat Aktivitas"
+                    icon={<History className="size-4 text-muted-foreground" />}
+                >
+                    <ol className="relative border-s border-border ps-6">
+                        {naskah.histories.map((history) => (
+                            <li key={history.id} className="mb-6 last:mb-0">
+                                <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-primary" />
+                                <div className="flex flex-wrap items-center gap-2 text-sm">
+                                    <span className="font-medium">
+                                        {history.ke_status.label}
+                                    </span>
+                                    {history.dari_status && (
+                                        <span className="text-xs text-muted-foreground">
+                                            (dari {history.dari_status.label})
                                         </span>
-                                        {history.dari_status && (
-                                            <span className="text-xs text-muted-foreground">
-                                                (dari {history.dari_status.label})
-                                            </span>
-                                        )}
-                                        <Badge variant="secondary" className="text-[10px]">
-                                            {history.aktor.label}
-                                        </Badge>
-                                        {history.admin && (
-                                            <span className="text-xs text-muted-foreground">
-                                                oleh {history.admin}
-                                            </span>
-                                        )}
-                                        <span className="ms-auto text-xs text-muted-foreground">
-                                            {history.waktu}
-                                        </span>
-                                    </div>
-                                    {history.catatan && (
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            {history.catatan}
-                                        </p>
                                     )}
-                                </li>
-                            ))}
-                        </ol>
-                    </CardContent>
-                </Card>
+                                    <Badge variant="secondary" className="text-[10px]">
+                                        {history.aktor.label}
+                                    </Badge>
+                                    {history.admin && (
+                                        <span className="text-xs text-muted-foreground">
+                                            oleh {history.admin}
+                                        </span>
+                                    )}
+                                    <span className="ms-auto text-xs text-muted-foreground">
+                                        {history.waktu}
+                                    </span>
+                                </div>
+                                {history.catatan && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {history.catatan}
+                                    </p>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+                </CollapsibleCard>
             </div>
         </>
     );

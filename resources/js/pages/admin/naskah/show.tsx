@@ -10,10 +10,10 @@ import {
     Upload,
 } from 'lucide-react';
 import { useState } from 'react';
+import CollapsibleCard from '@/components/collapsible-card';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -25,10 +25,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import { update as dokumenUpdate } from '@/routes/admin/dokumen';
 import { destroy, edit, index, transition } from '@/routes/admin/naskah';
@@ -55,7 +62,8 @@ function TransitionDialog({
 }) {
     const [open, setOpen] = useState(false);
     const form = useForm({ to_status: target, catatan: '' });
-    const targetLabel = statusOptions.find((s) => s.value === target)?.label ?? target;
+    const targetLabel =
+        statusOptions.find((s) => s.value === target)?.label ?? target;
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -68,7 +76,11 @@ function TransitionDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button
+                    variant="default"
+                    size="sm"
+                    className="justify-center"
+                >
                     {targetLabel}
                 </Button>
             </DialogTrigger>
@@ -76,7 +88,8 @@ function TransitionDialog({
                 <DialogHeader>
                     <DialogTitle>Ubah Status</DialogTitle>
                     <DialogDescription>
-                        Ubah status naskah dari "{naskah.status.label}" menjadi "{targetLabel}".
+                        Ubah status naskah dari "{naskah.status.label}" menjadi
+                        "{targetLabel}".
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
@@ -89,7 +102,9 @@ function TransitionDialog({
                         <Textarea
                             id="catatan"
                             value={form.data.catatan}
-                            onChange={(e) => form.setData('catatan', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('catatan', e.target.value)
+                            }
                             placeholder="Catatan untuk penulis (opsional)"
                             rows={3}
                         />
@@ -109,22 +124,16 @@ function TransitionDialog({
 
 function DokumenPanel({ naskah }: { naskah: NaskahDetail }) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <FileText className="size-4 text-muted-foreground" />
-                    Verifikasi Dokumen
-                </CardTitle>
-                <CardDescription>
-                    Tandai kelengkapan setiap dokumen pengajuan.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {naskah.dokumens.map((dokumen) => (
-                    <DokumenRow key={dokumen.id} dokumen={dokumen} />
-                ))}
-            </CardContent>
-        </Card>
+        <CollapsibleCard
+            title="Verifikasi Dokumen"
+            description="Tandai kelengkapan setiap dokumen pengajuan."
+            icon={<FileText className="size-4 text-muted-foreground" />}
+            contentClassName="space-y-4"
+        >
+            {naskah.dokumens.map((dokumen) => (
+                <DokumenRow key={dokumen.id} dokumen={dokumen} />
+            ))}
+        </CollapsibleCard>
     );
 }
 
@@ -150,7 +159,9 @@ function DokumenRow({
         <form onSubmit={onSubmit} className="space-y-3 rounded-md border p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{dokumen.nama_dokumen}</p>
+                    <p className="text-sm font-medium">
+                        {dokumen.nama_dokumen}
+                    </p>
                     {dokumen.file_url && (
                         <a
                             href={dokumen.file_url}
@@ -177,7 +188,9 @@ function DokumenRow({
                         <SelectContent>
                             <SelectItem value="belum">Belum</SelectItem>
                             <SelectItem value="lengkap">Lengkap</SelectItem>
-                            <SelectItem value="perlu_perbaikan">Perlu Perbaikan</SelectItem>
+                            <SelectItem value="perlu_perbaikan">
+                                Perlu Perbaikan
+                            </SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -186,7 +199,9 @@ function DokumenRow({
                     <Input
                         id={`catatan-${dokumen.id}`}
                         value={form.data.catatan}
-                        onChange={(e) => form.setData('catatan', e.target.value)}
+                        onChange={(e) =>
+                            form.setData('catatan', e.target.value)
+                        }
                         placeholder="Catatan (opsional)"
                     />
                 </div>
@@ -196,11 +211,19 @@ function DokumenRow({
                         id={`file-${dokumen.id}`}
                         type="file"
                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip"
-                        onChange={(e) => form.setData('file', e.target.files?.[0] ?? null)}
+                        onChange={(e) =>
+                            form.setData('file', e.target.files?.[0] ?? null)
+                        }
                     />
                 </div>
             </div>
-            <InputError message={form.errors.status || form.errors.catatan || form.errors.file} />
+            <InputError
+                message={
+                    form.errors.status ||
+                    form.errors.catatan ||
+                    form.errors.file
+                }
+            />
             <div className="flex justify-end">
                 <Button type="submit" size="sm" disabled={form.processing}>
                     {form.processing && <Spinner />}
@@ -225,95 +248,111 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
     }
 
     return (
-        <Card className="border-primary/30">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <LayoutTemplate className="size-4 text-muted-foreground" />
-                    Unggah Hasil Layout
-                </CardTitle>
-                <CardDescription>
-                    Unggah file layout dan link preview PDF untuk direview penulis.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <form onSubmit={onSubmit} className="space-y-4">
-                    <div className="grid gap-2 sm:grid-cols-2">
-                        <div className="grid gap-2">
-                            <Label htmlFor="file_layout">File Layout (PDF)</Label>
-                            <Input
-                                id="file_layout"
-                                type="file"
-                                accept=".pdf"
-                                onChange={(e) =>
-                                    form.setData('file_layout', e.target.files?.[0] ?? null)
-                                }
-                            />
-                            <InputError message={form.errors.file_layout} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="preview_pdf_link">Link Preview PDF</Label>
-                            <Input
-                                id="preview_pdf_link"
-                                value={form.data.preview_pdf_link}
-                                onChange={(e) =>
-                                    form.setData('preview_pdf_link', e.target.value)
-                                }
-                                placeholder="https://drive.google.com/..."
-                            />
-                            <InputError message={form.errors.preview_pdf_link} />
-                        </div>
+        <CollapsibleCard
+            title="Unggah Hasil Layout"
+            description="Unggah file layout dan link preview PDF untuk direview penulis."
+            icon={<LayoutTemplate className="size-4 text-muted-foreground" />}
+            className="border-primary/30"
+            contentClassName="space-y-4"
+        >
+            <form onSubmit={onSubmit} className="space-y-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                        <Label htmlFor="file_layout">File Layout (PDF)</Label>
+                        <Input
+                            id="file_layout"
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) =>
+                                form.setData(
+                                    'file_layout',
+                                    e.target.files?.[0] ?? null,
+                                )
+                            }
+                        />
+                        <InputError message={form.errors.file_layout} />
                     </div>
-                    <Button type="submit" disabled={form.processing}>
-                        {form.processing && <Spinner />}
-                        <Upload />
-                        Unggah &amp; Minta Review
-                    </Button>
-                </form>
+                    <div className="grid gap-2">
+                        <Label htmlFor="preview_pdf_link">
+                            Link Preview PDF
+                        </Label>
+                        <Input
+                            id="preview_pdf_link"
+                            value={form.data.preview_pdf_link}
+                            onChange={(e) =>
+                                form.setData('preview_pdf_link', e.target.value)
+                            }
+                            placeholder="https://drive.google.com/..."
+                        />
+                        <InputError message={form.errors.preview_pdf_link} />
+                    </div>
+                </div>
+                <Button type="submit" disabled={form.processing}>
+                    {form.processing && <Spinner />}
+                    <Upload />
+                    Unggah &amp; Minta Review
+                </Button>
+            </form>
 
-                {naskah.layouts && naskah.layouts.length > 0 && (
-                    <>
-                        <Separator />
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Riwayat Layout</p>
-                            {naskah.layouts.map((layout) => (
-                                <div
-                                    key={layout.id}
-                                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="font-medium">Versi {layout.versi}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {layout.tanggal}
-                                        </p>
-                                    </div>
-                                    <Badge variant="outline">{layout.status.label}</Badge>
-                                    <div className="flex gap-2">
-                                        {layout.file_url && (
-                                            <Button asChild variant="outline" size="sm">
-                                                <a href={layout.file_url} target="_blank" rel="noreferrer">
-                                                    File
-                                                </a>
-                                            </Button>
-                                        )}
-                                        {layout.preview_pdf_link && (
-                                            <Button asChild variant="outline" size="sm">
-                                                <a
-                                                    href={layout.preview_pdf_link}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    Preview
-                                                </a>
-                                            </Button>
-                                        )}
-                                    </div>
+            {naskah.layouts && naskah.layouts.length > 0 && (
+                <>
+                    <Separator />
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium">Riwayat Layout</p>
+                        {naskah.layouts.map((layout) => (
+                            <div
+                                key={layout.id}
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+                            >
+                                <div className="min-w-0">
+                                    <p className="font-medium">
+                                        Versi {layout.versi}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {layout.tanggal}
+                                    </p>
                                 </div>
-                            ))}
-                        </div>
-                    </>
-                )}
-            </CardContent>
-        </Card>
+                                <Badge variant="outline">
+                                    {layout.status.label}
+                                </Badge>
+                                <div className="flex gap-2">
+                                    {layout.file_url && (
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <a
+                                                href={layout.file_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                File
+                                            </a>
+                                        </Button>
+                                    )}
+                                    {layout.preview_pdf_link && (
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <a
+                                                href={layout.preview_pdf_link}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Preview
+                                            </a>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+        </CollapsibleCard>
     );
 }
 
@@ -332,56 +371,56 @@ function IsbnPanel({ naskah }: { naskah: NaskahDetail }) {
     }
 
     return (
-        <Card className="border-primary/30">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Check className="size-4 text-muted-foreground" />
-                    Pengajuan ISBN
-                </CardTitle>
-                <CardDescription>
-                    Ajukan data ISBN untuk persetujuan penulis.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={onSubmit} className="space-y-4">
-                    <div className="grid gap-2 sm:grid-cols-2">
-                        <div className="grid gap-2">
-                            <Label htmlFor="nomor_isbn">Nomor ISBN</Label>
-                            <Input
-                                id="nomor_isbn"
-                                value={form.data.nomor_isbn}
-                                onChange={(e) => form.setData('nomor_isbn', e.target.value)}
-                                placeholder="978-602-0000-00-0"
-                            />
-                            <InputError message={form.errors.nomor_isbn} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="penerbit">Penerbit</Label>
-                            <Input
-                                id="penerbit"
-                                value={form.data.penerbit}
-                                onChange={(e) => form.setData('penerbit', e.target.value)}
-                            />
-                            <InputError message={form.errors.penerbit} />
-                        </div>
+        <CollapsibleCard
+            title="Pengajuan ISBN"
+            description="Ajukan data ISBN untuk persetujuan penulis."
+            icon={<Check className="size-4 text-muted-foreground" />}
+            className="border-primary/30"
+        >
+            <form onSubmit={onSubmit} className="space-y-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                        <Label htmlFor="nomor_isbn">Nomor ISBN</Label>
+                        <Input
+                            id="nomor_isbn"
+                            value={form.data.nomor_isbn}
+                            onChange={(e) =>
+                                form.setData('nomor_isbn', e.target.value)
+                            }
+                            placeholder="978-602-0000-00-0"
+                        />
+                        <InputError message={form.errors.nomor_isbn} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="isbn_catatan">Catatan</Label>
-                        <Textarea
-                            id="isbn_catatan"
-                            value={form.data.catatan}
-                            onChange={(e) => form.setData('catatan', e.target.value)}
-                            rows={2}
+                        <Label htmlFor="penerbit">Penerbit</Label>
+                        <Input
+                            id="penerbit"
+                            value={form.data.penerbit}
+                            onChange={(e) =>
+                                form.setData('penerbit', e.target.value)
+                            }
                         />
-                        <InputError message={form.errors.catatan} />
+                        <InputError message={form.errors.penerbit} />
                     </div>
-                    <Button type="submit" disabled={form.processing}>
-                        {form.processing && <Spinner />}
-                        Ajukan untuk Persetujuan
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="isbn_catatan">Catatan</Label>
+                    <Textarea
+                        id="isbn_catatan"
+                        value={form.data.catatan}
+                        onChange={(e) =>
+                            form.setData('catatan', e.target.value)
+                        }
+                        rows={2}
+                    />
+                    <InputError message={form.errors.catatan} />
+                </div>
+                <Button type="submit" disabled={form.processing}>
+                    {form.processing && <Spinner />}
+                    Ajukan untuk Persetujuan
+                </Button>
+            </form>
+        </CollapsibleCard>
     );
 }
 
@@ -396,36 +435,50 @@ function CatatanPanel({ naskah }: { naskah: NaskahDetail }) {
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <MessageSquareText className="size-4 text-muted-foreground" />
-                    Catatan Admin
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={onSubmit} className="space-y-3">
-                    <Textarea
-                        value={form.data.catatan_admin}
-                        onChange={(e) => form.setData('catatan_admin', e.target.value)}
-                        rows={3}
-                        placeholder="Catatan yang akan terlihat penulis di halaman tracking"
-                    />
-                    <InputError message={form.errors.catatan_admin} />
-                    <div className="flex justify-end">
-                        <Button type="submit" size="sm" disabled={form.processing}>
-                            {form.processing && <Spinner />}
-                            Simpan Catatan
-                        </Button>
-                    </div>
-                </form>
-            </CardContent>
-        </Card>
+        <CollapsibleCard
+            title="Catatan Admin"
+            icon={
+                <MessageSquareText className="size-4 text-muted-foreground" />
+            }
+        >
+            <form onSubmit={onSubmit} className="space-y-3">
+                <Textarea
+                    value={form.data.catatan_admin}
+                    onChange={(e) =>
+                        form.setData('catatan_admin', e.target.value)
+                    }
+                    rows={3}
+                    placeholder="Catatan yang akan terlihat penulis di halaman tracking"
+                />
+                <InputError message={form.errors.catatan_admin} />
+                <div className="flex justify-end">
+                    <Button type="submit" size="sm" disabled={form.processing}>
+                        {form.processing && <Spinner />}
+                        Simpan Catatan
+                    </Button>
+                </div>
+            </form>
+        </CollapsibleCard>
     );
 }
 
-export default function NaskahShow({ naskah, steps, adminTransitions, statusOptions }: Props) {
-    const currentIndex = steps.findIndex((s) => s.value === naskah.status.value);
+export default function NaskahShow({
+    naskah,
+    steps,
+    adminTransitions,
+    statusOptions,
+}: Props) {
+    const currentIndex = steps.findIndex(
+        (s) => s.value === naskah.status.value,
+    );
+
+    const historyByStep = new Map<string, NaskahDetail['histories'][number]>();
+
+    for (const history of naskah.histories) {
+        if (!historyByStep.has(history.ke_status.value)) {
+            historyByStep.set(history.ke_status.value, history);
+        }
+    }
 
     function remove() {
         if (confirm('Hapus naskah ini?')) {
@@ -440,21 +493,33 @@ export default function NaskahShow({ naskah, steps, adminTransitions, statusOpti
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1">
-                        <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="-ml-2 text-muted-foreground"
+                        >
                             <Link href={index()}>
                                 <ArrowLeft />
                                 Data Naskah
                             </Link>
                         </Button>
                         <div className="flex flex-wrap items-center gap-2">
-                            <h1 className="text-lg font-semibold">{naskah.judul}</h1>
-                            <Badge variant="secondary" className="bg-primary/10 text-primary">
+                            <h1 className="text-lg font-semibold">
+                                {naskah.judul}
+                            </h1>
+                            <Badge
+                                variant="secondary"
+                                className="bg-primary/10 text-primary"
+                            >
                                 {naskah.status.label}
                             </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {naskah.author.nama} ({naskah.author.jenis_identitas}:{' '}
-                            {naskah.author.nomor_identitas}) · Pengajuan {naskah.tanggal_pengajuan}
+                            {naskah.author.nama} (
+                            {naskah.author.jenis_identitas}:{' '}
+                            {naskah.author.nomor_identitas}) · Pengajuan{' '}
+                            {naskah.tanggal_pengajuan}
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -475,11 +540,21 @@ export default function NaskahShow({ naskah, steps, adminTransitions, statusOpti
                     </div>
                 </div>
 
-                <Card>
-                    <CardContent className="space-y-3">
+                <div className="flex flex-col gap-6">
+                    <CollapsibleCard
+                        title="Progress Workflow"
+                        icon={
+                            <History className="size-4 text-muted-foreground" />
+                        }
+                        contentClassName="space-y-3"
+                    >
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Persentase Penyelesaian</span>
-                            <span className="font-semibold">{naskah.progress}%</span>
+                            <span className="text-muted-foreground">
+                                Persentase Penyelesaian
+                            </span>
+                            <span className="font-semibold">
+                                {naskah.progress}%
+                            </span>
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
@@ -487,141 +562,222 @@ export default function NaskahShow({ naskah, steps, adminTransitions, statusOpti
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
-                        <div className="flex flex-wrap gap-1.5 pt-1">
+                        <ol className="space-y-0">
                             {steps.map((step, index) => {
                                 const done = index < currentIndex;
                                 const active = index === currentIndex;
+                                const isLast = index === steps.length - 1;
+                                const history = historyByStep.get(step.value);
 
                                 return (
-                                    <span
+                                    <li
                                         key={step.value}
-                                        className={`rounded-md border px-2 py-1 text-[11px] ${
-                                            active
-                                                ? 'border-primary bg-primary/10 font-semibold text-primary'
-                                                : done
-                                                  ? 'border-cobalt-surface/30 bg-lavender-wash text-foreground'
-                                                  : 'border-border bg-muted/40 text-muted-foreground'
-                                        }`}
+                                        className="relative flex gap-4"
                                     >
-                                        {done ? <Check className="inline size-3" /> : null} {step.label}
-                                    </span>
+                                        <div className="flex flex-col items-center">
+                                            <span
+                                                className={cn(
+                                                    'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                    active
+                                                        ? 'border-primary bg-primary/10 text-primary'
+                                                        : done
+                                                          ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
+                                                          : 'border-border bg-background text-muted-foreground',
+                                                )}
+                                            >
+                                                {done ? (
+                                                    <Check className="size-4" />
+                                                ) : (
+                                                    <span className="text-xs font-semibold">
+                                                        {index + 1}
+                                                    </span>
+                                                )}
+                                            </span>
+                                            {!isLast && (
+                                                <span
+                                                    className={cn(
+                                                        'my-1 w-0.5 flex-1 rounded-full',
+                                                        done
+                                                            ? 'bg-primary/40'
+                                                            : 'bg-border',
+                                                    )}
+                                                />
+                                            )}
+                                        </div>
+
+                                        <div
+                                            className={cn(
+                                                'min-w-0 flex-1 pt-1',
+                                                !isLast && 'pb-6',
+                                            )}
+                                        >
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                <span
+                                                    className={cn(
+                                                        'text-sm font-medium',
+                                                        active
+                                                            ? 'text-primary'
+                                                            : done
+                                                              ? 'text-foreground'
+                                                              : 'text-muted-foreground',
+                                                    )}
+                                                >
+                                                    {step.label}
+                                                </span>
+                                                {active && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="bg-primary/10 text-primary"
+                                                    >
+                                                        Sedang berjalan
+                                                    </Badge>
+                                                )}
+                                                {history && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {history.waktu}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {history?.catatan && (
+                                                <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                    <p className="text-sm text-muted-foreground">
+                                                        <span className="font-medium text-foreground">
+                                                            Catatan admin
+                                                            {history.admin
+                                                                ? ` (${history.admin})`
+                                                                : ''}
+                                                            :
+                                                        </span>{' '}
+                                                        {history.catatan}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {active &&
+                                                adminTransitions.length > 0 && (
+                                                    <div className="mt-3 space-y-2">
+                                                        <p className="text-xs font-medium text-muted-foreground">
+                                                            Tindakan selanjutnya:
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {adminTransitions.map(
+                                                                (target) => (
+                                                                    <TransitionDialog
+                                                                        key={target}
+                                                                        naskah={
+                                                                            naskah
+                                                                        }
+                                                                        target={
+                                                                            target
+                                                                        }
+                                                                        statusOptions={
+                                                                            statusOptions
+                                                                        }
+                                                                    />
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                        </div>
+                                    </li>
                                 );
                             })}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {adminTransitions.length > 0 && (
-                    <Card className="border-primary/30">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                                <History className="size-4 text-muted-foreground" />
-                                Ubah Status Workflow
-                            </CardTitle>
-                            <CardDescription>
-                                Transisi yang diizinkan dari status "{naskah.status.label}".
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {adminTransitions.map((target) => (
-                                <TransitionDialog
-                                    key={target}
-                                    naskah={naskah}
-                                    target={target}
-                                    statusOptions={statusOptions}
-                                />
-                            ))}
-                        </CardContent>
-                    </Card>
-                )}
+                        </ol>
+                    </CollapsibleCard>
+                </div>
 
                 <DokumenPanel naskah={naskah} />
 
-                {(naskah.status.value === 'dalam_proses_layout' ||
-                    naskah.status.value === 'revisi_layout') && <LayoutPanel naskah={naskah} />}
-
-                {(naskah.status.value === 'pengajuan_isbn' ||
-                    naskah.status.value === 'revisi_isbn') && <IsbnPanel naskah={naskah} />}
-
                 <CatatanPanel naskah={naskah} />
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-sm">
-                            <History className="size-4 text-muted-foreground" />
-                            Riwayat Aktivitas
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ol className="relative border-s border-border ps-6">
-                            {naskah.histories.map((history) => (
-                                <li key={history.id} className="mb-5 last:mb-0">
-                                    <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-primary" />
-                                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <span className="font-medium">
-                                            {history.ke_status.label}
+                {(naskah.status.value === 'dalam_proses_editing_layout' ||
+                    naskah.status.value === 'revisi_editing_layout') && (
+                    <LayoutPanel naskah={naskah} />
+                )}
+
+                {(naskah.status.value === 'pengajuan_isbn' ||
+                    naskah.status.value === 'revisi_isbn') && (
+                    <IsbnPanel naskah={naskah} />
+                )}
+
+                <CollapsibleCard
+                    title="Riwayat Aktivitas"
+                    icon={<History className="size-4 text-muted-foreground" />}
+                >
+                    <ol className="relative border-s border-border ps-6">
+                        {naskah.histories.map((history) => (
+                            <li key={history.id} className="mb-5 last:mb-0">
+                                <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-primary" />
+                                <div className="flex flex-wrap items-center gap-2 text-sm">
+                                    <span className="font-medium">
+                                        {history.ke_status.label}
+                                    </span>
+                                    {history.dari_status && (
+                                        <span className="text-xs text-muted-foreground">
+                                            (dari {history.dari_status.label})
                                         </span>
-                                        {history.dari_status && (
-                                            <span className="text-xs text-muted-foreground">
-                                                (dari {history.dari_status.label})
-                                            </span>
-                                        )}
-                                        <Badge variant="secondary" className="text-[10px]">
-                                            {history.aktor.label}
-                                        </Badge>
-                                        {history.admin && (
-                                            <span className="text-xs text-muted-foreground">
-                                                oleh {history.admin}
-                                            </span>
-                                        )}
-                                        <span className="ms-auto text-xs text-muted-foreground">
-                                            {history.waktu}
-                                        </span>
-                                    </div>
-                                    {history.catatan && (
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            {history.catatan}
-                                        </p>
                                     )}
-                                </li>
-                            ))}
-                        </ol>
-                    </CardContent>
-                </Card>
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-[10px]"
+                                    >
+                                        {history.aktor.label}
+                                    </Badge>
+                                    {history.admin && (
+                                        <span className="text-xs text-muted-foreground">
+                                            oleh {history.admin}
+                                        </span>
+                                    )}
+                                    <span className="ms-auto text-xs text-muted-foreground">
+                                        {history.waktu}
+                                    </span>
+                                </div>
+                                {history.catatan && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {history.catatan}
+                                    </p>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+                </CollapsibleCard>
 
                 {naskah.revisi_uploads.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                                <Upload className="size-4 text-muted-foreground" />
-                                Revisi dari Penulis
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            {naskah.revisi_uploads.map((revisi) => (
-                                <div
-                                    key={revisi.id}
-                                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="font-medium">
-                                            {revisi.jenis.label} · {revisi.tanggal}
+                    <CollapsibleCard
+                        title="Revisi dari Penulis"
+                        icon={
+                            <Upload className="size-4 text-muted-foreground" />
+                        }
+                        contentClassName="space-y-2"
+                    >
+                        {naskah.revisi_uploads.map((revisi) => (
+                            <div
+                                key={revisi.id}
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+                            >
+                                <div className="min-w-0">
+                                    <p className="font-medium">
+                                        {revisi.jenis.label} · {revisi.tanggal}
+                                    </p>
+                                    {revisi.catatan_penulis && (
+                                        <p className="text-xs text-muted-foreground">
+                                            {revisi.catatan_penulis}
                                         </p>
-                                        {revisi.catatan_penulis && (
-                                            <p className="text-xs text-muted-foreground">
-                                                {revisi.catatan_penulis}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <Button asChild variant="outline" size="sm">
-                                        <a href={revisi.file_url} target="_blank" rel="noreferrer">
-                                            Unduh
-                                        </a>
-                                    </Button>
+                                    )}
                                 </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                                <Button asChild variant="outline" size="sm">
+                                    <a
+                                        href={revisi.file_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Unduh
+                                    </a>
+                                </Button>
+                            </div>
+                        ))}
+                    </CollapsibleCard>
                 )}
             </div>
         </>

@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { FileStack, LayoutGrid, Menu, Search } from 'lucide-react';
+import { FileStack, LayoutGrid, Menu, Search, UserRoundCog } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -52,10 +52,15 @@ const mainNavItems: NavItem[] = [
         href: tracking(),
         icon: Search,
     },
+    {
+        title: 'Akun',
+        href: admin.akun.index(),
+        icon: UserRoundCog,
+    },
 ];
 
 const activeItemStyles =
-    'text-foreground bg-primary/10 dark:bg-neutral-800 dark:text-neutral-100';
+    'text-foreground bg-primary/10';
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage();

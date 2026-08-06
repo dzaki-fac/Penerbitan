@@ -7,12 +7,9 @@ enum NaskahStatus: string
     case DataDiterima = 'data_diterima';
     case VerifikasiDokumen = 'verifikasi_dokumen';
     case MenungguPerbaikanDokumen = 'menunggu_perbaikan_dokumen';
-    case DalamProsesEditing = 'dalam_proses_editing';
-    case MenungguReviewNaskah = 'menunggu_review_naskah';
-    case RevisiPenulis = 'revisi_penulis';
-    case DalamProsesLayout = 'dalam_proses_layout';
-    case MenungguReviewLayout = 'menunggu_review_layout';
-    case RevisiLayout = 'revisi_layout';
+    case DalamProsesEditingLayout = 'dalam_proses_editing_layout';
+    case MenungguReviewEditingLayout = 'menunggu_review_editing_layout';
+    case RevisiEditingLayout = 'revisi_editing_layout';
     case PengajuanIsbn = 'pengajuan_isbn';
     case MenungguPersetujuanIsbn = 'menunggu_persetujuan_isbn';
     case RevisiIsbn = 'revisi_isbn';
@@ -27,12 +24,9 @@ enum NaskahStatus: string
             self::DataDiterima => 'Data Diterima',
             self::VerifikasiDokumen => 'Verifikasi Dokumen',
             self::MenungguPerbaikanDokumen => 'Menunggu Perbaikan Dokumen',
-            self::DalamProsesEditing => 'Dalam Proses Editing',
-            self::MenungguReviewNaskah => 'Menunggu Review Naskah',
-            self::RevisiPenulis => 'Revisi Penulis',
-            self::DalamProsesLayout => 'Dalam Proses Layout',
-            self::MenungguReviewLayout => 'Menunggu Review Layout',
-            self::RevisiLayout => 'Revisi Layout',
+            self::DalamProsesEditingLayout => 'Dalam Proses Editing & Layout',
+            self::MenungguReviewEditingLayout => 'Menunggu Review Naskah & Layout',
+            self::RevisiEditingLayout => 'Revisi Naskah & Layout',
             self::PengajuanIsbn => 'Pengajuan ISBN',
             self::MenungguPersetujuanIsbn => 'Menunggu Persetujuan ISBN',
             self::RevisiIsbn => 'Revisi ISBN',
@@ -49,12 +43,9 @@ enum NaskahStatus: string
             self::DataDiterima => 5,
             self::VerifikasiDokumen => 10,
             self::MenungguPerbaikanDokumen => 10,
-            self::DalamProsesEditing => 25,
-            self::MenungguReviewNaskah => 30,
-            self::RevisiPenulis => 25,
-            self::DalamProsesLayout => 45,
-            self::MenungguReviewLayout => 55,
-            self::RevisiLayout => 50,
+            self::DalamProsesEditingLayout => 25,
+            self::MenungguReviewEditingLayout => 50,
+            self::RevisiEditingLayout => 40,
             self::PengajuanIsbn => 65,
             self::MenungguPersetujuanIsbn => 75,
             self::RevisiIsbn => 70,
@@ -74,12 +65,9 @@ enum NaskahStatus: string
             self::DataDiterima,
             self::VerifikasiDokumen,
             self::MenungguPerbaikanDokumen,
-            self::DalamProsesEditing,
-            self::MenungguReviewNaskah,
-            self::RevisiPenulis,
-            self::DalamProsesLayout,
-            self::MenungguReviewLayout,
-            self::RevisiLayout,
+            self::DalamProsesEditingLayout,
+            self::MenungguReviewEditingLayout,
+            self::RevisiEditingLayout,
             self::PengajuanIsbn,
             self::MenungguPersetujuanIsbn,
             self::RevisiIsbn,

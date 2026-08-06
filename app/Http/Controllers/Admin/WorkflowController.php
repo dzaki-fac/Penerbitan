@@ -52,9 +52,9 @@ class WorkflowController extends Controller
      */
     public function uploadLayout(Naskah $naskah, LayoutRequest $request): RedirectResponse
     {
-        if ($naskah->status !== NaskahStatus::DalamProsesLayout && $naskah->status !== NaskahStatus::RevisiLayout) {
+        if ($naskah->status !== NaskahStatus::DalamProsesEditingLayout && $naskah->status !== NaskahStatus::RevisiEditingLayout) {
             return back()->withErrors([
-                'file_layout' => __('Layout hanya dapat diunggah pada status layout.'),
+                'file_layout' => __('Layout hanya dapat diunggah pada status editing & layout.'),
             ]);
         }
 
@@ -70,13 +70,9 @@ class WorkflowController extends Controller
             'status' => LayoutStatus::MenungguReview,
         ]);
 
-        if ($naskah->status === NaskahStatus::RevisiLayout) {
-            $layout->status = LayoutStatus::MenungguReview;
-        }
-
         WorkflowService::transition(
             $naskah,
-            NaskahStatus::MenungguReviewLayout,
+            NaskahStatus::MenungguReviewEditingLayout,
             AktorType::Admin,
             admin: $request->user(),
             note: __('Layout versi :versi diunggah.', ['versi' => $versi]),

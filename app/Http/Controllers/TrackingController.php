@@ -140,7 +140,7 @@ class TrackingController extends Controller
      */
     public function uploadRevisi(Naskah $naskah, UploadRevisiRequest $request): RedirectResponse
     {
-        if (! in_array($naskah->status, [NaskahStatus::MenungguPerbaikanDokumen, NaskahStatus::RevisiPenulis], true)) {
+        if (! in_array($naskah->status, [NaskahStatus::MenungguPerbaikanDokumen, NaskahStatus::RevisiEditingLayout], true)) {
             abort(404);
         }
 
@@ -164,7 +164,7 @@ class TrackingController extends Controller
 
         $to = $naskah->status === NaskahStatus::MenungguPerbaikanDokumen
             ? NaskahStatus::VerifikasiDokumen
-            : NaskahStatus::DalamProsesEditing;
+            : NaskahStatus::DalamProsesEditingLayout;
 
         WorkflowService::transition($naskah, $to, AktorType::Penulis, note: __('Revisi diunggah oleh penulis'));
 
@@ -174,11 +174,11 @@ class TrackingController extends Controller
     }
 
     /**
-     * Penulis menyetujui layout.
+     * Penulis menyetujui hasil editing & layout.
      */
     public function approveLayout(Naskah $naskah, TrackingIdentityRequest $request): RedirectResponse
     {
-        if ($naskah->status !== NaskahStatus::MenungguReviewLayout) {
+        if ($naskah->status !== NaskahStatus::MenungguReviewEditingLayout) {
             abort(404);
         }
 
@@ -193,19 +193,19 @@ class TrackingController extends Controller
             $layout->save();
         }
 
-        WorkflowService::transition($naskah, NaskahStatus::PengajuanIsbn, AktorType::Penulis, note: __('Layout disetujui oleh penulis'));
+        WorkflowService::transition($naskah, NaskahStatus::PengajuanIsbn, AktorType::Penulis, note: __('Editing & layout disetujui oleh penulis'));
 
-        flashSuccess(__('Layout disetujui.'));
+        flashSuccess(__('Editing & layout disetujui.'));
 
         return back();
     }
 
     /**
-     * Penulis mengajukan revisi layout.
+     * Penulis mengajukan revisi hasil editing & layout.
      */
     public function rejectLayout(Naskah $naskah, TrackingRejectRequest $request): RedirectResponse
     {
-        if ($naskah->status !== NaskahStatus::MenungguReviewLayout) {
+        if ($naskah->status !== NaskahStatus::MenungguReviewEditingLayout) {
             abort(404);
         }
 
@@ -223,12 +223,12 @@ class TrackingController extends Controller
 
         WorkflowService::transition(
             $naskah,
-            NaskahStatus::RevisiLayout,
+            NaskahStatus::RevisiEditingLayout,
             AktorType::Penulis,
-            note: __('Penulis mengajukan revisi layout: ').$request->validated('catatan'),
+            note: __('Penulis mengajukan revisi editing & layout: ').$request->validated('catatan'),
         );
 
-        flashSuccess(__('Revisi layout diajukan.'));
+        flashSuccess(__('Revisi editing & layout diajukan.'));
 
         return back();
     }
@@ -321,11 +321,11 @@ class TrackingController extends Controller
     private function actionFor(NaskahStatus $status): ?array
     {
         return match ($status) {
-            NaskahStatus::MenungguPerbaikanDokumen, NaskahStatus::RevisiPenulis => [
+            NaskahStatus::MenungguPerbaikanDokumen, NaskahStatus::RevisiEditingLayout => [
                 'jenis' => 'upload_revisi',
                 'label' => 'Upload Revisi',
             ],
-            NaskahStatus::MenungguReviewLayout, NaskahStatus::MenungguPersetujuanIsbn => [
+            NaskahStatus::MenungguReviewEditingLayout, NaskahStatus::MenungguPersetujuanIsbn => [
                 'jenis' => 'review',
                 'label' => 'Setujui / Ajukan Revisi',
             ],

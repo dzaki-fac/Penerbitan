@@ -53,7 +53,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'andi@example.com',
         ]);
 
-        // 1. Budi - naskah pada tahap review layout
+        // 1. Budi - naskah pada tahap review editing & layout
         $naskah = $this->createNaskah(
             $budi,
             'Penerapan Machine Learning untuk Prediksi Hasil Panen',
@@ -63,10 +63,8 @@ class DatabaseSeeder extends Seeder
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
-            NaskahStatus::DalamProsesEditing,
-            NaskahStatus::MenungguReviewNaskah,
-            NaskahStatus::DalamProsesLayout,
-            NaskahStatus::MenungguReviewLayout,
+            NaskahStatus::DalamProsesEditingLayout,
+            NaskahStatus::MenungguReviewEditingLayout,
         ]);
         $this->dokumen($naskah, DokumenStatus::Lengkap);
         Layout::create([
@@ -96,10 +94,8 @@ class DatabaseSeeder extends Seeder
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
-            NaskahStatus::DalamProsesEditing,
-            NaskahStatus::MenungguReviewNaskah,
-            NaskahStatus::DalamProsesLayout,
-            NaskahStatus::MenungguReviewLayout,
+            NaskahStatus::DalamProsesEditingLayout,
+            NaskahStatus::MenungguReviewEditingLayout,
             NaskahStatus::PengajuanIsbn,
             NaskahStatus::MenungguPersetujuanIsbn,
         ]);
@@ -127,10 +123,8 @@ class DatabaseSeeder extends Seeder
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
-            NaskahStatus::DalamProsesEditing,
-            NaskahStatus::MenungguReviewNaskah,
-            NaskahStatus::DalamProsesLayout,
-            NaskahStatus::MenungguReviewLayout,
+            NaskahStatus::DalamProsesEditingLayout,
+            NaskahStatus::MenungguReviewEditingLayout,
             NaskahStatus::PengajuanIsbn,
             NaskahStatus::MenungguPersetujuanIsbn,
             NaskahStatus::Finalisasi,
@@ -179,9 +173,9 @@ class DatabaseSeeder extends Seeder
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
-            NaskahStatus::DalamProsesEditing,
-            NaskahStatus::MenungguReviewNaskah,
-            NaskahStatus::RevisiPenulis,
+            NaskahStatus::DalamProsesEditingLayout,
+            NaskahStatus::MenungguReviewEditingLayout,
+            NaskahStatus::RevisiEditingLayout,
         ]);
         $this->dokumen($naskah, DokumenStatus::Lengkap);
     }
@@ -226,10 +220,10 @@ class DatabaseSeeder extends Seeder
                 WorkflowService::transition(
                     $naskah,
                     $status,
-                    $previous === NaskahStatus::MenungguReviewLayout
+                    $previous === NaskahStatus::MenungguReviewEditingLayout
                         ? AktorType::Penulis
                         : AktorType::Admin,
-                    admin: $previous === NaskahStatus::MenungguReviewLayout ? null : $admin,
+                    admin: $previous === NaskahStatus::MenungguReviewEditingLayout ? null : $admin,
                     note: 'Transisi status '.$status->label(),
                 );
             }

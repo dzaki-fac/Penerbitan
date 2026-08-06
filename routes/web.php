@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AkunController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DokumenController;
 use App\Http\Controllers\Admin\NaskahController;
@@ -30,6 +31,8 @@ Route::post('tracking/{naskah}/diambil', [TrackingController::class, 'markDiambi
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::resource('akun', AkunController::class)->except(['show', 'create', 'edit']);
 
         Route::resource('naskah', NaskahController::class)->names([
             'index' => 'naskah.index',

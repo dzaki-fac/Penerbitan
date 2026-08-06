@@ -23,15 +23,15 @@ class WorkflowService
             'aksi' => 'upload_revisi',
             'label' => 'Upload Revisi',
         ],
-        'revisi_penulis' => [
-            'to' => NaskahStatus::DalamProsesEditing,
+        'revisi_editing_layout' => [
+            'to' => NaskahStatus::DalamProsesEditingLayout,
             'aksi' => 'upload_revisi',
             'label' => 'Upload Revisi',
         ],
-        'menunggu_review_layout' => [
+        'menunggu_review_editing_layout' => [
             'to' => NaskahStatus::PengajuanIsbn,
             'aksi' => 'approve',
-            'label' => 'Setujui Layout',
+            'label' => 'Setujui Naskah & Layout',
         ],
         'menunggu_persetujuan_isbn' => [
             'to' => NaskahStatus::Finalisasi,
@@ -52,10 +52,10 @@ class WorkflowService
      */
     public const ADMIN_TRANSITIONS = [
         'data_diterima' => [NaskahStatus::VerifikasiDokumen],
-        'verifikasi_dokumen' => [NaskahStatus::DalamProsesEditing, NaskahStatus::MenungguPerbaikanDokumen],
-        'dalam_proses_editing' => [NaskahStatus::MenungguReviewNaskah],
-        'menunggu_review_naskah' => [NaskahStatus::DalamProsesLayout, NaskahStatus::RevisiPenulis],
-        'revisi_layout' => [NaskahStatus::DalamProsesLayout],
+        'verifikasi_dokumen' => [NaskahStatus::DalamProsesEditingLayout, NaskahStatus::MenungguPerbaikanDokumen],
+        'dalam_proses_editing_layout' => [NaskahStatus::MenungguReviewEditingLayout],
+        'menunggu_review_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
+        'revisi_editing_layout' => [NaskahStatus::DalamProsesEditingLayout],
         'pengajuan_isbn' => [NaskahStatus::MenungguPersetujuanIsbn],
         'revisi_isbn' => [NaskahStatus::PengajuanIsbn],
         'finalisasi' => [NaskahStatus::MasukCetak],
