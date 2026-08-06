@@ -1,6 +1,5 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
-import AppLogoIcon from '@/components/app-logo-icon';
 import {
     Card,
     CardContent,
@@ -26,8 +25,8 @@ export default function AuthCardLayout({
                     href={tracking()}
                     className="flex items-center gap-2 self-center font-medium"
                 >
-                    <div className="flex h-9 w-9 items-center justify-center">
-                        <AppLogoIcon className="size-9 fill-current text-black" />
+                    <div className="flex h-16 w-16 items-center justify-center">
+                        <img src="/images/logo-upt.png" alt="" className="h-16 w-auto" />
                     </div>
                 </Link>
 

@@ -51,5 +51,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('dokumen/{dokumen}', [DokumenController::class, 'update'])->name('dokumen.update');
     });
 });
-
-require __DIR__.'/settings.php';
