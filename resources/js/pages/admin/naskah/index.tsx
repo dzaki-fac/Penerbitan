@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,14 +28,26 @@ type Props = {
 export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
+    const applied = useRef({ search: filters.search, status: filters.status });
 
-    function applyFilters() {
-        router.get(admin.naskah.index(), { search, status }, { preserveState: true, replace: true });
+    function apply(next: { search?: string; status?: string }) {
+        applied.current = { ...applied.current, ...next };
+        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
     }
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== applied.current.search) {
+                apply({ search });
+            }
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     function resetFilters() {
         setSearch('');
         setStatus('');
+        applied.current = { search: '', status: '' };
         router.get(admin.naskah.index(), {}, { preserveState: true, replace: true });
     }
 
@@ -84,13 +96,19 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     id="search"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
                                     placeholder="Judul, nama penulis, atau nomor identitas"
                                 />
                             </div>
                             <div className="grid min-w-40 gap-2">
                                 <Label>Status</Label>
-                                <Select value={status || undefined} onValueChange={(v) => setStatus(v)}>
+                                <Select
+                                    value={status || undefined}
+                                    onValueChange={(v) => {
+                                        const value = v === 'all' ? '' : v;
+                                        setStatus(value);
+                                        apply({ status: value });
+                                    }}
+                                >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Semua status" />
                                     </SelectTrigger>
@@ -104,10 +122,6 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button onClick={applyFilters}>
-                                <Search />
-                                Terapkan
-                            </Button>
                             <Button variant="ghost" onClick={resetFilters}>
                                 Reset
                             </Button>

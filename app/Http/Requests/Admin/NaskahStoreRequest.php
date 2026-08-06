@@ -21,11 +21,23 @@ class NaskahStoreRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'judul' => ['required', 'string', 'max:255'],
             'abstrak' => ['nullable', 'string'],
-            'kategori' => ['nullable', 'string', 'max:255'],
+            'kategori' => ['required', 'string', 'max:255'],
             'tanggal_pengajuan' => ['required', 'date'],
-            'sumber_form' => ['nullable', 'string', 'max:255'],
-            'dokumen' => ['nullable', 'array'],
-            'dokumen.*' => ['string', 'max:255'],
+            'sumber_form' => ['required', 'string', 'max:255'],
+            'dokumen' => ['required', 'array', 'min:1'],
+            'dokumen.*' => ['required', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'dokumen.*' => 'nama dokumen',
         ];
     }
 }
