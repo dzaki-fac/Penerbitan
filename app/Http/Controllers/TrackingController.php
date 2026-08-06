@@ -34,32 +34,39 @@ class TrackingController extends Controller
      * Mencari seluruh naskah milik penulis berdasarkan identitas.
      */
     public function search(TrackingSearchRequest $request): Response
-    {
-        $author = Author::where('jenis_identitas', $request->validated('jenis_identitas'))
-            ->where('nomor_identitas', $request->validated('nomor_identitas'))
+{
+    $jenis = $request->validated('jenis_identitas');
+    $nilai = $request->validated('nomor_identitas');
+
+    $author = $jenis === 'email'
+        ? Author::where('email', $nilai)->first()
+        : Author::where('jenis_identitas', $jenis)
+            ->where('nomor_identitas', $nilai)
             ->first();
 
-        if (! $author) {
-            return back()->withErrors([
-                'nomor_identitas' => __('Data penulis dengan identitas tersebut tidak ditemukan.'),
-            ]);
-        }
-
-        $naskahs = $author->naskahs()
-            ->with(['latestLayout'])
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn (Naskah $naskah) => $this->card($naskah));
-
-        return Inertia::render('tracking/result', [
-            'author' => [
-                'nama' => $author->nama,
-                'jenis_identitas' => $author->jenis_identitas->label(),
-                'nomor_identitas' => $author->nomor_identitas,
-            ],
-            'naskahs' => $naskahs,
+    if (! $author) {
+        return back()->withErrors([
+            'nomor_identitas' => $jenis === 'email'
+                ? __('Data penulis dengan email tersebut tidak ditemukan.')
+                : __('Data penulis dengan identitas tersebut tidak ditemukan.'),
         ]);
     }
+
+    $naskahs = $author->naskahs()
+        ->with(['latestLayout'])
+        ->orderByDesc('created_at')
+        ->get()
+        ->map(fn (Naskah $naskah) => $this->card($naskah));
+
+    return Inertia::render('tracking/result', [
+        'author' => [
+            'nama' => $author->nama,
+            'jenis_identitas' => $jenis === 'email' ? 'Email' : $author->jenis_identitas->label(),
+            'nomor_identitas' => $jenis === 'email' ? $author->email : $author->nomor_identitas,
+        ],
+        'naskahs' => $naskahs,
+    ]);
+}
 
     /**
      * Menampilkan detail tracking naskah.
