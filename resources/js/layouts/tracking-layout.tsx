@@ -1,6 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 import { tracking } from '@/routes';
 
 export default function TrackingLayout({
@@ -10,8 +8,6 @@ export default function TrackingLayout({
     children: React.ReactNode;
     className?: string;
 }) {
-    const { auth } = usePage().props as { auth: { user: { name: string } | null } };
-
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
@@ -31,20 +27,6 @@ export default function TrackingLayout({
                             Sistem Penerbitan
                         </span>
                     </Link>
-                    <nav className="flex items-center gap-2">
-                        {auth.user ? (
-                            <Button asChild variant="outline" size="sm">
-                                <Link href="/admin">
-                                    <ShieldCheck />
-                                    Admin
-                                </Link>
-                            </Button>
-                        ) : (
-                            <Button asChild size="sm">
-                                <Link href="/login">Masuk Admin</Link>
-                            </Button>
-                        )}
-                    </nav>
                 </div>
             </header>
             <main className={`mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 ${className}`}>

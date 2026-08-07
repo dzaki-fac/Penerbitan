@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import {
+    AlertCircle,
     CalendarDays,
     Check,
     ChevronLeft,
@@ -14,6 +15,7 @@ import CollapsibleCard from '@/components/collapsible-card';
 import { ActionPanel } from '@/components/tracking/action-panel';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { statusBadgeClass, needsAuthorAction } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import { search } from '@/routes/tracking';
 import type { NaskahDetail, TrackingAction, WorkflowStep } from '@/types';
@@ -26,6 +28,7 @@ type Props = {
 
 export default function TrackingDetail({ naskah, steps, action }: Props) {
     const currentIndex = steps.findIndex((s) => s.value === naskah.status.value);
+    const perluAksi = needsAuthorAction(naskah.status.value);
 
     const historyByStep = new Map<string, NaskahDetail['histories'][number]>();
 
@@ -52,7 +55,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                                <Badge className={statusBadgeClass(naskah.status.value)}>
                                     {naskah.status.label}
                                 </Badge>
                                 {naskah.kategori && (
@@ -62,6 +65,13 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                             <h1 className="text-2xl font-semibold tracking-[0.008em]">
                                 {naskah.judul}
                             </h1>
+                            {perluAksi && (
+                                <p className="flex items-center gap-1.5 text-sm font-medium text-amber-700">
+                                    <AlertCircle className="size-4" />
+                                    Naskah ini menunggu tindakan Anda — lihat bagian
+                                    &quot;Aksi Penulis&quot; di bawah.
+                                </p>
+                            )}
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
                             <div className="flex items-center justify-end gap-1.5">
@@ -93,10 +103,13 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
 
                     <Separator className="my-6" />
 
-                    <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+                    <div className="mb-1 flex items-center gap-2 text-sm font-medium">
                         <History className="size-4 text-muted-foreground" />
                         Progress Workflow
                     </div>
+                    <p className="mb-4 text-xs text-muted-foreground">
+                        Tahapan proses penerbitan naskah Anda dari awal hingga selesai.
+                    </p>
                     <ol className="space-y-0">
                         {steps.map((step, index) => {
                             const done = index < currentIndex;
@@ -318,9 +331,19 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                     </CollapsibleCard>
                 </div>
 
+                {/*
+                  Riwayat Aktivitas sengaja di-collapse (defaultOpen={false}) karena
+                  informasinya sudah tercakup di "Progress Workflow" di atas. Ini
+                  hanya log teknis lengkap untuk yang butuh detail lebih rinci
+                  (misal ada status yang mundur/di-skip).
+                  Kalau CollapsibleCard belum punya prop defaultOpen, tambahkan
+                  dulu di komponennya (state useState(defaultOpen) untuk open/close).
+                */}
                 <CollapsibleCard
-                    title="Riwayat Aktivitas"
+                    title="Riwayat Aktivitas (Log Lengkap)"
+                    description="Detail teknis setiap perubahan status naskah."
                     icon={<History className="size-4 text-muted-foreground" />}
+                    defaultOpen={false}
                 >
                     <ol className="relative border-s border-border ps-6">
                         {naskah.histories.map((history) => (
