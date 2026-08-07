@@ -33,7 +33,7 @@ class TrackingController extends Controller
     /**
      * Mencari seluruh naskah milik penulis berdasarkan identitas.
      */
-    public function search(TrackingSearchRequest $request): Response
+    public function search(TrackingSearchRequest $request): Response|RedirectResponse
 {
     $jenis = $request->validated('jenis_identitas');
     $nilai = $request->validated('nomor_identitas');
