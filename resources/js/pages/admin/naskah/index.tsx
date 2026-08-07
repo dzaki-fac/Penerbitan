@@ -1,12 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import { create, destroy, edit, show } from '@/routes/admin/naskah';
 import type { NaskahCard } from '@/types';
@@ -21,26 +22,45 @@ type Paginated<T> = {
 
 type Props = {
     naskahs: Paginated<NaskahCard>;
-    filters: { search: string; status: string };
+    filters: { search: string; status: string; per_page: string };
     statuses: Array<{ value: string; label: string }>;
 };
 
 export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
+    const [perPage, setPerPage] = useState(filters.per_page);
+    const applied = useRef({ search: filters.search, status: filters.status, per_page: filters.per_page });
 
-    function applyFilters() {
-        router.get(admin.naskah.index(), { search, status }, { preserveState: true, replace: true });
+    function apply(next: { search?: string; status?: string }) {
+        applied.current = { ...applied.current, ...next };
+        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
     }
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== applied.current.search) {
+                apply({ search });
+            }
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     function resetFilters() {
         setSearch('');
         setStatus('');
-        router.get(admin.naskah.index(), {}, { preserveState: true, replace: true });
+        applied.current = { search: '', status: '', per_page: perPage };
+        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
     }
 
     function goTo(url: string) {
         router.get(url, {}, { preserveState: true });
+    }
+
+    function changePerPage(value: string) {
+        setPerPage(value);
+        applied.current = { ...applied.current, per_page: value };
+        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
     }
 
     function remove(id: number) {
@@ -48,6 +68,43 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
             router.delete(destroy(id));
         }
     }
+
+    const paginationBar = (border: string) => (
+        <div className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 ${border}`}>
+            <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                    Menampilkan {naskahs.data.length} dari {naskahs.total} naskah
+                </p>
+                <Select value={perPage} onValueChange={changePerPage}>
+                    <SelectTrigger className="h-7 w-24 text-xs">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="10">10 </SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="all">Semua</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            {naskahs.last_page > 1 && (
+                <div className="flex gap-1">
+                    {naskahs.links
+                        .filter((link): link is NonNullable<typeof link> => link !== null)
+                        .map((link, index) => (
+                            <Button
+                                key={index}
+                                variant={link.active ? 'default' : 'outline'}
+                                size="sm"
+                                className={cn('min-w-8 px-2', link.active && 'disabled:opacity-100')}
+                                disabled={!link.url || link.active}
+                                onClick={() => link.url && goTo(link.url)}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ))}
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <>
@@ -84,13 +141,19 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     id="search"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
                                     placeholder="Judul, nama penulis, atau nomor identitas"
                                 />
                             </div>
                             <div className="grid min-w-40 gap-2">
                                 <Label>Status</Label>
-                                <Select value={status || undefined} onValueChange={(v) => setStatus(v)}>
+                                <Select
+                                    value={status || undefined}
+                                    onValueChange={(v) => {
+                                        const value = v === 'all' ? '' : v;
+                                        setStatus(value);
+                                        apply({ status: value });
+                                    }}
+                                >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Semua status" />
                                     </SelectTrigger>
@@ -104,10 +167,6 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button onClick={applyFilters}>
-                                <Search />
-                                Terapkan
-                            </Button>
                             <Button variant="ghost" onClick={resetFilters}>
                                 Reset
                             </Button>
@@ -117,6 +176,7 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
 
                 <Card>
                     <CardContent className="p-0">
+                        {naskahs.data.length > 0 && paginationBar('border-b')}
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
@@ -202,29 +262,6 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                 </tbody>
                             </table>
                         </div>
-
-                        {naskahs.last_page > 1 && (
-                            <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3">
-                                <p className="text-xs text-muted-foreground">
-                                    Halaman {naskahs.current_page} dari {naskahs.last_page}
-                                </p>
-                                <div className="flex gap-1">
-                                    {naskahs.links
-                                        .filter((link): link is NonNullable<typeof link> => link !== null)
-                                        .map((link, index) => (
-                                            <Button
-                                                key={index}
-                                                variant={link.active ? 'default' : 'outline'}
-                                                size="sm"
-                                                className="min-w-8 px-2"
-                                                disabled={!link.url || link.active}
-                                                onClick={() => link.url && goTo(link.url)}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        ))}
-                                </div>
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
             </div>

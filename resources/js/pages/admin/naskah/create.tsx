@@ -213,6 +213,14 @@ export default function NaskahCreate() {
                                 <Plus />
                                 Tambah Dokumen
                             </Button>
+                            <InputError
+                                message={
+                                    form.errors.dokumen ??
+                                    form.data.dokumen
+                                        .map((_, i) => form.errors[`dokumen.${i}`])
+                                        .find(Boolean)
+                                }
+                            />
                         </CardContent>
                     </Card>
 
