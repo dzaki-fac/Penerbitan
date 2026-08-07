@@ -1,7 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { FileStack, LayoutGrid, Menu, Search, UserRoundCog } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -91,8 +90,17 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 <SheetTitle className="sr-only">
                                     Navigation menu
                                 </SheetTitle>
-                                <SheetHeader className="flex justify-start text-left">
-                                    <AppLogoIcon className="h-6 w-6 fill-current text-foreground" />
+                                <SheetHeader className="flex flex-row items-center justify-start text-left">
+                                    <img
+                                        src="/assets/logo_undip.png"
+                                        alt=""
+                                        className="h-10 w-auto"
+                                    />
+                                    <img
+                                        src="/images/logo-upt.png"
+                                        alt=""
+                                        className="h-10 w-auto"
+                                    />
                                 </SheetHeader>
                                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                                     <div className="flex h-full flex-col justify-between text-sm">

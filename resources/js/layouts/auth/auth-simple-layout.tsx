@@ -1,5 +1,4 @@
 import { Link } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
 import { tracking } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -17,8 +16,17 @@ export default function AuthSimpleLayout({
                             href={tracking()}
                             className="flex flex-col items-center gap-2 font-medium"
                         >
-                            <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                                <AppLogoIcon className="size-9 fill-current text-[var(--foreground)]" />
+                            <div className="mb-1 flex items-center justify-center rounded-md">
+                                <img
+                                    src="/assets/logo_undip.png"
+                                    alt=""
+                                    className="h-24 w-auto"
+                                />
+                                <img
+                                    src="/images/logo-upt.png"
+                                    alt=""
+                                    className="h-24 w-auto"
+                                />
                             </div>
                             <span className="sr-only">{title}</span>
                         </Link>
