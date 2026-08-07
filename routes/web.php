@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DokumenController;
 use App\Http\Controllers\Admin\NaskahController;
 use App\Http\Controllers\Admin\WorkflowController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TrackingController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [TrackingController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('tracking', [TrackingController::class, 'index'])->name('tracking');
 Route::post('tracking', [TrackingController::class, 'search'])->name('tracking.search');
 Route::get('tracking/{naskah}', [TrackingController::class, 'detail'])->name('tracking.detail');

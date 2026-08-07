@@ -32,7 +32,7 @@ export default function TrackingIndex() {
         <>
             <Head title="Tracking Naskah" />
 
-            <div className="flex flex-1 flex-col items-center justify-center py-16">
+            <div className="flex flex-1 flex-col items-center justify-center">
                 <div className="mx-auto max-w-xl text-center">
                     <span className="inline-flex items-center rounded-full bg-lavender-wash px-4 py-1 text-sm font-medium tracking-[0.004em] text-foreground">
                         Tracking Penerbitan
