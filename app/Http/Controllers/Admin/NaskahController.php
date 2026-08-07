@@ -40,9 +40,16 @@ class NaskahController extends Controller
             $query->where('status', $request->query('status'));
         }
 
+        $perPage = $request->query('per_page', '10');
+        $perPage = in_array($perPage, ['10', '20', 'all'], true) ? $perPage : '10';
+
+        if ($perPage === 'all') {
+            $perPage = $query->count() ?: 1;
+        }
+
         $naskahs = $query
             ->orderByDesc('created_at')
-            ->paginate(12)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Naskah $naskah) => [
                 'id' => $naskah->id,
@@ -60,6 +67,7 @@ class NaskahController extends Controller
             'filters' => [
                 'search' => $request->query('search', ''),
                 'status' => $request->query('status', ''),
+                'per_page' => $request->query('per_page', '10'),
             ],
             'statuses' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
                 'value' => $s->value,
