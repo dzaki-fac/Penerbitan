@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,9 +7,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { search } from '@/routes/tracking';
 
 const METODE = [
-    { key: 'nim', label: 'NIM' },
-    { key: 'nip', label: 'NIP' },
-    { key: 'email', label: 'Email' },
+    { key: 'nim', label: 'NIM', keterangan: 'Mahasiswa' },
+    { key: 'nip', label: 'NIP', keterangan: 'Dosen / Staf' },
+    { key: 'email', label: 'Email', keterangan: 'Jika lupa NIM/NIP' },
 ] as const;
 
 export default function TrackingIndex() {
@@ -52,21 +52,34 @@ export default function TrackingIndex() {
                 >
                     <div className="grid gap-2">
                         <Label htmlFor="jenis_identitas">Cari Berdasarkan</Label>
+                        <p className="text-xs text-muted-foreground">
+                            Pilih jenis identitas yang Anda gunakan saat mendaftar.
+                        </p>
                         <div className="grid grid-cols-3 gap-2">
-                            {METODE.map(({ key, label }) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    onClick={() => setData('jenis_identitas', key)}
-                                    className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-                                        data.jenis_identitas === key
-                                            ? 'border-cobalt-surface/40 bg-lavender-wash text-foreground'
-                                            : 'border-input bg-background hover:bg-accent'
-                                    }`}
-                                >
-                                    {label}
-                                </button>
-                            ))}
+                            {METODE.map(({ key, label, keterangan }) => {
+                                const active = data.jenis_identitas === key;
+                                return (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        onClick={() => setData('jenis_identitas', key)}
+                                        aria-pressed={active}
+                                        className={`relative flex flex-col items-center gap-0.5 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                                            active
+                                                ? 'border-cobalt-surface/40 bg-lavender-wash text-foreground'
+                                                : 'border-input bg-background hover:bg-accent'
+                                        }`}
+                                    >
+                                        {active && (
+                                            <Check className="absolute right-1.5 top-1.5 size-3.5 text-primary" />
+                                        )}
+                                        <span>{label}</span>
+                                        <span className="text-[11px] font-normal text-muted-foreground">
+                                            {keterangan}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -82,9 +95,13 @@ export default function TrackingIndex() {
                             placeholder={placeholder}
                             autoFocus
                         />
-                        {errors.nomor_identitas && (
+                        {errors.nomor_identitas ? (
                             <p className="text-sm text-destructive">
                                 {errors.nomor_identitas}
+                            </p>
+                        ) : (
+                            <p className="text-xs text-muted-foreground">
+                                Pastikan nomor sesuai dengan yang tercatat saat pengajuan naskah.
                             </p>
                         )}
                     </div>
@@ -93,6 +110,10 @@ export default function TrackingIndex() {
                         {processing ? <Spinner /> : <Search />}
                         Telusuri
                     </Button>
+
+                    <p className="text-center text-xs text-muted-foreground">
+                        Kesulitan menemukan data Anda? Hubungi admin penerbitan.
+                    </p>
                 </form>
             </div>
         </>
