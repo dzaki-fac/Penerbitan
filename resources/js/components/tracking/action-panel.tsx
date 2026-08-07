@@ -91,13 +91,15 @@ function IdentityFields({
 
 function SubmitButton({
     processing,
+    className,
     children,
 }: {
     processing: boolean;
+    className?: string;
     children: React.ReactNode;
 }) {
     return (
-        <Button type="submit" disabled={processing}>
+        <Button type="submit" disabled={processing} className={className}>
             {processing && <Spinner />}
             {children}
         </Button>
@@ -111,6 +113,7 @@ function ApproveDialog({
     submit,
     buttonLabel,
     icon,
+    buttonClassName,
 }: {
     naskah: NaskahDetail;
     title: string;
@@ -118,6 +121,7 @@ function ApproveDialog({
     submit: string;
     buttonLabel: string;
     icon?: React.ReactNode;
+    buttonClassName?: string;
 }) {
     const [open, setOpen] = useState(false);
     const form = useForm(identityDefaults(naskah));
@@ -133,7 +137,7 @@ function ApproveDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
+                <Button className={buttonClassName}>
                     {icon}
                     {buttonLabel}
                 </Button>
@@ -146,7 +150,10 @@ function ApproveDialog({
                 <form onSubmit={onSubmit} className="space-y-4">
                     <IdentityFields form={form} errors={form.errors} />
                     <DialogFooter>
-                        <SubmitButton processing={form.processing}>
+                        <SubmitButton
+                            processing={form.processing}
+                            className={buttonClassName}
+                        >
                             Konfirmasi
                         </SubmitButton>
                     </DialogFooter>
@@ -163,6 +170,7 @@ function RejectDialog({
     submit,
     buttonLabel,
     placeholder,
+    buttonClassName,
 }: {
     naskah: NaskahDetail;
     title: string;
@@ -170,6 +178,7 @@ function RejectDialog({
     submit: string;
     buttonLabel: string;
     placeholder: string;
+    buttonClassName?: string;
 }) {
     const [open, setOpen] = useState(false);
     const form = useForm({ ...identityDefaults(naskah), catatan: '' });
@@ -185,7 +194,7 @@ function RejectDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className={buttonClassName}>
                     <X />
                     {buttonLabel}
                 </Button>
@@ -294,6 +303,13 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
+// Kelas warna tombol: hijau untuk Setujui, outline merah untuk Ajukan Revisi.
+// Disatukan di sini supaya mudah diubah kalau mau ganti nuansa warnanya.
+const APPROVE_BUTTON_CLASS =
+    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
+const REJECT_BUTTON_CLASS =
+    'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+
 export function ActionPanel({ naskah, action }: Props) {
     if (!action) {
         return (
@@ -335,6 +351,7 @@ export function ActionPanel({ naskah, action }: Props) {
                         isMergedReview ? 'Setujui Naskah & Layout' : 'Setujui'
                     }
                     icon={<Check />}
+                    buttonClassName={APPROVE_BUTTON_CLASS}
                 />
                 <RejectDialog
                     naskah={naskah}
@@ -357,6 +374,7 @@ export function ActionPanel({ naskah, action }: Props) {
                             : 'Ajukan Revisi'
                     }
                     placeholder="Tuliskan catatan revisi Anda"
+                    buttonClassName={REJECT_BUTTON_CLASS}
                 />
                 {isMergedReview && naskah.layout?.preview_pdf_link && (
                     <Button asChild variant="outline">
