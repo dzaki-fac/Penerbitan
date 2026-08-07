@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { tracking } from '@/routes';
+import { home, tracking } from '@/routes';
 
 export default function TrackingLayout({
     children,
@@ -16,7 +16,7 @@ export default function TrackingLayout({
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
                 <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-                    <Link href={tracking()} className="flex items-center gap-2.5">
+                    <Link href={home()} className="flex items-center gap-2.5">
                         <img
                             src="/assets/logo_undip.png"
                             alt=""
@@ -32,16 +32,12 @@ export default function TrackingLayout({
                         </span>
                     </Link>
                     <nav className="flex items-center gap-2">
-                        {auth.user ? (
+                        {auth.user && (
                             <Button asChild variant="outline" size="sm">
                                 <Link href="/admin">
                                     <ShieldCheck />
                                     Admin
                                 </Link>
-                            </Button>
-                        ) : (
-                            <Button asChild size="sm">
-                                <Link href="/login">Masuk Admin</Link>
                             </Button>
                         )}
                     </nav>
@@ -50,11 +46,6 @@ export default function TrackingLayout({
             <main className={`mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 ${className}`}>
                 {children}
             </main>
-            <footer className="border-t border-border py-6">
-                <div className="mx-auto w-full max-w-6xl px-4 text-center text-sm text-muted-foreground sm:px-6">
-                    Sistem Monitoring &amp; Manajemen Proses Penerbitan
-                </div>
-            </footer>
         </div>
     );
 }
