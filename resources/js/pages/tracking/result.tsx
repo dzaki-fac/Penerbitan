@@ -8,7 +8,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { needsAuthorAction, statusBadgeClass } from '@/lib/status';
+import {
+    needsAuthorAction,
+    statusBadgeClass,
+    statusBorderClass,
+} from '@/lib/status';
 import { tracking } from '@/routes';
 import { detail } from '@/routes/tracking';
 import type { AuthorCard, NaskahCard } from '@/types';
@@ -91,11 +95,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`gap-4 border-border ${
-                                                perluAksi
-                                                    ? 'ring-1 ring-amber-300'
-                                                    : ''
-                                            }`}
+                                            className={`gap-4 ${statusBorderClass(naskah.status.value)}`}
                                         >
                                             <CardHeader className="gap-2">
                                                 <div className="flex items-start justify-between gap-3">

@@ -60,6 +60,20 @@ function toneFor(statusValue: string): Tone {
     return TONE_BY_STATUS[statusValue] ?? 'progress';
 }
 
+/** Kelas warna border kartu; mengikuti tone status (progress netral, aksi amber, revisi merah, selesai hijau). */
+export function statusBorderClass(statusValue: string): string {
+    switch (toneFor(statusValue)) {
+        case 'action':
+            return 'border-amber-300';
+        case 'revision':
+            return 'border-red-300';
+        case 'done':
+            return 'border-green-300';
+        default:
+            return 'border-border';
+    }
+}
+
 /** Class Tailwind untuk badge status, dipakai bareng <Badge className={...}> */
 export function statusBadgeClass(statusValue: string): string {
     return CLASS_BY_TONE[toneFor(statusValue)];
@@ -101,18 +115,6 @@ export function activeIndicatorClass(statusValue: string): string {
     }
 }
 
-/** Kelas isian bar progress aktif; warna + border mengikuti keadaan status. */
-export function activeProgressClass(statusValue: string): string {
-    switch (toneFor(statusValue)) {
-        case 'action':
-            return 'border-amber-600 bg-amber-500';
-        case 'revision':
-            return 'border-red-600 bg-red-500';
-        default:
-            return 'border-primary-foreground/20 bg-primary';
-    }
-}
-
 /** Kelas kartu konten step aktif: border tebal + bg warna mengikuti keadaan status. */
 export function activeContentClass(statusValue: string): string {
     switch (toneFor(statusValue)) {
@@ -125,9 +127,12 @@ export function activeContentClass(statusValue: string): string {
     }
 }
 
-/** True kalau status ini butuh tindakan dari penulis */
+/** True kalau status ini butuh tindakan dari penulis, termasuk status revisi */
 export function needsAuthorAction(statusValue: string): boolean {
-    return toneFor(statusValue) === 'action';
+    return (
+        toneFor(statusValue) === 'action' ||
+        REVISION_STATUS_VALUES.includes(statusValue)
+    );
 }
 
 /** True kalau status ini berarti ada revisi yang perlu diperbaiki */

@@ -15,8 +15,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
     REVISION_STATUS_VALUES,
+    activeContentClass,
+    activeIndicatorClass,
+    activeStatusClass,
+    activeStatusLabel,
     statusBadgeClass,
     needsAuthorAction,
+    statusBorderClass,
     statusSubBadge,
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
@@ -70,7 +75,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                     Kembali ke daftar naskah
                 </a>
 
-                <div className="rounded-xl border border-border bg-card p-6">
+                <div
+                    className={`rounded-xl border ${statusBorderClass(naskah.status.value)} bg-card p-6`}
+                >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -125,7 +132,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className="h-full rounded-full bg-primary transition-all duration-500"
+                                className="h-full rounded-full border border-primary-foreground/20 bg-primary transition-all duration-500"
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
@@ -158,7 +165,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             className={cn(
                                                 'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                                                 active
-                                                    ? 'border-primary bg-primary/10 text-primary'
+                                                    ? activeIndicatorClass(
+                                                          naskah.status.value,
+                                                      )
                                                     : done
                                                       ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
                                                       : 'border-border bg-background text-muted-foreground',
@@ -187,6 +196,13 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                     <div
                                         className={cn(
                                             'min-w-0 flex-1 pt-1',
+                                            active &&
+                                                cn(
+                                                    'rounded-lg p-3',
+                                                    activeContentClass(
+                                                        naskah.status.value,
+                                                    ),
+                                                ),
                                             !isLast && 'pb-6',
                                         )}
                                     >
@@ -206,9 +222,13 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             {active && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className="bg-primary/10 text-primary"
+                                                    className={activeStatusClass(
+                                                        naskah.status.value,
+                                                    )}
                                                 >
-                                                    Sedang berjalan
+                                                    {activeStatusLabel(
+                                                        naskah.status.value,
+                                                    )}
                                                 </Badge>
                                             )}
                                             {active && subBadge && (

@@ -40,7 +40,6 @@ import {
     REVISION_STATUS_VALUES,
     activeContentClass,
     activeIndicatorClass,
-    activeProgressClass,
     activeStatusClass,
     activeStatusLabel,
     statusSubBadge,
@@ -868,10 +867,7 @@ export default function NaskahShow({
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className={cn(
-                                    'h-full rounded-full border transition-all duration-500',
-                                    activeProgressClass(naskah.status.value),
-                                )}
+                                className="h-full rounded-full border border-primary-foreground/20 bg-primary transition-all duration-500"
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
