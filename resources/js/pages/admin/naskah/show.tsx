@@ -93,7 +93,6 @@ function TransitionDialog({
     });
     const targetLabel =
         statusOptions.find((s) => s.value === target)?.label ?? target;
-    const isRevisionTarget = REVISION_STATUS_VALUES.includes(target);
     const isIsbnTerbit = target === 'isbn_terbit';
 
     function onSubmit(e: React.FormEvent) {
@@ -109,14 +108,8 @@ function TransitionDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant={isRevisionTarget ? 'outline' : 'default'}
                     size="sm"
-                    className={cn(
-                        'justify-center',
-                        isRevisionTarget
-                            ? REVISION_BUTTON_CLASS
-                            : GO_BUTTON_CLASS,
-                    )}
+                    className={cn('justify-center', ACTION_BUTTON_CLASS)}
                 >
                     {targetLabel}
                 </Button>
@@ -184,11 +177,9 @@ function TransitionDialog({
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            variant={isRevisionTarget ? 'outline' : 'default'}
                             className={cn(
-                                isRevisionTarget
-                                    ? REVISION_BUTTON_CLASS
-                                    : GO_BUTTON_CLASS,
+                                'justify-center',
+                                ACTION_BUTTON_CLASS,
                             )}
                         >
                             {form.processing && <Spinner />}
@@ -289,9 +280,10 @@ function JumpTransitionDialog({
                             disabled={form.processing}
                             variant={isRevisionTarget ? 'outline' : 'default'}
                             className={cn(
+                                'justify-center',
                                 isRevisionTarget
-                                    ? REVISION_BUTTON_CLASS
-                                    : GO_BUTTON_CLASS,
+                                    ? JUMP_REVISION_CLASS
+                                    : JUMP_BUTTON_CLASS,
                             )}
                         >
                             {form.processing && <Spinner />}
@@ -304,10 +296,16 @@ function JumpTransitionDialog({
     );
 }
 
-const GO_BUTTON_CLASS =
+const ACTION_BUTTON_CLASS =
+    'bg-primary text-primary-foreground hover:bg-primary/90';
+const JUMP_BUTTON_CLASS =
     'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
-const REVISION_BUTTON_CLASS =
+const JUMP_REVISION_CLASS =
     'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+
+// Alias lama — semua tombol aksi workflow kini memakai warna yang sama.
+const GO_BUTTON_CLASS = ACTION_BUTTON_CLASS;
+const REVISION_BUTTON_CLASS = ACTION_BUTTON_CLASS;
 
 function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     const [open, setOpen] = useState(false);
@@ -324,7 +322,10 @@ function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="justify-center" size="sm" variant="outline">
+                <Button
+                    className={`justify-center ${ACTION_BUTTON_CLASS}`}
+                    size="sm"
+                >
                     <User />
                     Konfirmasi Upload Revisi
                 </Button>
@@ -429,7 +430,6 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                 <Button
                     className={`justify-center ${REVISION_BUTTON_CLASS}`}
                     size="sm"
-                    variant="outline"
                 >
                     <X />
                     Ajukan Revisi
@@ -463,7 +463,6 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            variant="outline"
                             className={REVISION_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}

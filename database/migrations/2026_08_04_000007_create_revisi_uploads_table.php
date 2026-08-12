@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('naskah_id')->constrained()->cascadeOnDelete();
             $table->foreignId('author_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('jenis', array_column(RevisiJenis::cases(), 'value'));
-            $table->string('file_path');
+            $table->string('file_path')->nullable();
             $table->string('catatan_penulis')->nullable();
             $table->timestamps();
         });

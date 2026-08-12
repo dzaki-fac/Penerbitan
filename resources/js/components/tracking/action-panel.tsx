@@ -190,7 +190,7 @@ function RejectDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className={buttonClassName}>
+                <Button className={buttonClassName}>
                     <X />
                     {buttonLabel}
                 </Button>
@@ -283,12 +283,14 @@ function ConfirmUploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-// Kelas warna tombol: hijau untuk Setujui, outline merah untuk Ajukan Revisi.
-// Disatukan di sini supaya mudah diubah kalau mau ganti nuansa warnanya.
-const APPROVE_BUTTON_CLASS =
-    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
-const REJECT_BUTTON_CLASS =
-    'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+// Kelas warna tombol: seragam untuk semua tombol aksi workflow, dipisah di sini
+// supaya mudah diubah kalau mau ganti nuansa warnanya.
+const ACTION_BUTTON_CLASS =
+    'bg-primary text-primary-foreground hover:bg-primary/90';
+
+// Alias — sama warnanya dengan tombol aksi lainnya.
+const APPROVE_BUTTON_CLASS = ACTION_BUTTON_CLASS;
+const REJECT_BUTTON_CLASS = ACTION_BUTTON_CLASS;
 
 export function ActionPanel({ naskah, action }: Props) {
     if (!action) {
