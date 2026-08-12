@@ -60,7 +60,7 @@ class NaskahController extends Controller
             ->through(fn (Naskah $naskah) => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'kategori' => $naskah->kategori,
+                'link_cover' => $naskah->link_cover,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
@@ -112,8 +112,7 @@ class NaskahController extends Controller
         $naskah = Naskah::create([
             'author_id' => $author->id,
             'judul' => $data['judul'],
-            'abstrak' => $data['abstrak'] ?? null,
-            'kategori' => $data['kategori'] ?? null,
+            'link_cover' => $data['link_cover'] ?? null,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
             'status' => NaskahStatus::DataDiterima,
@@ -141,8 +140,7 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'abstrak' => $naskah->abstrak,
-                'kategori' => $naskah->kategori,
+                'link_cover' => $naskah->link_cover,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d'),
                 'sumber_form' => $naskah->sumber_form,
                 'penulis' => [
@@ -184,13 +182,11 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'abstrak' => $naskah->abstrak,
-                'kategori' => $naskah->kategori,
+                'link_cover' => $naskah->link_cover,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
                 'sumber_form' => $naskah->sumber_form,
-                'link_drive' => $naskah->link_drive,
                 'author' => [
                     'id' => $naskah->author->id,
                     'nama' => $naskah->author->nama,

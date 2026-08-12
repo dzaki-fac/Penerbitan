@@ -47,9 +47,6 @@ class WorkflowController extends Controller
 
         $this->syncIsbnStatus($naskah, $to);
 
-        $naskah->link_drive = $request->validated('link_drive') ?? $naskah->link_drive;
-        $naskah->save();
-
         WorkflowService::transition(
             $naskah,
             $to,
@@ -300,13 +297,7 @@ class WorkflowController extends Controller
 
         $validated = $request->validate([
             'catatan' => ['nullable', 'string', 'max:1000'],
-            'link_drive' => ['nullable', 'url', 'max:500'],
         ]);
-
-        if ($request->has('link_drive')) {
-            $naskah->link_drive = $validated['link_drive'];
-            $naskah->save();
-        }
 
         $history->update(['catatan' => $validated['catatan']]);
 

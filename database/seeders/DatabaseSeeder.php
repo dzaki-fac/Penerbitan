@@ -55,8 +55,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $budi,
             'Penerapan Machine Learning untuk Prediksi Hasil Panen',
-            'Penelitian ini mengembangkan model prediksi hasil panen menggunakan algoritma machine learning.',
-            'Penelitian',
+            'https://drive.google.com/file/d/example-cover-1/view',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -89,8 +88,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $budi,
             'Analisis Sentimen Media Sosial terhadap Program MBKM',
-            'Analisis opini publik terhadap program Merdeka Belajar Kampus Merdeka melalui media sosial.',
-            'Penelitian',
+            'https://drive.google.com/file/d/example-cover-2/view',
         );
         $this->walk($naskah, $admin, [NaskahStatus::DataDiterima]);
 
@@ -98,8 +96,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $siti,
             'Manajemen Strategis Pendidikan Tinggi di Era Digital',
-            'Buku referensi mengenai strategi pengelolaan perguruan tinggi menghadapi transformasi digital.',
-            'Buku Referensi',
+            'https://drive.google.com/file/d/example-cover-3/view',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -124,8 +121,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $siti,
             'Panduan Penulisan Artikel Ilmiah untuk Mahasiswa',
-            'Buku pedoman praktis penulisan artikel ilmiah beserta contoh studi kasus.',
-            'Buku Referensi',
+            'https://drive.google.com/file/d/example-cover-4/view',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -156,8 +152,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $andi,
             'Rancang Bangun Sistem IoT untuk Monitoring Kualitas Air',
-            'Perancangan sistem pemantauan kualitas air sungai berbasis Internet of Things.',
-            'Skripsi',
+            'https://drive.google.com/file/d/example-cover-5/view',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -168,8 +163,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $andi,
             'Implementasi Blockchain pada Sistem Keuangan Mikro',
-            'Studi penerapan teknologi blockchain untuk keamanan transaksi keuangan mikro.',
-            'Skripsi',
+            'https://drive.google.com/file/d/example-cover-6/view',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -181,13 +175,12 @@ class DatabaseSeeder extends Seeder
     /**
      * Membuat naskah baru pada status awal Data Diterima.
      */
-    private function createNaskah(Author $author, string $judul, string $abstrak, string $kategori): Naskah
+    private function createNaskah(Author $author, string $judul, string $linkCover): Naskah
     {
         $naskah = Naskah::create([
             'author_id' => $author->id,
             'judul' => $judul,
-            'abstrak' => $abstrak,
-            'kategori' => $kategori,
+            'link_cover' => $linkCover,
             'tanggal_pengajuan' => now()->subDays(rand(3, 40)),
             'sumber_form' => 'Google Form Pendaftaran',
             'status' => NaskahStatus::DataDiterima,

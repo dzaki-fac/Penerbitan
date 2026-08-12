@@ -86,12 +86,10 @@ class TrackingController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'abstrak' => $naskah->abstrak,
-                'kategori' => $naskah->kategori,
+                'link_cover' => $naskah->link_cover,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
-                'link_drive' => $naskah->link_drive,
                 'author' => [
                     'nama' => $naskah->author->nama,
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
@@ -280,6 +278,7 @@ class TrackingController extends Controller
         return [
             'id' => $naskah->id,
             'judul' => $naskah->judul,
+            'link_cover' => $naskah->link_cover,
             'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
             'progress' => $naskah->progress,
             'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),

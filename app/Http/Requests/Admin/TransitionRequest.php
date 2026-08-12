@@ -18,12 +18,6 @@ class TransitionRequest extends FormRequest
         return [
             'to_status' => ['required', 'in:'.implode(',', array_column(NaskahStatus::cases(), 'value'))],
             'catatan' => ['nullable', 'string', 'max:1000'],
-            'link_drive' => [
-                'nullable',
-                'url',
-                'max:500',
-                'required_if:to_status,revisi_dokumen,revisi_editing_layout,revisi_isbn,revisi_proof_reading',
-            ],
             'force' => ['sometimes', 'boolean'],
         ];
     }

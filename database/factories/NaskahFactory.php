@@ -22,8 +22,7 @@ class NaskahFactory extends Factory
         return [
             'author_id' => Author::factory(),
             'judul' => fake()->sentence(4),
-            'abstrak' => fake()->paragraph(),
-            'kategori' => fake()->randomElement(['Fiksi', 'Non-fiksi', 'Ilmiah', 'Pendidikan']),
+            'link_cover' => fake()->url(),
             'tanggal_pengajuan' => fake()->date(),
             'sumber_form' => null,
             'status' => $status,

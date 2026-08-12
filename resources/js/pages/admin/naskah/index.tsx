@@ -263,9 +263,9 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                                 <p className="truncate font-medium">
                                                     {naskah.judul}
                                                 </p>
-                                                {naskah.kategori && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {naskah.kategori}
+                                                {naskah.link_cover && (
+                                                    <p className="truncate text-xs text-muted-foreground">
+                                                        {naskah.link_cover}
                                                     </p>
                                                 )}
                                             </td>

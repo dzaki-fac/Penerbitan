@@ -12,7 +12,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
 import admin from '@/routes/admin';
 import { index, store } from '@/routes/admin/naskah';
 
@@ -23,8 +22,7 @@ export default function NaskahCreate() {
         nama: '',
         email: '',
         judul: '',
-        abstrak: '',
-        kategori: '',
+        link_cover: '',
         tanggal_pengajuan: new Date().toISOString().slice(0, 10),
         sumber_form: '',
     });
@@ -153,28 +151,20 @@ export default function NaskahCreate() {
                                 <InputError message={form.errors.judul} />
                             </div>
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="abstrak">Abstrak</Label>
-                                <Textarea
-                                    id="abstrak"
-                                    value={form.data.abstrak}
-                                    onChange={(e) =>
-                                        form.setData('abstrak', e.target.value)
-                                    }
-                                    rows={4}
-                                />
-                                <InputError message={form.errors.abstrak} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="kategori">Kategori</Label>
+                                <Label htmlFor="link_cover">Link Cover</Label>
                                 <Input
-                                    id="kategori"
-                                    value={form.data.kategori}
+                                    id="link_cover"
+                                    type="url"
+                                    value={form.data.link_cover}
                                     onChange={(e) =>
-                                        form.setData('kategori', e.target.value)
+                                        form.setData(
+                                            'link_cover',
+                                            e.target.value,
+                                        )
                                     }
-                                    placeholder="Fiksi, Non-fiksi, Ilmiah, dll."
+                                    placeholder="URL sampul/cover buku (mis. Google Drive)"
                                 />
-                                <InputError message={form.errors.kategori} />
+                                <InputError message={form.errors.link_cover} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="tanggal_pengajuan">

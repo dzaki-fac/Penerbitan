@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Check, ExternalLink, FileUp, RotateCcw, X } from 'lucide-react';
+import { Check, FileUp, RotateCcw, X } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -253,32 +253,12 @@ function ConfirmUploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
                 <DialogHeader>
                     <DialogTitle>Konfirmasi Upload Revisi</DialogTitle>
                     <DialogDescription>
-                        Unggah file revisi yang diminta ke link Drive yang
-                        diberikan admin, lalu konfirmasi di sini.
+                        Unggah file revisi yang diminta ke link yang diberikan
+                        admin pada catatan, lalu konfirmasi di sini.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
                     <IdentityFields form={form} errors={form.errors} />
-                    <div className="grid gap-2">
-                        <Label>Link Drive Tempat Upload</Label>
-                        {naskah.link_drive ? (
-                            <Button asChild variant="outline">
-                                <a
-                                    href={naskah.link_drive}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    <ExternalLink />
-                                    Buka Link Drive
-                                </a>
-                            </Button>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">
-                                Link Drive belum tersedia, silakan hubungi
-                                admin.
-                            </p>
-                        )}
-                    </div>
                     <div className="grid gap-2">
                         <Label htmlFor="catatan_penulis">Catatan Penulis</Label>
                         <Textarea

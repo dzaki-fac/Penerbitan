@@ -88,7 +88,6 @@ function TransitionDialog({
     const form = useForm({
         to_status: target,
         catatan: '',
-        link_drive: naskah.link_drive ?? '',
         nomor_isbn: naskah.isbn?.nomor_isbn ?? '',
         penerbit: naskah.isbn?.penerbit ?? '',
     });
@@ -176,31 +175,11 @@ function TransitionDialog({
                             onChange={(e) =>
                                 form.setData('catatan', e.target.value)
                             }
-                            placeholder="Catatan untuk penulis (opsional)"
+                            placeholder="Catatan untuk penulis, termasuk link upload revisi jika perlu"
                             rows={3}
                         />
                         <InputError message={form.errors.catatan} />
                     </div>
-                    {isRevisionTarget && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="link_drive">
-                                Link Drive Upload Revisi
-                            </Label>
-                            <Input
-                                id="link_drive"
-                                type="url"
-                                value={form.data.link_drive}
-                                onChange={(e) =>
-                                    form.setData('link_drive', e.target.value)
-                                }
-                                placeholder="https://drive.google.com/..."
-                            />
-                            <p className="text-sm text-muted-foreground">
-                                Penulis akan mengunggah file revisi ke link ini.
-                            </p>
-                            <InputError message={form.errors.link_drive} />
-                        </div>
-                    )}
                     <DialogFooter>
                         <Button
                             type="submit"
@@ -233,7 +212,6 @@ function JumpTransitionDialog({
     const form = useForm({
         to_status: '',
         catatan: '',
-        link_drive: naskah.link_drive ?? '',
         force: true,
     });
     const isRevisionTarget = REVISION_STATUS_VALUES.includes(
@@ -292,26 +270,6 @@ function JumpTransitionDialog({
                         </Select>
                         <InputError message={form.errors.to_status} />
                     </div>
-                    {isRevisionTarget && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="jump_link_drive">
-                                Link Drive Upload Revisi
-                            </Label>
-                            <Input
-                                id="jump_link_drive"
-                                type="url"
-                                value={form.data.link_drive}
-                                onChange={(e) =>
-                                    form.setData('link_drive', e.target.value)
-                                }
-                                placeholder="https://drive.google.com/..."
-                            />
-                            <p className="text-sm text-muted-foreground">
-                                Penulis akan mengunggah file revisi ke link ini.
-                            </p>
-                            <InputError message={form.errors.link_drive} />
-                        </div>
-                    )}
                     <div className="grid gap-2">
                         <Label htmlFor="jump_catatan">Catatan</Label>
                         <Textarea
@@ -320,7 +278,7 @@ function JumpTransitionDialog({
                             onChange={(e) =>
                                 form.setData('catatan', e.target.value)
                             }
-                            placeholder="Alasan pemindahan status (opsional)"
+                            placeholder="Alasan pemindahan status, termasuk link upload revisi jika perlu"
                             rows={3}
                         />
                         <InputError message={form.errors.catatan} />
@@ -655,19 +613,13 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
 function HistoryCatatanDialog({
     naskahId,
     history,
-    linkDrive,
 }: {
     naskahId: number;
     history: NaskahDetail['histories'][number];
-    linkDrive: string;
 }) {
     const [open, setOpen] = useState(false);
-    const isRevisionStep = REVISION_STATUS_VALUES.includes(
-        history.ke_status.value,
-    );
     const form = useForm({
         catatan: history.catatan ?? '',
-        link_drive: linkDrive,
     });
 
     function onSubmit(e: React.FormEvent) {
@@ -703,11 +655,7 @@ function HistoryCatatanDialog({
             )}
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>
-                        {isRevisionStep
-                            ? 'Edit Catatan & Link'
-                            : 'Edit Catatan'}
-                    </DialogTitle>
+                    <DialogTitle>Edit Catatan</DialogTitle>
                     <DialogDescription>
                         Ubah catatan admin pada transisi status ini.
                     </DialogDescription>
@@ -722,27 +670,10 @@ function HistoryCatatanDialog({
                                 form.setData('catatan', e.target.value)
                             }
                             rows={3}
-                            placeholder="Catatan untuk penulis (opsional)"
+                            placeholder="Catatan untuk penulis, termasuk link upload revisi jika perlu"
                         />
                         <InputError message={form.errors.catatan} />
                     </div>
-                    {isRevisionStep && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="history_link_drive">
-                                Link Drive Upload Revisi
-                            </Label>
-                            <Input
-                                id="history_link_drive"
-                                type="url"
-                                value={form.data.link_drive}
-                                onChange={(e) =>
-                                    form.setData('link_drive', e.target.value)
-                                }
-                                placeholder="https://drive.google.com/..."
-                            />
-                            <InputError message={form.errors.link_drive} />
-                        </div>
-                    )}
                     <DialogFooter>
                         <Button
                             type="submit"
@@ -776,11 +707,6 @@ export default function NaskahShow({
             historyByStep.set(history.ke_status.stage, history);
         }
     }
-
-    // Riwayat revisi terakhir dipakai sebagai penanda step tempat link Drive ditampilkan.
-    const revisionStage = naskah.histories.find((h) =>
-        REVISION_STATUS_VALUES.includes(h.ke_status.value),
-    )?.ke_status.stage;
 
     // Riwayat ISBN terbit dipakai sebagai penanda step tempat data ISBN tampil.
     const isbnHistory = naskah.histories.find(
@@ -817,9 +743,7 @@ export default function NaskahShow({
                             </h1>
                             <Badge
                                 variant="secondary"
-                                className={activeStatusClass(
-                                    naskah.status.value,
-                                )}
+                                className={activeStatusClass()}
                             >
                                 {naskah.status.label}
                             </Badge>
@@ -830,6 +754,17 @@ export default function NaskahShow({
                             {naskah.author.nomor_identitas}) · Pengajuan{' '}
                             {naskah.tanggal_pengajuan}
                         </p>
+                        {naskah.link_cover && (
+                            <a
+                                href={naskah.link_cover}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                            >
+                                <ExternalLink className="size-4" />
+                                Lihat Cover
+                            </a>
+                        )}
                     </div>
                     <div className="flex gap-2">
                         <Button asChild variant="outline" size="sm">
@@ -888,9 +823,7 @@ export default function NaskahShow({
                                                 <span
                                                     className={cn(
                                                         'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                        activeIndicatorClass(
-                                                            naskah.status.value,
-                                                        ),
+                                                        activeIndicatorClass(),
                                                     )}
                                                 >
                                                     <span className="text-xs font-semibold">
@@ -934,9 +867,7 @@ export default function NaskahShow({
                                                 active &&
                                                     cn(
                                                         'rounded-lg p-3',
-                                                        activeContentClass(
-                                                            naskah.status.value,
-                                                        ),
+                                                        activeContentClass(),
                                                     ),
                                                 !isLast && 'pb-6',
                                             )}
@@ -957,13 +888,9 @@ export default function NaskahShow({
                                                 {active && (
                                                     <Badge
                                                         variant="secondary"
-                                                        className={activeStatusClass(
-                                                            naskah.status.value,
-                                                        )}
+                                                        className={activeStatusClass()}
                                                     >
-                                                        {activeStatusLabel(
-                                                            naskah.status.value,
-                                                        )}
+                                                        {activeStatusLabel()}
                                                     </Badge>
                                                 )}
                                                 {active && subBadge && (
@@ -1002,10 +929,6 @@ export default function NaskahShow({
                                                                 history={
                                                                     history
                                                                 }
-                                                                linkDrive={
-                                                                    naskah.link_drive ??
-                                                                    ''
-                                                                }
                                                             />
                                                         </div>
                                                     )}
@@ -1018,36 +941,9 @@ export default function NaskahShow({
                                                         <HistoryCatatanDialog
                                                             naskahId={naskah.id}
                                                             history={history}
-                                                            linkDrive={
-                                                                naskah.link_drive ??
-                                                                ''
-                                                            }
                                                         />
                                                     </div>
                                                 )}
-                                            {index === revisionStage &&
-                                                naskah.link_drive && (
-                                                    <div className="mt-2 rounded-md border border-dashed border-border px-3 py-2">
-                                                        <a
-                                                            href={
-                                                                naskah.link_drive
-                                                            }
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
-                                                        >
-                                                            <ExternalLink className="size-4" />
-                                                            Buka Link Drive
-                                                            Upload Revisi
-                                                        </a>
-                                                        <p className="mt-0.5 text-xs text-muted-foreground">
-                                                            Link dikirim untuk
-                                                            penulis mengunggah
-                                                            revisi.
-                                                        </p>
-                                                    </div>
-                                                )}
-
                                             {isbnHistory &&
                                                 index ===
                                                     isbnHistory.ke_status

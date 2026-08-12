@@ -4,7 +4,9 @@ import {
     BookOpen,
     CalendarDays,
     ChevronRight,
+    Image as ImageIcon,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +23,33 @@ type Props = {
     author: AuthorCard;
     naskahs: NaskahCard[];
 };
+
+function CoverThumbnail({ src, title }: { src: string; title: string }) {
+    const [broken, setBroken] = useState(false);
+
+    return (
+        <a
+            href={src}
+            target="_blank"
+            rel="noreferrer"
+            className="block border-b border-border"
+        >
+            {broken ? (
+                <div className="flex h-40 items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
+                    <ImageIcon className="size-5" />
+                    Buka Cover
+                </div>
+            ) : (
+                <img
+                    src={src}
+                    alt={title}
+                    onError={() => setBroken(true)}
+                    className="h-40 w-full bg-muted object-cover"
+                />
+            )}
+        </a>
+    );
+}
 
 export default function TrackingResult({ author, naskahs }: Props) {
     const perluTindakan = naskahs.filter((n) =>
@@ -52,9 +81,9 @@ export default function TrackingResult({ author, naskahs }: Props) {
                 </div>
 
                 {perluTindakan.length > 0 && (
-                    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                        <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
-                        <p className="text-sm text-amber-800">
+                    <div className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4">
+                        <AlertCircle className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                        <p className="text-sm text-foreground">
                             Ada{' '}
                             <span className="font-semibold">
                                 {perluTindakan.length}
@@ -95,21 +124,27 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`gap-4 ${statusBorderClass(naskah.status.value)}`}
+                                            className={`gap-4 ${statusBorderClass()}`}
                                         >
+                                            {naskah.link_cover && (
+                                                <CoverThumbnail
+                                                    src={naskah.link_cover}
+                                                    title={naskah.judul}
+                                                />
+                                            )}
                                             <CardHeader className="gap-2">
                                                 <div className="flex items-start justify-between gap-3">
                                                     <CardTitle className="text-base leading-snug">
                                                         {naskah.judul}
                                                     </CardTitle>
                                                     <Badge
-                                                        className={`shrink-0 ${statusBadgeClass(naskah.status.value)}`}
+                                                        className={`shrink-0 ${statusBadgeClass()}`}
                                                     >
                                                         {naskah.status.label}
                                                     </Badge>
                                                 </div>
                                                 {perluAksi && (
-                                                    <p className="flex items-center gap-1 text-xs font-medium text-amber-700">
+                                                    <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                                                         <AlertCircle className="size-3.5" />
                                                         Perlu tindakan Anda
                                                     </p>

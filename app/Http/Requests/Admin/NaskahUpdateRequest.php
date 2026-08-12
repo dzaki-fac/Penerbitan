@@ -16,8 +16,7 @@ class NaskahUpdateRequest extends FormRequest
     {
         return [
             'judul' => ['required', 'string', 'max:255'],
-            'abstrak' => ['nullable', 'string'],
-            'kategori' => ['nullable', 'string', 'max:255'],
+            'link_cover' => ['nullable', 'url', 'max:500'],
             'tanggal_pengajuan' => ['required', 'date'],
             'sumber_form' => ['nullable', 'string', 'max:255'],
         ];

@@ -23,7 +23,7 @@ export type AuthorCard = {
 export type NaskahCard = {
     id: number;
     judul: string;
-    kategori: string | null;
+    link_cover: string | null;
     status: StatusBadge;
     progress: number;
     tanggal_pengajuan: string;
@@ -34,13 +34,11 @@ export type NaskahCard = {
 export type NaskahDetail = {
     id: number;
     judul: string;
-    abstrak: string | null;
-    kategori: string | null;
+    link_cover: string | null;
     status: NaskahStatusInfo;
     progress: number;
     tanggal_pengajuan: string;
     sumber_form: string | null;
-    link_drive: string | null;
     author: AuthorCard & { id?: number; email?: string | null };
     layout: {
         id: number;

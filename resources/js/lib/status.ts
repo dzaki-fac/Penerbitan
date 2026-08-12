@@ -29,13 +29,6 @@ const TONE_BY_STATUS: Record<string, Tone> = {
     selesai: 'done',
 };
 
-const CLASS_BY_TONE: Record<Tone, string> = {
-    progress: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100',
-    action: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100',
-    revision: 'bg-red-100 text-red-700 border-red-200 hover:bg-red-100',
-    done: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-100',
-};
-
 const LABEL_BY_TONE: Record<Tone, string> = {
     progress: 'Sedang diproses',
     action: 'Perlu tindakan Anda',
@@ -45,7 +38,7 @@ const LABEL_BY_TONE: Record<Tone, string> = {
 
 /**
  * Badge pendek untuk status turunan yang ditampilkan di dalam tahapan utama pada timeline.
- * revisi => merah, terbit/acc => hijau.
+ * Label ditampilkan netral tanpa warna status.
  */
 const SUB_BADGE_BY_STATUS: Record<string, { label: string; tone: Tone }> = {
     revisi_dokumen: { label: 'Revisi', tone: 'revision' },
@@ -60,71 +53,34 @@ function toneFor(statusValue: string): Tone {
     return TONE_BY_STATUS[statusValue] ?? 'progress';
 }
 
-/** Kelas warna border kartu; mengikuti tone status (progress netral, aksi amber, revisi merah, selesai hijau). */
-export function statusBorderClass(statusValue: string): string {
-    switch (toneFor(statusValue)) {
-        case 'action':
-            return 'border-amber-300';
-        case 'revision':
-            return 'border-red-300';
-        case 'done':
-            return 'border-green-300';
-        default:
-            return 'border-border';
-    }
+/** Kelas warna border kartu; netral tidak mengikuti status. */
+export function statusBorderClass(): string {
+    return 'border-border';
 }
 
-/** Class Tailwind untuk badge status, dipakai bareng <Badge className={...}> */
-export function statusBadgeClass(statusValue: string): string {
-    return CLASS_BY_TONE[toneFor(statusValue)];
+/** Class Tailwind untuk badge status; netral tidak mengikuti status. */
+export function statusBadgeClass(): string {
+    return 'bg-secondary text-secondary-foreground border-transparent';
 }
 
-/** Kelas badge untuk status aktif saat ini (Sedang berjalan / Menunggu penulis / Perlu revisi). */
-export function activeStatusClass(statusValue: string): string {
-    switch (toneFor(statusValue)) {
-        case 'action':
-            return 'bg-amber-100 text-amber-800 border-amber-200';
-        case 'revision':
-            return 'bg-red-100 text-red-700 border-red-200';
-        default:
-            return 'bg-primary/10 text-primary';
-    }
+/** Kelas badge untuk status aktif saat ini; netral tidak mengikuti status. */
+export function activeStatusClass(): string {
+    return 'bg-primary/10 text-primary';
 }
 
 /** Label untuk badge status aktif saat ini. */
-export function activeStatusLabel(statusValue: string): string {
-    switch (toneFor(statusValue)) {
-        case 'action':
-            return 'Menunggu penulis';
-        case 'revision':
-            return 'Perlu revisi';
-        default:
-            return 'Sedang berjalan';
-    }
+export function activeStatusLabel(): string {
+    return 'Sedang berjalan';
 }
 
-/** Kelas indikator lingkaran pada step aktif timeline (warna mengikuti keadaan status). */
-export function activeIndicatorClass(statusValue: string): string {
-    switch (toneFor(statusValue)) {
-        case 'action':
-            return 'border-amber-400 bg-amber-100 text-amber-800';
-        case 'revision':
-            return 'border-red-400 bg-red-100 text-red-700';
-        default:
-            return 'border-primary bg-primary/10 text-primary';
-    }
+/** Kelas indikator lingkaran pada step aktif timeline; netral tidak mengikuti status. */
+export function activeIndicatorClass(): string {
+    return 'border-primary bg-primary/10 text-primary';
 }
 
-/** Kelas kartu konten step aktif: border tebal + bg warna mengikuti keadaan status. */
-export function activeContentClass(statusValue: string): string {
-    switch (toneFor(statusValue)) {
-        case 'action':
-            return 'border-2 border-amber-400 bg-amber-50';
-        case 'revision':
-            return 'border-2 border-red-400 bg-red-50';
-        default:
-            return 'border-2 border-primary bg-primary/5';
-    }
+/** Kelas kartu konten step aktif: border tebal + bg; netral tidak mengikuti status. */
+export function activeContentClass(): string {
+    return 'border-2 border-primary bg-primary/5';
 }
 
 /** True kalau status ini butuh tindakan dari penulis, termasuk status revisi */
@@ -153,6 +109,7 @@ export function statusToneLabel(statusValue: string): string {
 /**
  * Badge tambahan untuk status turunan (Revisi/Terbit/Acc).
  * Kembalikan null jika status adalah tahapan utama.
+ * Warna netral, tidak mengikuti status.
  */
 export function statusSubBadge(
     statusValue: string,
@@ -163,5 +120,8 @@ export function statusSubBadge(
         return null;
     }
 
-    return { label: sub.label, className: CLASS_BY_TONE[sub.tone] };
+    return {
+        label: sub.label,
+        className: 'bg-muted text-foreground border-border',
+    };
 }

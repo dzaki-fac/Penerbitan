@@ -14,7 +14,6 @@ import { ActionPanel } from '@/components/tracking/action-panel';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-    REVISION_STATUS_VALUES,
     activeContentClass,
     activeIndicatorClass,
     activeStatusClass,
@@ -46,11 +45,6 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
         }
     }
 
-    // Riwayat revisi terakhir dipakai sebagai penanda step tempat link Drive ditampilkan.
-    const revisionStage = naskah.histories.find((h) =>
-        REVISION_STATUS_VALUES.includes(h.ke_status.value),
-    )?.ke_status.stage;
-
     // Riwayat ISBN terbit dipakai sebagai penanda step tempat data ISBN tampil.
     const isbnHistory = naskah.histories.find(
         (h) => h.ke_status.value === 'isbn_terbit',
@@ -76,29 +70,20 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                 </a>
 
                 <div
-                    className={`rounded-xl border ${statusBorderClass(naskah.status.value)} bg-card p-6`}
+                    className={`rounded-xl border ${statusBorderClass()} bg-card p-6`}
                 >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Badge
-                                    className={statusBadgeClass(
-                                        naskah.status.value,
-                                    )}
-                                >
+                                <Badge className={statusBadgeClass()}>
                                     {naskah.status.label}
                                 </Badge>
-                                {naskah.kategori && (
-                                    <Badge variant="outline">
-                                        {naskah.kategori}
-                                    </Badge>
-                                )}
                             </div>
                             <h1 className="text-2xl font-semibold tracking-[0.008em]">
                                 {naskah.judul}
                             </h1>
                             {perluAksi && (
-                                <p className="flex items-center gap-1.5 text-sm font-medium text-amber-700">
+                                <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
                                     <AlertCircle className="size-4" />
                                     Naskah ini menunggu tindakan Anda — lihat
                                     bagian &quot;Aksi Penulis&quot; di bawah.
@@ -118,6 +103,19 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 <CalendarDays className="size-4" />
                                 {naskah.tanggal_pengajuan}
                             </div>
+                            {naskah.link_cover && (
+                                <div className="mt-1 flex items-center justify-end gap-1.5">
+                                    <ExternalLink className="size-4" />
+                                    <a
+                                        href={naskah.link_cover}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="underline underline-offset-4 hover:text-foreground"
+                                    >
+                                        Lihat Cover
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -165,9 +163,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             className={cn(
                                                 'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                                                 active
-                                                    ? activeIndicatorClass(
-                                                          naskah.status.value,
-                                                      )
+                                                    ? activeIndicatorClass()
                                                     : done
                                                       ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
                                                       : 'border-border bg-background text-muted-foreground',
@@ -199,9 +195,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             active &&
                                                 cn(
                                                     'rounded-lg p-3',
-                                                    activeContentClass(
-                                                        naskah.status.value,
-                                                    ),
+                                                    activeContentClass(),
                                                 ),
                                             !isLast && 'pb-6',
                                         )}
@@ -222,13 +216,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             {active && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className={activeStatusClass(
-                                                        naskah.status.value,
-                                                    )}
+                                                    className={activeStatusClass()}
                                                 >
-                                                    {activeStatusLabel(
-                                                        naskah.status.value,
-                                                    )}
+                                                    {activeStatusLabel()}
                                                 </Badge>
                                             )}
                                             {active && subBadge && (
@@ -279,27 +269,6 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                             }
                                                         </p>
                                                     )}
-                                                </div>
-                                            )}
-                                        {index === revisionStage &&
-                                            naskah.link_drive && (
-                                                <div className="mt-2 rounded-md border border-dashed border-border px-3 py-2">
-                                                    <a
-                                                        href={naskah.link_drive}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
-                                                    >
-                                                        <ExternalLink className="size-4" />
-                                                        Buka Link Drive Upload
-                                                        Revisi
-                                                    </a>
-                                                    <p className="mt-0.5 text-xs text-muted-foreground">
-                                                        Unggah file revisi ke
-                                                        tautan ini, lalu
-                                                        konfirmasi di aksi
-                                                        penulis.
-                                                    </p>
                                                 </div>
                                             )}
                                         {active && action && (

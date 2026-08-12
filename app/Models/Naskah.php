@@ -16,17 +16,15 @@ use App\Enums\NaskahStatus;
  * @property int $id
  * @property int $author_id
  * @property string $judul
- * @property string|null $abstrak
- * @property string|null $kategori
+ * @property string|null $link_cover
  * @property Carbon $tanggal_pengajuan
  * @property string|null $sumber_form
  * @property NaskahStatus $status
  * @property int $progress
- * @property string|null $link_drive
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['author_id', 'judul', 'abstrak', 'kategori', 'tanggal_pengajuan', 'sumber_form', 'status', 'progress', 'link_drive'])]
+#[Fillable(['author_id', 'judul', 'link_cover', 'tanggal_pengajuan', 'sumber_form', 'status', 'progress'])]
 class Naskah extends Model
 {
     /** @use HasFactory<NaskahFactory> */

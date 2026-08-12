@@ -20,8 +20,7 @@ class NaskahStoreRequest extends FormRequest
             'nama' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'judul' => ['required', 'string', 'max:255'],
-            'abstrak' => ['nullable', 'string'],
-            'kategori' => ['required', 'string', 'max:255'],
+            'link_cover' => ['nullable', 'url', 'max:500'],
             'tanggal_pengajuan' => ['required', 'date'],
             'sumber_form' => ['required', 'string', 'max:255'],
         ];
