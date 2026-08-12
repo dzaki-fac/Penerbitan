@@ -22,11 +22,11 @@ use App\Enums\NaskahStatus;
  * @property string|null $sumber_form
  * @property NaskahStatus $status
  * @property int $progress
- * @property string|null $catatan_admin
+ * @property string|null $link_drive
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['author_id', 'judul', 'abstrak', 'kategori', 'tanggal_pengajuan', 'sumber_form', 'status', 'progress', 'catatan_admin'])]
+#[Fillable(['author_id', 'judul', 'abstrak', 'kategori', 'tanggal_pengajuan', 'sumber_form', 'status', 'progress', 'link_drive'])]
 class Naskah extends Model
 {
     /** @use HasFactory<NaskahFactory> */
@@ -49,14 +49,6 @@ class Naskah extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
-    }
-
-    /**
-     * @return HasMany<Dokumen, $this>
-     */
-    public function dokumens(): HasMany
-    {
-        return $this->hasMany(Dokumen::class)->orderBy('id');
     }
 
     /**

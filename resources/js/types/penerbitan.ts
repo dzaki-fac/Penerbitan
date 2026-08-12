@@ -7,6 +7,11 @@ export type WorkflowStep = {
     value: string;
     label: string;
     progress: number;
+    stage: number;
+};
+
+export type NaskahStatusInfo = StatusBadge & {
+    stage: number;
 };
 
 export type AuthorCard = {
@@ -31,19 +36,12 @@ export type NaskahDetail = {
     judul: string;
     abstrak: string | null;
     kategori: string | null;
-    status: StatusBadge;
+    status: NaskahStatusInfo;
     progress: number;
     tanggal_pengajuan: string;
     sumber_form: string | null;
-    catatan_admin: string | null;
+    link_drive: string | null;
     author: AuthorCard & { id?: number; email?: string | null };
-    dokumens: Array<{
-        id: number;
-        nama_dokumen: string;
-        status: StatusBadge;
-        catatan: string | null;
-        file_url: string | null;
-    }>;
     layout: {
         id: number;
         versi: number;
@@ -72,15 +70,16 @@ export type NaskahDetail = {
         jenis: StatusBadge;
         catatan_penulis: string | null;
         tanggal: string;
-        file_url: string;
+        file_url: string | null;
     }>;
     histories: Array<{
         id: number;
-        dari_status: StatusBadge | null;
-        ke_status: StatusBadge;
+        dari_status: NaskahStatusInfo | null;
+        ke_status: NaskahStatusInfo;
         aktor: StatusBadge;
         admin: string | null;
         catatan: string | null;
+        can_edit_catatan: boolean;
         waktu: string;
     }>;
 };

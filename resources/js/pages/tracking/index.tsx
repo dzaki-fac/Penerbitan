@@ -58,6 +58,7 @@ export default function TrackingIndex() {
                         <div className="grid grid-cols-3 gap-2">
                             {METODE.map(({ key, label, keterangan }) => {
                                 const active = data.jenis_identitas === key;
+
                                 return (
                                     <button
                                         key={key}

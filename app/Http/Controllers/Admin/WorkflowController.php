@@ -6,6 +6,7 @@ use App\Enums\AktorType;
 use App\Enums\IsbnStatus;
 use App\Enums\LayoutStatus;
 use App\Enums\NaskahStatus;
+use App\Enums\RevisiJenis;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\IsbnRequest;
 use App\Http\Requests\Admin\LayoutRequest;
@@ -13,6 +14,8 @@ use App\Http\Requests\Admin\TransitionRequest;
 use App\Models\Isbn;
 use App\Models\Layout;
 use App\Models\Naskah;
+use App\Models\RevisiUpload;
+use App\Models\WorkflowHistory;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,13 +29,26 @@ class WorkflowController extends Controller
     {
         $to = NaskahStatus::from($request->validated('to_status'));
 
+        $force = (bool) $request->validated('force');
+
+        if ($to === $naskah->status) {
+            return back()->withErrors([
+                'to_status' => __('Naskah sudah berada pada status tersebut.'),
+            ]);
+        }
+
         $allowed = WorkflowService::adminTransitionsFor($naskah->status->value);
 
-        if (! in_array($to, $allowed, true)) {
+        if (! $force && ! in_array($to, $allowed, true)) {
             return back()->withErrors([
                 'to_status' => __('Transisi tersebut tidak diizinkan dari status saat ini.'),
             ]);
         }
+
+        $this->syncIsbnStatus($naskah, $to);
+
+        $naskah->link_drive = $request->validated('link_drive') ?? $naskah->link_drive;
+        $naskah->save();
 
         WorkflowService::transition(
             $naskah,
@@ -48,85 +64,253 @@ class WorkflowController extends Controller
     }
 
     /**
-     * Admin mengunggah hasil layout + link preview PDF.
+     * Admin mengonfirmasi upload revisi atas nama penulis.
+     */
+    public function confirmRevisi(Naskah $naskah, Request $request): RedirectResponse
+    {
+        if (! in_array($naskah->status, [NaskahStatus::RevisiDokumen, NaskahStatus::RevisiEditingLayout], true)) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'catatan' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        RevisiUpload::create([
+            'naskah_id' => $naskah->id,
+            'author_id' => $naskah->author_id,
+            'jenis' => $naskah->status === NaskahStatus::RevisiDokumen
+                ? RevisiJenis::Dokumen
+                : RevisiJenis::Naskah,
+            'catatan_penulis' => $validated['catatan'],
+        ]);
+
+        $to = $naskah->status === NaskahStatus::RevisiDokumen
+            ? NaskahStatus::VerifikasiDokumen
+            : NaskahStatus::DalamProsesEditingLayout;
+
+        WorkflowService::transition(
+            $naskah,
+            $to,
+            AktorType::Admin,
+            admin: $request->user(),
+            note: __('Admin mengonfirmasi revisi telah diunggah'),
+        );
+
+        flashSuccess(__('Upload revisi dikonfirmasi.'));
+
+        return back();
+    }
+
+    /**
+     * Admin menyetujui hasil proof reading atas nama penulis (Acc).
+     */
+    public function approveProofReading(Naskah $naskah, Request $request): RedirectResponse
+    {
+        if ($naskah->status !== NaskahStatus::ProofReadingPenulis) {
+            abort(404);
+        }
+
+        if ($layout = $naskah->latestLayout) {
+            $layout->status = LayoutStatus::Disetujui;
+            $layout->save();
+        }
+
+        WorkflowService::transition(
+            $naskah,
+            NaskahStatus::AccProofReading,
+            AktorType::Admin,
+            admin: $request->user(),
+            note: __('Proof reading disetujui (Acc) oleh admin'),
+        );
+
+        flashSuccess(__('Proof reading disetujui.'));
+
+        return back();
+    }
+
+    /**
+     * Admin mengajukan revisi hasil proof reading atas nama penulis.
+     */
+    public function rejectProofReading(Naskah $naskah, Request $request): RedirectResponse
+    {
+        if ($naskah->status !== NaskahStatus::ProofReadingPenulis) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'catatan' => ['required', 'string', 'max:1000'],
+        ]);
+
+        if ($layout = $naskah->latestLayout) {
+            $layout->status = LayoutStatus::Revisi;
+            $layout->catatan_revisi = $validated['catatan'];
+            $layout->save();
+        }
+
+        WorkflowService::transition(
+            $naskah,
+            NaskahStatus::RevisiProofReading,
+            AktorType::Admin,
+            admin: $request->user(),
+            note: __('Revisi proof reading diajukan oleh admin: ').$validated['catatan'],
+        );
+
+        flashSuccess(__('Revisi proof reading diajukan.'));
+
+        return back();
+    }
+
+    /**
+     * Admin menandai buku telah diambil atas nama penulis.
+     */
+    public function markDiambil(Naskah $naskah, Request $request): RedirectResponse
+    {
+        if ($naskah->status !== NaskahStatus::SiapDiambil) {
+            abort(404);
+        }
+
+        WorkflowService::transition(
+            $naskah,
+            NaskahStatus::Selesai,
+            AktorType::Admin,
+            admin: $request->user(),
+            note: __('Buku ditandai telah diambil oleh admin'),
+        );
+
+        flashSuccess(__('Buku telah ditandai diambil.'));
+
+        return back();
+    }
+
+    /**
+     * Admin mengirim hasil layout berupa link preview PDF.
      */
     public function uploadLayout(Naskah $naskah, LayoutRequest $request): RedirectResponse
     {
-        if ($naskah->status !== NaskahStatus::DalamProsesEditingLayout && $naskah->status !== NaskahStatus::RevisiEditingLayout) {
+        $validStatuses = [
+            NaskahStatus::DalamProsesEditingLayout,
+            NaskahStatus::RevisiEditingLayout,
+            NaskahStatus::RevisiProofReading,
+        ];
+
+        if (! in_array($naskah->status, $validStatuses, true)) {
             return back()->withErrors([
-                'file_layout' => __('Layout hanya dapat diunggah pada status editing & layout.'),
+                'preview_pdf_link' => __('Layout hanya dapat dikirim pada tahap editing & layout atau revisi proof reading.'),
             ]);
         }
 
         $versi = ($naskah->layouts()->max('versi') ?? 0) + 1;
 
-        $layout = Layout::create([
+        Layout::create([
             'naskah_id' => $naskah->id,
             'versi' => $versi,
-            'file_layout' => $request->hasFile('file_layout')
-                ? $request->file('file_layout')->store('layouts', 'public')
-                : null,
             'preview_pdf_link' => $request->validated('preview_pdf_link'),
             'status' => LayoutStatus::MenungguReview,
         ]);
 
-        WorkflowService::transition(
-            $naskah,
-            NaskahStatus::MenungguReviewEditingLayout,
-            AktorType::Admin,
-            admin: $request->user(),
-            note: __('Layout versi :versi diunggah.', ['versi' => $versi]),
-        );
+        if ($naskah->status === NaskahStatus::RevisiProofReading) {
+            WorkflowService::transition(
+                $naskah,
+                NaskahStatus::ProofReadingPenulis,
+                AktorType::Admin,
+                admin: $request->user(),
+                note: __('Layout versi :versi dikirim untuk proof reading ulang.', ['versi' => $versi]),
+            );
+        }
 
-        flashSuccess(__('Layout versi :versi berhasil diunggah.', ['versi' => $versi]));
+        flashSuccess(__('Layout versi :versi berhasil dikirim.', ['versi' => $versi]));
 
         return back();
     }
 
     /**
-     * Admin mengelola data ISBN.
+     * Admin mengelola data ISBN sekaligus memindahkan status naskah.
      */
     public function updateIsbn(Naskah $naskah, IsbnRequest $request): RedirectResponse
     {
         if (! in_array($naskah->status, [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiIsbn], true)) {
             return back()->withErrors([
-                'nomor_isbn' => __('ISBN hanya dapat dikelola pada status pengajuan ISBN.'),
+                'to_status' => __('ISBN hanya dapat dikelola pada tahap pengajuan ISBN.'),
             ]);
         }
 
-        $isbn = $naskah->isbn ?? new Isbn(['naskah_id' => $naskah->id]);
+        $to = NaskahStatus::from($request->validated('to_status'));
 
-        $isbn->nomor_isbn = $request->validated('nomor_isbn') ?? $isbn->nomor_isbn;
-        $isbn->penerbit = $request->validated('penerbit') ?? $isbn->penerbit;
-        $isbn->catatan = $request->validated('catatan') ?? $isbn->catatan;
-        $isbn->status = IsbnStatus::MenungguPersetujuan;
-        $isbn->save();
+        $allowed = WorkflowService::adminTransitionsFor($naskah->status->value);
+
+        if (! in_array($to, $allowed, true)) {
+            return back()->withErrors([
+                'to_status' => __('Transisi tersebut tidak diizinkan dari status saat ini.'),
+            ]);
+        }
+
+        if ($to === NaskahStatus::IsbnTerbit) {
+            $isbn = $naskah->isbn ?? new Isbn(['naskah_id' => $naskah->id]);
+
+            $isbn->nomor_isbn = $request->validated('nomor_isbn');
+            $isbn->penerbit = $request->validated('penerbit');
+            $isbn->catatan = $request->validated('catatan');
+            $isbn->status = IsbnStatus::Proses;
+            $isbn->save();
+        }
+
+        $this->syncIsbnStatus($naskah, $to);
 
         WorkflowService::transition(
             $naskah,
-            NaskahStatus::MenungguPersetujuanIsbn,
+            $to,
             AktorType::Admin,
             admin: $request->user(),
-            note: __('Data ISBN diajukan untuk persetujuan penulis'),
+            note: $request->validated('catatan'),
         );
 
-        flashSuccess(__('Data ISBN diajukan untuk persetujuan penulis.'));
+        flashSuccess($to === NaskahStatus::IsbnTerbit
+            ? __('Data ISBN terbit disimpan dan status diperbarui menjadi :status.', ['status' => $to->label()])
+            : __('Status ISBN diperbarui menjadi :status.', ['status' => $to->label()]));
 
         return back();
     }
 
     /**
-     * Admin memperbarui catatan naskah.
+     * Menyelaraskan status record ISBN ketika admin mencatat hasil verifikasi Perpusnas.
      */
-    public function updateCatatan(Naskah $naskah, Request $request): RedirectResponse
+    private function syncIsbnStatus(Naskah $naskah, NaskahStatus $to): void
     {
+        if (! $isbn = $naskah->isbn) {
+            return;
+        }
+
+        $isbn->status = match ($to) {
+            NaskahStatus::IsbnTerbit => IsbnStatus::Terbit,
+            NaskahStatus::RevisiIsbn => IsbnStatus::Revisi,
+            default => $isbn->status,
+        };
+        $isbn->save();
+    }
+
+    /**
+     * Admin mengubah catatan pada entri riwayat transisi status.
+     */
+    public function updateHistoryCatatan(Naskah $naskah, WorkflowHistory $history, Request $request): RedirectResponse
+    {
+        if ($history->naskah_id !== $naskah->id || $history->admin_id === null) {
+            abort(403);
+        }
+
         $validated = $request->validate([
-            'catatan_admin' => ['required', 'string', 'max:2000'],
+            'catatan' => ['nullable', 'string', 'max:1000'],
+            'link_drive' => ['nullable', 'url', 'max:500'],
         ]);
 
-        $naskah->update(['catatan_admin' => $validated['catatan_admin']]);
+        if ($request->has('link_drive')) {
+            $naskah->link_drive = $validated['link_drive'];
+            $naskah->save();
+        }
 
-        flashSuccess(__('Catatan admin diperbarui.'));
+        $history->update(['catatan' => $validated['catatan']]);
+
+        flashSuccess(__('Catatan pada riwayat diperbarui.'));
 
         return back();
     }

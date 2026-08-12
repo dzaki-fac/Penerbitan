@@ -23,7 +23,7 @@ export default function Landing() {
                         />
                     </div>
                     <h1 className="text-center text-2xl font-semibold tracking-[0.016em] sm:text-3xl">
-                        Sistem Monitoring &amp; Manajemen Penerbitan
+                        Sistem Penerbitan UPT Perpustakaan dan UNDIP Press
                     </h1>
                     <p className="mx-auto max-w-xl text-center text-balance text-muted-foreground">
                         Pantau proses penerbitan naskah Anda atau ajukan naskah baru untuk diterbitkan.
@@ -36,9 +36,16 @@ export default function Landing() {
                         variant="outline"
                         size="lg"
                         className="gap-2"
+                        asChild
                     >
-                        <BookOpenText />
-                        Ajukan Naskah Baru
+                        <a
+                            href="https://docs.google.com/forms/d/e/1FAIpQLScioScW9vQOXXFCuHEaQNIg0cx3usvWyOXTf_9SQzKnMlbdjA/viewform"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <BookOpenText />
+                            Ajukan Naskah Baru
+                        </a>
                     </Button>
                     <Button asChild size="lg" className="gap-2">
                         <Link href={tracking()}>

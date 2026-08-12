@@ -24,20 +24,6 @@ class NaskahStoreRequest extends FormRequest
             'kategori' => ['required', 'string', 'max:255'],
             'tanggal_pengajuan' => ['required', 'date'],
             'sumber_form' => ['required', 'string', 'max:255'],
-            'dokumen' => ['required', 'array', 'min:1'],
-            'dokumen.*' => ['required', 'string', 'max:255'],
-        ];
-    }
-
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'dokumen.*' => 'nama dokumen',
         ];
     }
 }

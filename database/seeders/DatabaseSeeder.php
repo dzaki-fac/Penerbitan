@@ -3,13 +3,11 @@
 namespace Database\Seeders;
 
 use App\Enums\AktorType;
-use App\Enums\DokumenStatus;
 use App\Enums\IdentitasType;
 use App\Enums\IsbnStatus;
 use App\Enums\LayoutStatus;
 use App\Enums\NaskahStatus;
 use App\Models\Author;
-use App\Models\Dokumen;
 use App\Models\Isbn;
 use App\Models\Layout;
 use App\Models\Naskah;
@@ -53,7 +51,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'andi@example.com',
         ]);
 
-        // 1. Budi - naskah pada tahap review editing & layout
+        // 1. Budi - naskah menunggu proof reading (acc/revisi oleh penulis)
         $naskah = $this->createNaskah(
             $budi,
             'Penerapan Machine Learning untuk Prediksi Hasil Panen',
@@ -64,14 +62,27 @@ class DatabaseSeeder extends Seeder
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
             NaskahStatus::DalamProsesEditingLayout,
-            NaskahStatus::MenungguReviewEditingLayout,
+            NaskahStatus::PengajuanIsbn,
+            NaskahStatus::IsbnTerbit,
+            NaskahStatus::ProofReadingPenulis,
         ]);
-        $this->dokumen($naskah, DokumenStatus::Lengkap);
         Layout::create([
             'naskah_id' => $naskah->id,
             'versi' => 1,
             'preview_pdf_link' => 'https://drive.google.com/file/d/example-layout-1/preview',
+            'status' => LayoutStatus::Disetujui,
+        ]);
+        Layout::create([
+            'naskah_id' => $naskah->id,
+            'versi' => 2,
+            'preview_pdf_link' => 'https://drive.google.com/file/d/example-layout-1b/preview',
             'status' => LayoutStatus::MenungguReview,
+        ]);
+        Isbn::create([
+            'naskah_id' => $naskah->id,
+            'nomor_isbn' => '978-602-4523-01-7',
+            'penerbit' => 'Deepublish',
+            'status' => IsbnStatus::Terbit,
         ]);
 
         // 2. Budi - naskah baru, data diterima
@@ -82,9 +93,8 @@ class DatabaseSeeder extends Seeder
             'Penelitian',
         );
         $this->walk($naskah, $admin, [NaskahStatus::DataDiterima]);
-        $this->dokumen($naskah, DokumenStatus::Belum);
 
-        // 3. Siti - naskah menunggu persetujuan ISBN
+        // 3. Siti - naskah pada tahap pengajuan ISBN & verifikasi Perpusnas RI
         $naskah = $this->createNaskah(
             $siti,
             'Manajemen Strategis Pendidikan Tinggi di Era Digital',
@@ -95,11 +105,8 @@ class DatabaseSeeder extends Seeder
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
             NaskahStatus::DalamProsesEditingLayout,
-            NaskahStatus::MenungguReviewEditingLayout,
             NaskahStatus::PengajuanIsbn,
-            NaskahStatus::MenungguPersetujuanIsbn,
         ]);
-        $this->dokumen($naskah, DokumenStatus::Lengkap);
         Layout::create([
             'naskah_id' => $naskah->id,
             'versi' => 1,
@@ -110,7 +117,7 @@ class DatabaseSeeder extends Seeder
             'naskah_id' => $naskah->id,
             'nomor_isbn' => '978-602-4523-01-7',
             'penerbit' => 'Deepublish',
-            'status' => IsbnStatus::MenungguPersetujuan,
+            'status' => IsbnStatus::Proses,
         ]);
 
         // 4. Siti - naskah selesai, buku diambil
@@ -124,15 +131,14 @@ class DatabaseSeeder extends Seeder
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
             NaskahStatus::DalamProsesEditingLayout,
-            NaskahStatus::MenungguReviewEditingLayout,
             NaskahStatus::PengajuanIsbn,
-            NaskahStatus::MenungguPersetujuanIsbn,
-            NaskahStatus::Finalisasi,
-            NaskahStatus::MasukCetak,
+            NaskahStatus::IsbnTerbit,
+            NaskahStatus::ProofReadingPenulis,
+            NaskahStatus::AccProofReading,
+            NaskahStatus::ProsesCetak,
             NaskahStatus::SiapDiambil,
-            NaskahStatus::BukuDiambil,
+            NaskahStatus::Selesai,
         ]);
-        $this->dokumen($naskah, DokumenStatus::Lengkap);
         Layout::create([
             'naskah_id' => $naskah->id,
             'versi' => 1,
@@ -143,7 +149,7 @@ class DatabaseSeeder extends Seeder
             'naskah_id' => $naskah->id,
             'nomor_isbn' => '978-602-4523-02-4',
             'penerbit' => 'Deepublish',
-            'status' => IsbnStatus::Disetujui,
+            'status' => IsbnStatus::Terbit,
         ]);
 
         // 5. Andi - naskah dalam verifikasi dokumen
@@ -157,13 +163,8 @@ class DatabaseSeeder extends Seeder
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
         ]);
-        $this->dokumen($naskah, DokumenStatus::Lengkap);
-        Dokumen::where('naskah_id', $naskah->id)->first()->update([
-            'status' => DokumenStatus::PerluPerbaikan,
-            'catatan' => 'Pernyataan orisinalitas belum ditandatangani di atas materai.',
-        ]);
 
-        // 6. Andi - naskah menunggu perbaikan dari penulis
+        // 6. Andi - naskah menunggu revisi dokumen dari penulis
         $naskah = $this->createNaskah(
             $andi,
             'Implementasi Blockchain pada Sistem Keuangan Mikro',
@@ -173,11 +174,8 @@ class DatabaseSeeder extends Seeder
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
             NaskahStatus::VerifikasiDokumen,
-            NaskahStatus::DalamProsesEditingLayout,
-            NaskahStatus::MenungguReviewEditingLayout,
-            NaskahStatus::RevisiEditingLayout,
+            NaskahStatus::RevisiDokumen,
         ]);
-        $this->dokumen($naskah, DokumenStatus::Lengkap);
     }
 
     /**
@@ -217,32 +215,24 @@ class DatabaseSeeder extends Seeder
 
         foreach ($chain as $status) {
             if ($previous !== null) {
+                $olehPenulis = in_array($status, [
+                    NaskahStatus::RevisiDokumen,
+                    NaskahStatus::RevisiEditingLayout,
+                    NaskahStatus::RevisiProofReading,
+                    NaskahStatus::AccProofReading,
+                    NaskahStatus::Selesai,
+                ], true);
+
                 WorkflowService::transition(
                     $naskah,
                     $status,
-                    $previous === NaskahStatus::MenungguReviewEditingLayout
-                        ? AktorType::Penulis
-                        : AktorType::Admin,
-                    admin: $previous === NaskahStatus::MenungguReviewEditingLayout ? null : $admin,
+                    $olehPenulis ? AktorType::Penulis : AktorType::Admin,
+                    admin: $olehPenulis ? null : $admin,
                     note: 'Transisi status '.$status->label(),
                 );
             }
 
             $previous = $status;
-        }
-    }
-
-    /**
-     * Membuat tiga dokumen standar untuk naskah.
-     */
-    private function dokumen(Naskah $naskah, DokumenStatus $status): void
-    {
-        foreach (['Naskah Utuh', 'Abstrak', 'Pernyataan Orisinalitas'] as $nama) {
-            Dokumen::create([
-                'naskah_id' => $naskah->id,
-                'nama_dokumen' => $nama,
-                'status' => $status,
-            ]);
         }
     }
 }

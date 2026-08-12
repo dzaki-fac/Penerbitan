@@ -18,28 +18,23 @@ class WorkflowService
      * @var array<string, array{to: NaskahStatus, aksi: string, label: string}>
      */
     public const AUTHOR_ACTIONS = [
-        'menunggu_perbaikan_dokumen' => [
+        'revisi_dokumen' => [
             'to' => NaskahStatus::VerifikasiDokumen,
             'aksi' => 'upload_revisi',
-            'label' => 'Upload Revisi',
+            'label' => 'Upload Revisi Dokumen',
         ],
         'revisi_editing_layout' => [
             'to' => NaskahStatus::DalamProsesEditingLayout,
             'aksi' => 'upload_revisi',
             'label' => 'Upload Revisi',
         ],
-        'menunggu_review_editing_layout' => [
-            'to' => NaskahStatus::PengajuanIsbn,
-            'aksi' => 'approve',
-            'label' => 'Setujui Naskah & Layout',
-        ],
-        'menunggu_persetujuan_isbn' => [
-            'to' => NaskahStatus::Finalisasi,
-            'aksi' => 'approve',
-            'label' => 'Setujui',
+        'proof_reading_penulis' => [
+            'to' => NaskahStatus::AccProofReading,
+            'aksi' => 'review',
+            'label' => 'Acc / Ajukan Revisi',
         ],
         'siap_diambil' => [
-            'to' => NaskahStatus::BukuDiambil,
+            'to' => NaskahStatus::Selesai,
             'aksi' => 'approve',
             'label' => 'Buku Sudah Diambil',
         ],
@@ -52,20 +47,24 @@ class WorkflowService
      */
     public const ADMIN_TRANSITIONS = [
         'data_diterima' => [NaskahStatus::VerifikasiDokumen],
-        'verifikasi_dokumen' => [NaskahStatus::DalamProsesEditingLayout, NaskahStatus::MenungguPerbaikanDokumen],
-        'dalam_proses_editing_layout' => [NaskahStatus::MenungguReviewEditingLayout],
-        'menunggu_review_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
-        'revisi_editing_layout' => [NaskahStatus::DalamProsesEditingLayout],
-        'pengajuan_isbn' => [NaskahStatus::MenungguPersetujuanIsbn],
-        'revisi_isbn' => [NaskahStatus::PengajuanIsbn],
-        'finalisasi' => [NaskahStatus::MasukCetak],
-        'masuk_cetak' => [NaskahStatus::SiapDiambil],
+        'verifikasi_dokumen' => [NaskahStatus::DalamProsesEditingLayout, NaskahStatus::RevisiDokumen],
+        'revisi_dokumen' => [],
+        'dalam_proses_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
+        'revisi_editing_layout' => [],
+        'pengajuan_isbn' => [NaskahStatus::RevisiIsbn, NaskahStatus::IsbnTerbit],
+        'revisi_isbn' => [NaskahStatus::PengajuanIsbn, NaskahStatus::IsbnTerbit],
+        'isbn_terbit' => [NaskahStatus::ProofReadingPenulis],
+        'proof_reading_penulis' => [],
+        'revisi_proof_reading' => [NaskahStatus::ProofReadingPenulis],
+        'acc_proof_reading' => [NaskahStatus::ProsesCetak],
+        'proses_cetak' => [NaskahStatus::SiapDiambil],
+        'siap_diambil' => [],
     ];
 
     /**
-     * Daftar seluruh status untuk progress bar publik.
+     * Daftar seluruh tahapan utama untuk progress bar publik.
      *
-     * @return array<int, array{value: string, label: string, progress: int}>
+     * @return array<int, array{value: string, label: string, progress: int, stage: int}>
      */
     public static function steps(): array
     {
@@ -73,6 +72,7 @@ class WorkflowService
             'value' => $status->value,
             'label' => $status->label(),
             'progress' => $status->progress(),
+            'stage' => $status->stage(),
         ], NaskahStatus::ordered());
     }
 

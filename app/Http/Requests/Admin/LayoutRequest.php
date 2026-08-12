@@ -15,8 +15,7 @@ class LayoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file_layout' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
-            'preview_pdf_link' => ['nullable', 'string', 'max:500'],
+            'preview_pdf_link' => ['required', 'string', 'max:500'],
         ];
     }
 }

@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AktorType;
-use App\Enums\DokumenStatus;
 use App\Enums\NaskahStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\NaskahStoreRequest;
 use App\Http\Requests\Admin\NaskahUpdateRequest;
 use App\Models\Author;
-use App\Models\Dokumen;
 use App\Models\Naskah;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +32,14 @@ class NaskahController extends Controller
                         ->where('nama', 'like', "%{$search}%")
                         ->orWhere('nomor_identitas', 'like', "%{$search}%"));
             });
+        }
+
+        if ($stageStr = $request->query('stage')) {
+            $stage = (int) $stageStr;
+            $query->whereIn(
+                'status',
+                array_map(fn (NaskahStatus $s) => $s->value, NaskahStatus::forStage($stage)),
+            );
         }
 
         if ($request->filled('status')) {
@@ -67,6 +73,7 @@ class NaskahController extends Controller
             'filters' => [
                 'search' => $request->query('search', ''),
                 'status' => $request->query('status', ''),
+                'stage' => $request->query('stage', ''),
                 'per_page' => $request->query('per_page', '10'),
             ],
             'statuses' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
@@ -85,7 +92,7 @@ class NaskahController extends Controller
     }
 
     /**
-     * Menyimpan naskah baru beserta penulis dan dokumen awal.
+     * Menyimpan naskah baru beserta penulis.
      */
     public function store(NaskahStoreRequest $request): RedirectResponse
     {
@@ -112,16 +119,6 @@ class NaskahController extends Controller
             'status' => NaskahStatus::DataDiterima,
             'progress' => NaskahStatus::DataDiterima->progress(),
         ]);
-
-        $namaDokumen = $data['dokumen'] ?? ['Naskah Utuh', 'Abstrak', 'Pernyataan Orisinalitas'];
-
-        foreach ($namaDokumen as $nama) {
-            Dokumen::create([
-                'naskah_id' => $naskah->id,
-                'nama_dokumen' => $nama,
-                'status' => DokumenStatus::Belum,
-            ]);
-        }
 
         WorkflowService::transition(
             $naskah,
@@ -177,7 +174,6 @@ class NaskahController extends Controller
     {
         $naskah->load([
             'author',
-            'dokumens',
             'layouts',
             'isbn',
             'revisiUploads',
@@ -190,11 +186,11 @@ class NaskahController extends Controller
                 'judul' => $naskah->judul,
                 'abstrak' => $naskah->abstrak,
                 'kategori' => $naskah->kategori,
-                'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
+                'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
                 'sumber_form' => $naskah->sumber_form,
-                'catatan_admin' => $naskah->catatan_admin,
+                'link_drive' => $naskah->link_drive,
                 'author' => [
                     'id' => $naskah->author->id,
                     'nama' => $naskah->author->nama,
@@ -202,13 +198,6 @@ class NaskahController extends Controller
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
                     'nomor_identitas' => $naskah->author->nomor_identitas,
                 ],
-                'dokumens' => $naskah->dokumens->map(fn ($d) => [
-                    'id' => $d->id,
-                    'nama_dokumen' => $d->nama_dokumen,
-                    'status' => ['value' => $d->status->value, 'label' => $d->status->label()],
-                    'catatan' => $d->catatan,
-                    'file_url' => $d->file_path ? Storage::disk('public')->url($d->file_path) : null,
-                ]),
                 'layouts' => $naskah->layouts->map(fn ($l) => [
                     'id' => $l->id,
                     'versi' => $l->versi,
@@ -230,20 +219,22 @@ class NaskahController extends Controller
                     'jenis' => ['value' => $r->jenis->value, 'label' => $r->jenis->label()],
                     'catatan_penulis' => $r->catatan_penulis,
                     'tanggal' => $r->created_at->format('d M Y H:i'),
-                    'file_url' => Storage::disk('public')->url($r->file_path),
+                    'file_url' => $r->file_path ? Storage::disk('public')->url($r->file_path) : null,
                 ]),
                 'histories' => $naskah->histories->map(fn ($h) => [
                     'id' => $h->id,
-                    'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label()] : null,
-                    'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label()],
+                    'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label(), 'stage' => $h->dari_status->stage()] : null,
+                    'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label(), 'stage' => $h->ke_status->stage()],
                     'aktor' => ['value' => $h->aktor->value, 'label' => $h->aktor->label()],
                     'admin' => $h->admin?->name,
                     'catatan' => $h->catatan,
+                    'can_edit_catatan' => $h->admin_id !== null,
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
             ],
             'steps' => WorkflowService::steps(),
             'adminTransitions' => WorkflowService::adminTransitionsFor($naskah->status->value),
+            'authorAction' => WorkflowService::authorActionFor($naskah->status->value),
             'statusOptions' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
                 'value' => $s->value,
                 'label' => $s->label(),

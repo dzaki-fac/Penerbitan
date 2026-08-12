@@ -2,12 +2,13 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     Check,
-    FileText,
+    ExternalLink,
     History,
     LayoutTemplate,
-    MessageSquareText,
     Pencil,
     Upload,
+    User,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 import CollapsibleCard from '@/components/collapsible-card';
@@ -35,20 +36,44 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    REVISION_STATUS_VALUES,
+    activeContentClass,
+    activeIndicatorClass,
+    activeProgressClass,
+    activeStatusClass,
+    activeStatusLabel,
+    statusSubBadge,
+} from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
-import { update as dokumenUpdate } from '@/routes/admin/dokumen';
-import { destroy, edit, index, transition } from '@/routes/admin/naskah';
-import { update as catatanUpdate } from '@/routes/admin/naskah/catatan';
+import {
+    approveProofReading,
+    confirmRevisi,
+    destroy,
+    edit,
+    index,
+    markDiambil,
+    rejectProofReading,
+    transition,
+} from '@/routes/admin/naskah';
+import { update as historyUpdate } from '@/routes/admin/naskah/history';
 import { update as isbnUpdate } from '@/routes/admin/naskah/isbn';
 import { store as layoutStore } from '@/routes/admin/naskah/layout';
 import type { NaskahDetail, WorkflowStep } from '@/types';
+
+type AuthorAction = {
+    aksi: string;
+    label: string;
+    to: string;
+};
 
 type Props = {
     naskah: NaskahDetail;
     steps: WorkflowStep[];
     adminTransitions: string[];
     statusOptions: Array<{ value: string; label: string }>;
+    authorAction: AuthorAction | null;
 };
 
 function TransitionDialog({
@@ -61,9 +86,160 @@ function TransitionDialog({
     statusOptions: Array<{ value: string; label: string }>;
 }) {
     const [open, setOpen] = useState(false);
-    const form = useForm({ to_status: target, catatan: '' });
+    const form = useForm({
+        to_status: target,
+        catatan: '',
+        link_drive: naskah.link_drive ?? '',
+        nomor_isbn: naskah.isbn?.nomor_isbn ?? '',
+        penerbit: naskah.isbn?.penerbit ?? '',
+    });
     const targetLabel =
         statusOptions.find((s) => s.value === target)?.label ?? target;
+    const isRevisionTarget = REVISION_STATUS_VALUES.includes(target);
+    const isIsbnTerbit = target === 'isbn_terbit';
+
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        const endpoint = isIsbnTerbit ? isbnUpdate : transition;
+        form.post(endpoint.url(naskah.id), {
+            preserveScroll: true,
+            onSuccess: () => setOpen(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    variant={isRevisionTarget ? 'outline' : 'default'}
+                    size="sm"
+                    className={cn(
+                        'justify-center',
+                        isRevisionTarget
+                            ? REVISION_BUTTON_CLASS
+                            : GO_BUTTON_CLASS,
+                    )}
+                >
+                    {targetLabel}
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        {isIsbnTerbit ? 'Ajukan ISBN Terbit' : 'Ubah Status'}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {isIsbnTerbit
+                            ? 'Masukkan data ISBN untuk memindahkan naskah ke status "ISBN Terbit".'
+                            : `Ubah status naskah dari "${naskah.status.label}" menjadi "${targetLabel}".`}
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <div className="grid gap-2">
+                        <Label>Status Tujuan</Label>
+                        <Input value={targetLabel} readOnly />
+                    </div>
+                    {isIsbnTerbit && (
+                        <div className="grid gap-2 sm:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="nomor_isbn">Nomor ISBN</Label>
+                                <Input
+                                    id="nomor_isbn"
+                                    value={form.data.nomor_isbn}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nomor_isbn',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="978-602-0000-00-0"
+                                />
+                                <InputError message={form.errors.nomor_isbn} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="penerbit">Penerbit</Label>
+                                <Input
+                                    id="penerbit"
+                                    value={form.data.penerbit}
+                                    onChange={(e) =>
+                                        form.setData('penerbit', e.target.value)
+                                    }
+                                />
+                                <InputError message={form.errors.penerbit} />
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid gap-2">
+                        <Label htmlFor="catatan">Catatan</Label>
+                        <Textarea
+                            id="catatan"
+                            value={form.data.catatan}
+                            onChange={(e) =>
+                                form.setData('catatan', e.target.value)
+                            }
+                            placeholder="Catatan untuk penulis (opsional)"
+                            rows={3}
+                        />
+                        <InputError message={form.errors.catatan} />
+                    </div>
+                    {isRevisionTarget && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="link_drive">
+                                Link Drive Upload Revisi
+                            </Label>
+                            <Input
+                                id="link_drive"
+                                type="url"
+                                value={form.data.link_drive}
+                                onChange={(e) =>
+                                    form.setData('link_drive', e.target.value)
+                                }
+                                placeholder="https://drive.google.com/..."
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Penulis akan mengunggah file revisi ke link ini.
+                            </p>
+                            <InputError message={form.errors.link_drive} />
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            variant={isRevisionTarget ? 'outline' : 'default'}
+                            className={cn(
+                                isRevisionTarget
+                                    ? REVISION_BUTTON_CLASS
+                                    : GO_BUTTON_CLASS,
+                            )}
+                        >
+                            {form.processing && <Spinner />}
+                            {isIsbnTerbit ? 'Ajukan & Terbitkan' : 'Konfirmasi'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function JumpTransitionDialog({
+    naskah,
+    statusOptions,
+}: {
+    naskah: NaskahDetail;
+    statusOptions: Array<{ value: string; label: string }>;
+}) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({
+        to_status: '',
+        catatan: '',
+        link_drive: naskah.link_drive ?? '',
+        force: true,
+    });
+    const isRevisionTarget = REVISION_STATUS_VALUES.includes(
+        form.data.to_status,
+    );
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -76,36 +252,144 @@ function TransitionDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button
-                    variant="default"
-                    size="sm"
-                    className="justify-center"
-                >
-                    {targetLabel}
+                <Button variant="outline" size="sm" className="justify-center">
+                    Pindah ke Status Lain
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Ubah Status</DialogTitle>
+                    <DialogTitle>Pindah ke Status Lain</DialogTitle>
                     <DialogDescription>
-                        Ubah status naskah dari "{naskah.status.label}" menjadi
-                        "{targetLabel}".
+                        Pilih status tujuan dari tahap lain untuk melompatkan
+                        atau memundurkan progress naskah sesuai kebutuhan.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid gap-2">
                         <Label>Status Tujuan</Label>
-                        <Input value={targetLabel} readOnly />
+                        <Select
+                            value={form.data.to_status}
+                            onValueChange={(value) =>
+                                form.setData('to_status', value)
+                            }
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Pilih status tujuan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {statusOptions
+                                    .filter(
+                                        (s) => s.value !== naskah.status.value,
+                                    )
+                                    .map((s) => (
+                                        <SelectItem
+                                            key={s.value}
+                                            value={s.value}
+                                        >
+                                            {s.label}
+                                        </SelectItem>
+                                    ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={form.errors.to_status} />
                     </div>
+                    {isRevisionTarget && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="jump_link_drive">
+                                Link Drive Upload Revisi
+                            </Label>
+                            <Input
+                                id="jump_link_drive"
+                                type="url"
+                                value={form.data.link_drive}
+                                onChange={(e) =>
+                                    form.setData('link_drive', e.target.value)
+                                }
+                                placeholder="https://drive.google.com/..."
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Penulis akan mengunggah file revisi ke link ini.
+                            </p>
+                            <InputError message={form.errors.link_drive} />
+                        </div>
+                    )}
                     <div className="grid gap-2">
-                        <Label htmlFor="catatan">Catatan</Label>
+                        <Label htmlFor="jump_catatan">Catatan</Label>
                         <Textarea
-                            id="catatan"
+                            id="jump_catatan"
                             value={form.data.catatan}
                             onChange={(e) =>
                                 form.setData('catatan', e.target.value)
                             }
-                            placeholder="Catatan untuk penulis (opsional)"
+                            placeholder="Alasan pemindahan status (opsional)"
+                            rows={3}
+                        />
+                        <InputError message={form.errors.catatan} />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            variant={isRevisionTarget ? 'outline' : 'default'}
+                            className={cn(
+                                isRevisionTarget
+                                    ? REVISION_BUTTON_CLASS
+                                    : GO_BUTTON_CLASS,
+                            )}
+                        >
+                            {form.processing && <Spinner />}
+                            Pindahkan Status
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+const GO_BUTTON_CLASS =
+    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
+const REVISION_BUTTON_CLASS =
+    'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+
+function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({ catatan: '' });
+
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post(confirmRevisi.url(naskah.id), {
+            preserveScroll: true,
+            onSuccess: () => setOpen(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button className="justify-center" size="sm" variant="outline">
+                    <User />
+                    Konfirmasi Upload Revisi
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Konfirmasi Upload Revisi</DialogTitle>
+                    <DialogDescription>
+                        Konfirmasi atas nama penulis bahwa revisi telah diunggah
+                        ke link Drive.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="admin_confirm_catatan">Catatan</Label>
+                        <Textarea
+                            id="admin_confirm_catatan"
+                            value={form.data.catatan}
+                            onChange={(e) =>
+                                form.setData('catatan', e.target.value)
+                            }
+                            placeholder="Keterangan singkat (opsional)"
                             rows={3}
                         />
                         <InputError message={form.errors.catatan} />
@@ -122,121 +406,169 @@ function TransitionDialog({
     );
 }
 
-function DokumenPanel({ naskah }: { naskah: NaskahDetail }) {
-    return (
-        <CollapsibleCard
-            title="Verifikasi Dokumen"
-            description="Tandai kelengkapan setiap dokumen pengajuan."
-            icon={<FileText className="size-4 text-muted-foreground" />}
-            contentClassName="space-y-4"
-        >
-            {naskah.dokumens.map((dokumen) => (
-                <DokumenRow key={dokumen.id} dokumen={dokumen} />
-            ))}
-        </CollapsibleCard>
-    );
-}
-
-function DokumenRow({
-    dokumen,
-}: {
-    dokumen: NaskahDetail['dokumens'][number];
-}) {
-    const form = useForm({
-        status: dokumen.status.value,
-        catatan: dokumen.catatan ?? '',
-        file: null as File | null,
-    });
+function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({});
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        form.patch(dokumenUpdate.url(dokumen.id), {
+        form.post(approveProofReading.url(naskah.id), {
             preserveScroll: true,
+            onSuccess: () => setOpen(false),
         });
     }
 
     return (
-        <form onSubmit={onSubmit} className="space-y-3 rounded-md border p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">
-                        {dokumen.nama_dokumen}
-                    </p>
-                    {dokumen.file_url && (
-                        <a
-                            href={dokumen.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-primary underline underline-offset-4"
-                        >
-                            Lihat file
-                        </a>
-                    )}
-                </div>
-                <Badge variant="secondary">{dokumen.status.label}</Badge>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-                <div className="grid gap-2">
-                    <Label>Status</Label>
-                    <Select
-                        value={form.data.status || undefined}
-                        onValueChange={(v) => form.setData('status', v)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="belum">Belum</SelectItem>
-                            <SelectItem value="lengkap">Lengkap</SelectItem>
-                            <SelectItem value="perlu_perbaikan">
-                                Perlu Perbaikan
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor={`catatan-${dokumen.id}`}>Catatan</Label>
-                    <Input
-                        id={`catatan-${dokumen.id}`}
-                        value={form.data.catatan}
-                        onChange={(e) =>
-                            form.setData('catatan', e.target.value)
-                        }
-                        placeholder="Catatan (opsional)"
-                    />
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor={`file-${dokumen.id}`}>File</Label>
-                    <Input
-                        id={`file-${dokumen.id}`}
-                        type="file"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip"
-                        onChange={(e) =>
-                            form.setData('file', e.target.files?.[0] ?? null)
-                        }
-                    />
-                </div>
-            </div>
-            <InputError
-                message={
-                    form.errors.status ||
-                    form.errors.catatan ||
-                    form.errors.file
-                }
-            />
-            <div className="flex justify-end">
-                <Button type="submit" size="sm" disabled={form.processing}>
-                    {form.processing && <Spinner />}
-                    Simpan
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    className={`justify-center ${GO_BUTTON_CLASS}`}
+                    size="sm"
+                >
+                    <User />
+                    Acc Proof Reading
                 </Button>
-            </div>
-        </form>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Acc Proof Reading</DialogTitle>
+                    <DialogDescription>
+                        Setujui hasil proof reading atas nama penulis. Status
+                        naskah dipindahkan ke "Acc Proof Reading".
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            className={GO_BUTTON_CLASS}
+                        >
+                            {form.processing && <Spinner />}
+                            Setujui (Acc)
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({ catatan: '' });
+
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post(rejectProofReading.url(naskah.id), {
+            preserveScroll: true,
+            onSuccess: () => setOpen(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    className={`justify-center ${REVISION_BUTTON_CLASS}`}
+                    size="sm"
+                    variant="outline"
+                >
+                    <X />
+                    Ajukan Revisi
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Ajukan Revisi Proof Reading</DialogTitle>
+                    <DialogDescription>
+                        Ajukan perbaikan atas nama penulis. Bagian yang perlu
+                        diperbaiki dijelaskan pada catatan revisi.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="admin_reject_catatan">
+                            Catatan Revisi
+                        </Label>
+                        <Textarea
+                            id="admin_reject_catatan"
+                            value={form.data.catatan}
+                            onChange={(e) =>
+                                form.setData('catatan', e.target.value)
+                            }
+                            placeholder="Tuliskan catatan revisi"
+                            rows={3}
+                        />
+                        <InputError message={form.errors.catatan} />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            variant="outline"
+                            className={REVISION_BUTTON_CLASS}
+                        >
+                            {form.processing && <Spinner />}
+                            Ajukan Revisi
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function AdminMarkDiambilDialog({ naskah }: { naskah: NaskahDetail }) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({});
+
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post(markDiambil.url(naskah.id), {
+            preserveScroll: true,
+            onSuccess: () => setOpen(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    className={`justify-center ${GO_BUTTON_CLASS}`}
+                    size="sm"
+                >
+                    <Check />
+                    Buku Sudah Diambil
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Buku Sudah Diambil</DialogTitle>
+                    <DialogDescription>
+                        Tandai buku telah diambil atas nama penulis. Status
+                        naskah dipindahkan ke "Selesai".
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            className={GO_BUTTON_CLASS}
+                        >
+                            {form.processing && <Spinner />}
+                            Konfirmasi
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 
 function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
     const form = useForm({
-        file_layout: null as File | null,
         preview_pdf_link: '',
     });
 
@@ -249,48 +581,28 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
 
     return (
         <CollapsibleCard
-            title="Unggah Hasil Layout"
-            description="Unggah file layout dan link preview PDF untuk direview penulis."
+            title="Kirim Hasil Layout"
+            description="Kirim link preview PDF hasil layout untuk direview penulis."
             icon={<LayoutTemplate className="size-4 text-muted-foreground" />}
             className="border-primary/30"
             contentClassName="space-y-4"
         >
             <form onSubmit={onSubmit} className="space-y-4">
-                <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="grid gap-2">
-                        <Label htmlFor="file_layout">File Layout (PDF)</Label>
-                        <Input
-                            id="file_layout"
-                            type="file"
-                            accept=".pdf"
-                            onChange={(e) =>
-                                form.setData(
-                                    'file_layout',
-                                    e.target.files?.[0] ?? null,
-                                )
-                            }
-                        />
-                        <InputError message={form.errors.file_layout} />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="preview_pdf_link">
-                            Link Preview PDF
-                        </Label>
-                        <Input
-                            id="preview_pdf_link"
-                            value={form.data.preview_pdf_link}
-                            onChange={(e) =>
-                                form.setData('preview_pdf_link', e.target.value)
-                            }
-                            placeholder="https://drive.google.com/..."
-                        />
-                        <InputError message={form.errors.preview_pdf_link} />
-                    </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="preview_pdf_link">Link Preview PDF</Label>
+                    <Input
+                        id="preview_pdf_link"
+                        value={form.data.preview_pdf_link}
+                        onChange={(e) =>
+                            form.setData('preview_pdf_link', e.target.value)
+                        }
+                        placeholder="https://drive.google.com/..."
+                    />
+                    <InputError message={form.errors.preview_pdf_link} />
                 </div>
                 <Button type="submit" disabled={form.processing}>
                     {form.processing && <Spinner />}
-                    <Upload />
-                    Unggah &amp; Minta Review
+                    Kirim &amp; Minta Review
                 </Button>
             </form>
 
@@ -316,21 +628,6 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
                                     {layout.status.label}
                                 </Badge>
                                 <div className="flex gap-2">
-                                    {layout.file_url && (
-                                        <Button
-                                            asChild
-                                            variant="outline"
-                                            size="sm"
-                                        >
-                                            <a
-                                                href={layout.file_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                File
-                                            </a>
-                                        </Button>
-                                    )}
                                     {layout.preview_pdf_link && (
                                         <Button
                                             asChild
@@ -356,109 +653,110 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-function IsbnPanel({ naskah }: { naskah: NaskahDetail }) {
+function HistoryCatatanDialog({
+    naskahId,
+    history,
+    linkDrive,
+}: {
+    naskahId: number;
+    history: NaskahDetail['histories'][number];
+    linkDrive: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const isRevisionStep = REVISION_STATUS_VALUES.includes(
+        history.ke_status.value,
+    );
     const form = useForm({
-        nomor_isbn: naskah.isbn?.nomor_isbn ?? '',
-        penerbit: naskah.isbn?.penerbit ?? '',
-        catatan: naskah.isbn?.catatan ?? '',
+        catatan: history.catatan ?? '',
+        link_drive: linkDrive,
     });
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        form.post(isbnUpdate.url(naskah.id), {
-            preserveScroll: true,
-        });
+        form.patch(
+            historyUpdate.url({ naskah: naskahId, history: history.id }),
+            {
+                preserveScroll: true,
+                onSuccess: () => setOpen(false),
+            },
+        );
     }
 
     return (
-        <CollapsibleCard
-            title="Pengajuan ISBN"
-            description="Ajukan data ISBN untuk persetujuan penulis."
-            icon={<Check className="size-4 text-muted-foreground" />}
-            className="border-primary/30"
-        >
-            <form onSubmit={onSubmit} className="space-y-4">
-                <div className="grid gap-2 sm:grid-cols-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+            {history.catatan ? (
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                    <Pencil className="size-3" />
+                    Edit
+                </button>
+            ) : (
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                    Tambah catatan
+                </button>
+            )}
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        {isRevisionStep
+                            ? 'Edit Catatan & Link'
+                            : 'Edit Catatan'}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Ubah catatan admin pada transisi status ini.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="nomor_isbn">Nomor ISBN</Label>
-                        <Input
-                            id="nomor_isbn"
-                            value={form.data.nomor_isbn}
+                        <Label htmlFor="history_catatan">Catatan</Label>
+                        <Textarea
+                            id="history_catatan"
+                            value={form.data.catatan}
                             onChange={(e) =>
-                                form.setData('nomor_isbn', e.target.value)
+                                form.setData('catatan', e.target.value)
                             }
-                            placeholder="978-602-0000-00-0"
+                            rows={3}
+                            placeholder="Catatan untuk penulis (opsional)"
                         />
-                        <InputError message={form.errors.nomor_isbn} />
+                        <InputError message={form.errors.catatan} />
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="penerbit">Penerbit</Label>
-                        <Input
-                            id="penerbit"
-                            value={form.data.penerbit}
-                            onChange={(e) =>
-                                form.setData('penerbit', e.target.value)
-                            }
-                        />
-                        <InputError message={form.errors.penerbit} />
-                    </div>
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="isbn_catatan">Catatan</Label>
-                    <Textarea
-                        id="isbn_catatan"
-                        value={form.data.catatan}
-                        onChange={(e) =>
-                            form.setData('catatan', e.target.value)
-                        }
-                        rows={2}
-                    />
-                    <InputError message={form.errors.catatan} />
-                </div>
-                <Button type="submit" disabled={form.processing}>
-                    {form.processing && <Spinner />}
-                    Ajukan untuk Persetujuan
-                </Button>
-            </form>
-        </CollapsibleCard>
-    );
-}
-
-function CatatanPanel({ naskah }: { naskah: NaskahDetail }) {
-    const form = useForm({ catatan_admin: naskah.catatan_admin ?? '' });
-
-    function onSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        form.post(catatanUpdate.url(naskah.id), {
-            preserveScroll: true,
-        });
-    }
-
-    return (
-        <CollapsibleCard
-            title="Catatan Admin"
-            icon={
-                <MessageSquareText className="size-4 text-muted-foreground" />
-            }
-        >
-            <form onSubmit={onSubmit} className="space-y-3">
-                <Textarea
-                    value={form.data.catatan_admin}
-                    onChange={(e) =>
-                        form.setData('catatan_admin', e.target.value)
-                    }
-                    rows={3}
-                    placeholder="Catatan yang akan terlihat penulis di halaman tracking"
-                />
-                <InputError message={form.errors.catatan_admin} />
-                <div className="flex justify-end">
-                    <Button type="submit" size="sm" disabled={form.processing}>
-                        {form.processing && <Spinner />}
-                        Simpan Catatan
-                    </Button>
-                </div>
-            </form>
-        </CollapsibleCard>
+                    {isRevisionStep && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="history_link_drive">
+                                Link Drive Upload Revisi
+                            </Label>
+                            <Input
+                                id="history_link_drive"
+                                type="url"
+                                value={form.data.link_drive}
+                                onChange={(e) =>
+                                    form.setData('link_drive', e.target.value)
+                                }
+                                placeholder="https://drive.google.com/..."
+                            />
+                            <InputError message={form.errors.link_drive} />
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            size="sm"
+                        >
+                            {form.processing && <Spinner />}
+                            Simpan
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -467,18 +765,28 @@ export default function NaskahShow({
     steps,
     adminTransitions,
     statusOptions,
+    authorAction,
 }: Props) {
-    const currentIndex = steps.findIndex(
-        (s) => s.value === naskah.status.value,
-    );
+    const currentIndex = naskah.status.stage;
+    const subBadge = statusSubBadge(naskah.status.value);
 
-    const historyByStep = new Map<string, NaskahDetail['histories'][number]>();
+    const historyByStep = new Map<number, NaskahDetail['histories'][number]>();
 
     for (const history of naskah.histories) {
-        if (!historyByStep.has(history.ke_status.value)) {
-            historyByStep.set(history.ke_status.value, history);
+        if (!historyByStep.has(history.ke_status.stage)) {
+            historyByStep.set(history.ke_status.stage, history);
         }
     }
+
+    // Riwayat revisi terakhir dipakai sebagai penanda step tempat link Drive ditampilkan.
+    const revisionStage = naskah.histories.find((h) =>
+        REVISION_STATUS_VALUES.includes(h.ke_status.value),
+    )?.ke_status.stage;
+
+    // Riwayat ISBN terbit dipakai sebagai penanda step tempat data ISBN tampil.
+    const isbnHistory = naskah.histories.find(
+        (h) => h.ke_status.value === 'isbn_terbit',
+    );
 
     function remove() {
         if (confirm('Hapus naskah ini?')) {
@@ -510,7 +818,9 @@ export default function NaskahShow({
                             </h1>
                             <Badge
                                 variant="secondary"
-                                className="bg-primary/10 text-primary"
+                                className={activeStatusClass(
+                                    naskah.status.value,
+                                )}
                             >
                                 {naskah.status.label}
                             </Badge>
@@ -558,7 +868,10 @@ export default function NaskahShow({
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className="h-full rounded-full bg-primary transition-all duration-500"
+                                className={cn(
+                                    'h-full rounded-full border transition-all duration-500',
+                                    activeProgressClass(naskah.status.value),
+                                )}
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
@@ -567,7 +880,7 @@ export default function NaskahShow({
                                 const done = index < currentIndex;
                                 const active = index === currentIndex;
                                 const isLast = index === steps.length - 1;
-                                const history = historyByStep.get(step.value);
+                                const history = historyByStep.get(step.stage);
 
                                 return (
                                     <li
@@ -575,24 +888,38 @@ export default function NaskahShow({
                                         className="relative flex gap-4"
                                     >
                                         <div className="flex flex-col items-center">
-                                            <span
-                                                className={cn(
-                                                    'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                    active
-                                                        ? 'border-primary bg-primary/10 text-primary'
-                                                        : done
-                                                          ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
-                                                          : 'border-border bg-background text-muted-foreground',
-                                                )}
-                                            >
-                                                {done ? (
-                                                    <Check className="size-4" />
-                                                ) : (
+                                            {active ? (
+                                                <span
+                                                    className={cn(
+                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                        activeIndicatorClass(
+                                                            naskah.status.value,
+                                                        ),
+                                                    )}
+                                                >
                                                     <span className="text-xs font-semibold">
                                                         {index + 1}
                                                     </span>
-                                                )}
-                                            </span>
+                                                </span>
+                                            ) : done ? (
+                                                <span
+                                                    className={
+                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-cobalt-surface/30 bg-lavender-wash text-primary transition-colors'
+                                                    }
+                                                >
+                                                    <Check className="size-4" />
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    className={
+                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-border bg-background text-muted-foreground transition-colors'
+                                                    }
+                                                >
+                                                    <span className="text-xs font-semibold">
+                                                        {index + 1}
+                                                    </span>
+                                                </span>
+                                            )}
                                             {!isLast && (
                                                 <span
                                                     className={cn(
@@ -608,6 +935,13 @@ export default function NaskahShow({
                                         <div
                                             className={cn(
                                                 'min-w-0 flex-1 pt-1',
+                                                active &&
+                                                    cn(
+                                                        'rounded-lg p-3',
+                                                        activeContentClass(
+                                                            naskah.status.value,
+                                                        ),
+                                                    ),
                                                 !isLast && 'pb-6',
                                             )}
                                         >
@@ -627,9 +961,22 @@ export default function NaskahShow({
                                                 {active && (
                                                     <Badge
                                                         variant="secondary"
-                                                        className="bg-primary/10 text-primary"
+                                                        className={activeStatusClass(
+                                                            naskah.status.value,
+                                                        )}
                                                     >
-                                                        Sedang berjalan
+                                                        {activeStatusLabel(
+                                                            naskah.status.value,
+                                                        )}
+                                                    </Badge>
+                                                )}
+                                                {active && subBadge && (
+                                                    <Badge
+                                                        className={
+                                                            subBadge.className
+                                                        }
+                                                    >
+                                                        {subBadge.label}
                                                     </Badge>
                                                 )}
                                                 {history && (
@@ -650,20 +997,102 @@ export default function NaskahShow({
                                                         </span>{' '}
                                                         {history.catatan}
                                                     </p>
+                                                    {history.can_edit_catatan && (
+                                                        <div className="mt-1">
+                                                            <HistoryCatatanDialog
+                                                                naskahId={
+                                                                    naskah.id
+                                                                }
+                                                                history={
+                                                                    history
+                                                                }
+                                                                linkDrive={
+                                                                    naskah.link_drive ??
+                                                                    ''
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
+                                            {history &&
+                                                history.can_edit_catatan &&
+                                                !history.catatan && (
+                                                    <div className="mt-2">
+                                                        <HistoryCatatanDialog
+                                                            naskahId={naskah.id}
+                                                            history={history}
+                                                            linkDrive={
+                                                                naskah.link_drive ??
+                                                                ''
+                                                            }
+                                                        />
+                                                    </div>
+                                                )}
+                                            {index === revisionStage &&
+                                                naskah.link_drive && (
+                                                    <div className="mt-2 rounded-md border border-dashed border-border px-3 py-2">
+                                                        <a
+                                                            href={
+                                                                naskah.link_drive
+                                                            }
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                                                        >
+                                                            <ExternalLink className="size-4" />
+                                                            Buka Link Drive
+                                                            Upload Revisi
+                                                        </a>
+                                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                                            Link dikirim untuk
+                                                            penulis mengunggah
+                                                            revisi.
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                            {isbnHistory &&
+                                                index ===
+                                                    isbnHistory.ke_status
+                                                        .stage &&
+                                                naskah.isbn?.nomor_isbn && (
+                                                    <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                        <p className="text-xs font-medium text-muted-foreground">
+                                                            ISBN Terbit
+                                                        </p>
+                                                        <p className="text-sm font-semibold">
+                                                            {
+                                                                naskah.isbn
+                                                                    .nomor_isbn
+                                                            }
+                                                        </p>
+                                                        {naskah.isbn
+                                                            .penerbit && (
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {
+                                                                    naskah.isbn
+                                                                        .penerbit
+                                                                }
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                             {active &&
                                                 adminTransitions.length > 0 && (
                                                     <div className="mt-3 space-y-2">
                                                         <p className="text-xs font-medium text-muted-foreground">
-                                                            Tindakan selanjutnya:
+                                                            Tindakan
+                                                            selanjutnya:
                                                         </p>
                                                         <div className="flex flex-wrap gap-2">
                                                             {adminTransitions.map(
                                                                 (target) => (
                                                                     <TransitionDialog
-                                                                        key={target}
+                                                                        key={
+                                                                            target
+                                                                        }
                                                                         naskah={
                                                                             naskah
                                                                         }
@@ -679,6 +1108,56 @@ export default function NaskahShow({
                                                         </div>
                                                     </div>
                                                 )}
+
+                                            {active && (
+                                                <div className="mt-3">
+                                                    <JumpTransitionDialog
+                                                        naskah={naskah}
+                                                        statusOptions={
+                                                            statusOptions
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {active && authorAction && (
+                                                <div className="mt-3 space-y-2">
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Aksi penulis (dapat
+                                                        dipicu admin atas nama
+                                                        penulis):
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {authorAction.aksi ===
+                                                            'upload_revisi' && (
+                                                            <AdminConfirmRevisiDialog
+                                                                naskah={naskah}
+                                                            />
+                                                        )}
+                                                        {authorAction.aksi ===
+                                                            'review' && (
+                                                            <>
+                                                                <AdminApproveProofReadingDialog
+                                                                    naskah={
+                                                                        naskah
+                                                                    }
+                                                                />
+                                                                <AdminRejectProofReadingDialog
+                                                                    naskah={
+                                                                        naskah
+                                                                    }
+                                                                />
+                                                            </>
+                                                        )}
+                                                        {authorAction.aksi ===
+                                                            'approve' && (
+                                                            <AdminMarkDiambilDialog
+                                                                naskah={naskah}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </li>
                                 );
@@ -687,18 +1166,10 @@ export default function NaskahShow({
                     </CollapsibleCard>
                 </div>
 
-                <DokumenPanel naskah={naskah} />
-
-                <CatatanPanel naskah={naskah} />
-
                 {(naskah.status.value === 'dalam_proses_editing_layout' ||
-                    naskah.status.value === 'revisi_editing_layout') && (
+                    naskah.status.value === 'revisi_editing_layout' ||
+                    naskah.status.value === 'revisi_proof_reading') && (
                     <LayoutPanel naskah={naskah} />
-                )}
-
-                {(naskah.status.value === 'pengajuan_isbn' ||
-                    naskah.status.value === 'revisi_isbn') && (
-                    <IsbnPanel naskah={naskah} />
                 )}
 
                 <CollapsibleCard
@@ -766,15 +1237,21 @@ export default function NaskahShow({
                                         </p>
                                     )}
                                 </div>
-                                <Button asChild variant="outline" size="sm">
-                                    <a
-                                        href={revisi.file_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        Unduh
-                                    </a>
-                                </Button>
+                                {revisi.file_url ? (
+                                    <Button asChild variant="outline" size="sm">
+                                        <a
+                                            href={revisi.file_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
+                                            Unduh
+                                        </a>
+                                    </Button>
+                                ) : (
+                                    <p className="text-xs text-muted-foreground">
+                                        File diunggah ke link Drive
+                                    </p>
+                                )}
                             </div>
                         ))}
                     </CollapsibleCard>

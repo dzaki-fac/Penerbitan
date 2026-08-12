@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { home, tracking } from '@/routes';
+import { home } from '@/routes';
 
 export default function TrackingLayout({
     children,

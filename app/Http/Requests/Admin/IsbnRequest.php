@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\NaskahStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IsbnRequest extends FormRequest
 {
@@ -14,9 +16,16 @@ class IsbnRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isTerbit = $this->input('to_status') === NaskahStatus::IsbnTerbit->value;
+
         return [
-            'nomor_isbn' => ['nullable', 'string', 'max:255'],
-            'penerbit' => ['nullable', 'string', 'max:255'],
+            'to_status' => ['required', Rule::in([
+                NaskahStatus::IsbnTerbit->value,
+                NaskahStatus::RevisiIsbn->value,
+                NaskahStatus::PengajuanIsbn->value,
+            ])],
+            'nomor_isbn' => [$isTerbit ? 'required' : 'nullable', 'string', 'max:255'],
+            'penerbit' => [$isTerbit ? 'required' : 'nullable', 'string', 'max:255'],
             'catatan' => ['nullable', 'string', 'max:1000'],
         ];
     }

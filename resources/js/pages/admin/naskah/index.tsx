@@ -3,10 +3,22 @@ import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import { create, destroy, edit, show } from '@/routes/admin/naskah';
@@ -22,7 +34,12 @@ type Paginated<T> = {
 
 type Props = {
     naskahs: Paginated<NaskahCard>;
-    filters: { search: string; status: string; per_page: string };
+    filters: {
+        search: string;
+        status: string;
+        stage: string;
+        per_page: string;
+    };
     statuses: Array<{ value: string; label: string }>;
 };
 
@@ -30,11 +47,19 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
     const [perPage, setPerPage] = useState(filters.per_page);
-    const applied = useRef({ search: filters.search, status: filters.status, per_page: filters.per_page });
+    const applied = useRef({
+        search: filters.search,
+        status: filters.status,
+        stage: filters.stage,
+        per_page: filters.per_page,
+    });
 
     function apply(next: { search?: string; status?: string }) {
         applied.current = { ...applied.current, ...next };
-        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
+        router.get(admin.naskah.index(), applied.current, {
+            preserveState: true,
+            replace: true,
+        });
     }
 
     useEffect(() => {
@@ -43,14 +68,23 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                 apply({ search });
             }
         }, 400);
+
         return () => clearTimeout(timer);
     }, [search]);
 
     function resetFilters() {
         setSearch('');
         setStatus('');
-        applied.current = { search: '', status: '', per_page: perPage };
-        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
+        applied.current = {
+            search: '',
+            status: '',
+            stage: '',
+            per_page: perPage,
+        };
+        router.get(admin.naskah.index(), applied.current, {
+            preserveState: true,
+            replace: true,
+        });
     }
 
     function goTo(url: string) {
@@ -60,7 +94,10 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     function changePerPage(value: string) {
         setPerPage(value);
         applied.current = { ...applied.current, per_page: value };
-        router.get(admin.naskah.index(), applied.current, { preserveState: true, replace: true });
+        router.get(admin.naskah.index(), applied.current, {
+            preserveState: true,
+            replace: true,
+        });
     }
 
     function remove(id: number) {
@@ -70,10 +107,13 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     }
 
     const paginationBar = (border: string) => (
-        <div className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 ${border}`}>
+        <div
+            className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 ${border}`}
+        >
             <div className="flex items-center gap-2">
                 <p className="text-xs text-muted-foreground">
-                    Menampilkan {naskahs.data.length} dari {naskahs.total} naskah
+                    Menampilkan {naskahs.data.length} dari {naskahs.total}{' '}
+                    naskah
                 </p>
                 <Select value={perPage} onValueChange={changePerPage}>
                     <SelectTrigger className="h-7 w-24 text-xs">
@@ -89,13 +129,19 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
             {naskahs.last_page > 1 && (
                 <div className="flex gap-1">
                     {naskahs.links
-                        .filter((link): link is NonNullable<typeof link> => link !== null)
+                        .filter(
+                            (link): link is NonNullable<typeof link> =>
+                                link !== null,
+                        )
                         .map((link, index) => (
                             <Button
                                 key={index}
                                 variant={link.active ? 'default' : 'outline'}
                                 size="sm"
-                                className={cn('min-w-8 px-2', link.active && 'disabled:opacity-100')}
+                                className={cn(
+                                    'min-w-8 px-2',
+                                    link.active && 'disabled:opacity-100',
+                                )}
                                 disabled={!link.url || link.active}
                                 onClick={() => link.url && goTo(link.url)}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
@@ -115,7 +161,8 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                     <div>
                         <h1 className="text-lg font-semibold">Data Naskah</h1>
                         <p className="text-sm text-muted-foreground">
-                            Naskah berasal dari Google Form yang diimpor oleh admin.
+                            Naskah berasal dari Google Form yang diimpor oleh
+                            admin.
                         </p>
                     </div>
                     <Button asChild>
@@ -158,9 +205,14 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                         <SelectValue placeholder="Semua status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua status</SelectItem>
+                                        <SelectItem value="all">
+                                            Semua status
+                                        </SelectItem>
                                         {statuses.map((s) => (
-                                            <SelectItem key={s.value} value={s.value}>
+                                            <SelectItem
+                                                key={s.value}
+                                                value={s.value}
+                                            >
                                                 {s.label}
                                             </SelectItem>
                                         ))}
@@ -181,19 +233,36 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-muted/50 text-left text-xs text-muted-foreground">
-                                        <th className="px-4 py-3 font-medium">Judul</th>
-                                        <th className="px-4 py-3 font-medium">Penulis</th>
-                                        <th className="px-4 py-3 font-medium">Tanggal</th>
-                                        <th className="px-4 py-3 font-medium">Status</th>
-                                        <th className="px-4 py-3 font-medium">Progress</th>
-                                        <th className="px-4 py-3 text-right font-medium">Aksi</th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Judul
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Penulis
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Tanggal
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Status
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Progress
+                                        </th>
+                                        <th className="px-4 py-3 text-right font-medium">
+                                            Aksi
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {naskahs.data.map((naskah) => (
-                                        <tr key={naskah.id} className="border-b last:border-0">
+                                        <tr
+                                            key={naskah.id}
+                                            className="border-b last:border-0"
+                                        >
                                             <td className="max-w-60 px-4 py-3">
-                                                <p className="truncate font-medium">{naskah.judul}</p>
+                                                <p className="truncate font-medium">
+                                                    {naskah.judul}
+                                                </p>
                                                 {naskah.kategori && (
                                                     <p className="text-xs text-muted-foreground">
                                                         {naskah.kategori}
@@ -219,7 +288,9 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                                     <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
                                                         <div
                                                             className="h-full rounded-full bg-primary"
-                                                            style={{ width: `${naskah.progress}%` }}
+                                                            style={{
+                                                                width: `${naskah.progress}%`,
+                                                            }}
                                                         />
                                                     </div>
                                                     <span className="text-xs text-muted-foreground">
@@ -229,13 +300,31 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex justify-end gap-1">
-                                                    <Button asChild variant="ghost" size="icon" title="Detail">
-                                                        <Link href={show(naskah.id)}>
+                                                    <Button
+                                                        asChild
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Detail"
+                                                    >
+                                                        <Link
+                                                            href={show(
+                                                                naskah.id,
+                                                            )}
+                                                        >
                                                             <Eye />
                                                         </Link>
                                                     </Button>
-                                                    <Button asChild variant="ghost" size="icon" title="Edit">
-                                                        <Link href={edit(naskah.id)}>
+                                                    <Button
+                                                        asChild
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Edit"
+                                                    >
+                                                        <Link
+                                                            href={edit(
+                                                                naskah.id,
+                                                            )}
+                                                        >
                                                             <Pencil />
                                                         </Link>
                                                     </Button>
@@ -243,7 +332,9 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                                         variant="ghost"
                                                         size="icon"
                                                         title="Hapus"
-                                                        onClick={() => remove(naskah.id)}
+                                                        onClick={() =>
+                                                            remove(naskah.id)
+                                                        }
                                                         className="text-destructive hover:text-destructive"
                                                     >
                                                         <Trash2 />
@@ -254,7 +345,10 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     ))}
                                     {naskahs.data.length === 0 && (
                                         <tr>
-                                            <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                                            <td
+                                                colSpan={6}
+                                                className="px-4 py-10 text-center text-muted-foreground"
+                                            >
                                                 Tidak ada naskah ditemukan.
                                             </td>
                                         </tr>

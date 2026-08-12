@@ -16,12 +16,18 @@ class DashboardController extends Controller
      */
     public function index(): Response
     {
-        $statuses = collect(NaskahStatus::cases())->map(function (NaskahStatus $status) {
+        $statuses = collect(NaskahStatus::ordered())->map(function (NaskahStatus $status) {
+            $memberStatuses = array_map(
+                fn (NaskahStatus $s) => $s->value,
+                NaskahStatus::forStage($status->stage()),
+            );
+
             return [
                 'value' => $status->value,
                 'label' => $status->label(),
+                'stage' => $status->stage(),
                 'progress' => $status->progress(),
-                'count' => Naskah::where('status', $status->value)->count(),
+                'count' => Naskah::whereIn('status', $memberStatuses)->count(),
             ];
         });
 
@@ -43,8 +49,8 @@ class DashboardController extends Controller
         return Inertia::render('admin/dashboard', [
             'stats' => [
                 'total' => Naskah::count(),
-                'selesai' => Naskah::where('status', NaskahStatus::BukuDiambil->value)->count(),
-                'sedang_proses' => Naskah::where('status', '!=', NaskahStatus::BukuDiambil->value)->count(),
+                'selesai' => Naskah::where('status', NaskahStatus::Selesai->value)->count(),
+                'sedang_proses' => Naskah::where('status', '!=', NaskahStatus::Selesai->value)->count(),
             ],
             'statuses' => $statuses,
             'recentHistories' => $recentHistories,
