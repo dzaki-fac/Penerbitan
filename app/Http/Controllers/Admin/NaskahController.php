@@ -63,9 +63,11 @@ class NaskahController extends Controller
                 'link_cover' => $naskah->link_cover,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
                 'progress' => $naskah->progress,
-                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
+                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
                 'penulis' => $naskah->author->nama,
                 'identitas' => $naskah->author->jenis_identitas->label().' '.$naskah->author->nomor_identitas,
+                'penulis_status' => $naskah->author->status,
+                'fakultas_sekolah' => $naskah->author->fakultas_sekolah,
             ]);
 
         return Inertia::render('admin/naskah/index', [
@@ -106,6 +108,11 @@ class NaskahController extends Controller
             [
                 'nama' => $data['nama'],
                 'email' => $data['email'] ?? null,
+                'status' => $data['status'] ?? null,
+                'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+                'nomor_npwp' => $data['nomor_npwp'] ?? null,
+                'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
+                'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
             ],
         );
 
@@ -115,6 +122,16 @@ class NaskahController extends Controller
             'link_cover' => $data['link_cover'] ?? null,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
+            'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
+            'biaya' => $data['biaya'] ?? null,
+            'nama_narahubung' => $data['nama_narahubung'] ?? null,
+            'nomor_whatsapp_narahubung' => $data['nomor_whatsapp_narahubung'] ?? null,
+            'email_narahubung' => $data['email_narahubung'] ?? null,
+            'link_dummy_upload' => $data['link_dummy_upload'] ?? null,
+            'link_dummy_pdf' => $data['link_dummy_pdf'] ?? null,
+            'link_dummy_word' => $data['link_dummy_word'] ?? null,
+            'link_surat_keaslian' => $data['link_surat_keaslian'] ?? null,
+            'link_surat_penerbitan' => $data['link_surat_penerbitan'] ?? null,
             'status' => NaskahStatus::DataDiterima,
             'progress' => NaskahStatus::DataDiterima->progress(),
         ]);
@@ -141,13 +158,28 @@ class NaskahController extends Controller
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
                 'link_cover' => $naskah->link_cover,
-                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d'),
+                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d\TH:i'),
                 'sumber_form' => $naskah->sumber_form,
+                'kebijakan_akses' => $naskah->kebijakan_akses,
+                'biaya' => $naskah->biaya,
+                'nama_narahubung' => $naskah->nama_narahubung,
+                'nomor_whatsapp_narahubung' => $naskah->nomor_whatsapp_narahubung,
+                'email_narahubung' => $naskah->email_narahubung,
+                'link_dummy_upload' => $naskah->link_dummy_upload,
+                'link_dummy_pdf' => $naskah->link_dummy_pdf,
+                'link_dummy_word' => $naskah->link_dummy_word,
+                'link_surat_keaslian' => $naskah->link_surat_keaslian,
+                'link_surat_penerbitan' => $naskah->link_surat_penerbitan,
                 'penulis' => [
                     'nama' => $naskah->author->nama,
                     'email' => $naskah->author->email,
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
                     'nomor_identitas' => $naskah->author->nomor_identitas,
+                    'status' => $naskah->author->status,
+                    'fakultas_sekolah' => $naskah->author->fakultas_sekolah,
+                    'nomor_npwp' => $naskah->author->nomor_npwp,
+                    'nomor_whatsapp' => $naskah->author->nomor_whatsapp,
+                    'penulis_tambahan' => $naskah->author->penulis_tambahan,
                 ],
             ],
         ]);
@@ -158,7 +190,34 @@ class NaskahController extends Controller
      */
     public function update(Naskah $naskah, NaskahUpdateRequest $request): RedirectResponse
     {
-        $naskah->update($request->validated());
+        $data = $request->validated();
+
+        $naskah->author->update([
+            'nama' => $data['nama'],
+            'email' => $data['email'] ?? null,
+            'status' => $data['status'] ?? null,
+            'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+            'nomor_npwp' => $data['nomor_npwp'] ?? null,
+            'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
+            'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
+        ]);
+
+        $naskah->update([
+            'judul' => $data['judul'],
+            'link_cover' => $data['link_cover'] ?? null,
+            'tanggal_pengajuan' => $data['tanggal_pengajuan'],
+            'sumber_form' => $data['sumber_form'] ?? null,
+            'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
+            'biaya' => $data['biaya'] ?? null,
+            'nama_narahubung' => $data['nama_narahubung'] ?? null,
+            'nomor_whatsapp_narahubung' => $data['nomor_whatsapp_narahubung'] ?? null,
+            'email_narahubung' => $data['email_narahubung'] ?? null,
+            'link_dummy_upload' => $data['link_dummy_upload'] ?? null,
+            'link_dummy_pdf' => $data['link_dummy_pdf'] ?? null,
+            'link_dummy_word' => $data['link_dummy_word'] ?? null,
+            'link_surat_keaslian' => $data['link_surat_keaslian'] ?? null,
+            'link_surat_penerbitan' => $data['link_surat_penerbitan'] ?? null,
+        ]);
 
         flashSuccess(__('Naskah berhasil diperbarui.'));
 
@@ -185,14 +244,29 @@ class NaskahController extends Controller
                 'link_cover' => $naskah->link_cover,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
-                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
+                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
                 'sumber_form' => $naskah->sumber_form,
+                'kebijakan_akses' => $naskah->kebijakan_akses,
+                'biaya' => $naskah->biaya,
+                'nama_narahubung' => $naskah->nama_narahubung,
+                'nomor_whatsapp_narahubung' => $naskah->nomor_whatsapp_narahubung,
+                'email_narahubung' => $naskah->email_narahubung,
+                'link_dummy_upload' => $naskah->link_dummy_upload,
+                'link_dummy_pdf' => $naskah->link_dummy_pdf,
+                'link_dummy_word' => $naskah->link_dummy_word,
+                'link_surat_keaslian' => $naskah->link_surat_keaslian,
+                'link_surat_penerbitan' => $naskah->link_surat_penerbitan,
                 'author' => [
                     'id' => $naskah->author->id,
                     'nama' => $naskah->author->nama,
                     'email' => $naskah->author->email,
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
                     'nomor_identitas' => $naskah->author->nomor_identitas,
+                    'status' => $naskah->author->status,
+                    'fakultas_sekolah' => $naskah->author->fakultas_sekolah,
+                    'nomor_npwp' => $naskah->author->nomor_npwp,
+                    'nomor_whatsapp' => $naskah->author->nomor_whatsapp,
+                    'penulis_tambahan' => $naskah->author->penulis_tambahan,
                 ],
                 'layouts' => $naskah->layouts->map(fn ($l) => [
                     'id' => $l->id,

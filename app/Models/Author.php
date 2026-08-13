@@ -16,10 +16,15 @@ use App\Enums\IdentitasType;
  * @property IdentitasType $jenis_identitas
  * @property string $nomor_identitas
  * @property string|null $email
+ * @property string|null $status
+ * @property string|null $fakultas_sekolah
+ * @property string|null $nomor_npwp
+ * @property string|null $nomor_whatsapp
+ * @property string|null $penulis_tambahan
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['nama', 'jenis_identitas', 'nomor_identitas', 'email'])]
+#[Fillable(['nama', 'jenis_identitas', 'nomor_identitas', 'email', 'status', 'fakultas_sekolah', 'nomor_npwp', 'nomor_whatsapp', 'penulis_tambahan'])]
 class Author extends Model
 {
     /** @use HasFactory<AuthorFactory> */

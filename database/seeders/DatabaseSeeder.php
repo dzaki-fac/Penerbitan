@@ -13,6 +13,7 @@ use App\Models\Layout;
 use App\Models\Naskah;
 use App\Models\User;
 use App\Services\WorkflowService;
+use Database\Factories\NaskahFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -35,6 +36,10 @@ class DatabaseSeeder extends Seeder
             'jenis_identitas' => IdentitasType::NIM,
             'nomor_identitas' => '2112345001',
             'email' => 'budi@example.com',
+            'status' => 'Mahasiswa Universitas Diponegoro',
+            'fakultas_sekolah' => 'Fakultas Teknik',
+            'nomor_npwp' => '12.345.678.9-012.345',
+            'nomor_whatsapp' => '081234567890',
         ]);
 
         $siti = Author::create([
@@ -42,6 +47,11 @@ class DatabaseSeeder extends Seeder
             'jenis_identitas' => IdentitasType::NIP,
             'nomor_identitas' => '198501012010012001',
             'email' => 'siti@example.com',
+            'status' => 'Dosen Universitas Diponegoro',
+            'fakultas_sekolah' => 'Fakultas Ekonomika dan Bisnis',
+            'nomor_npwp' => '98.765.432.1-098.765',
+            'nomor_whatsapp' => '081298765432',
+            'penulis_tambahan' => 'Dr. Ahmad Fauzi',
         ]);
 
         $andi = Author::create([
@@ -49,6 +59,10 @@ class DatabaseSeeder extends Seeder
             'jenis_identitas' => IdentitasType::NIM,
             'nomor_identitas' => '2112345002',
             'email' => 'andi@example.com',
+            'status' => 'Mahasiswa Universitas Diponegoro',
+            'fakultas_sekolah' => 'Fakultas Teknik',
+            'nomor_npwp' => '11.111.111.1-111.111',
+            'nomor_whatsapp' => '085712345678',
         ]);
 
         // 1. Budi - naskah menunggu proof reading (acc/revisi oleh penulis)
@@ -182,9 +196,19 @@ class DatabaseSeeder extends Seeder
             'judul' => $judul,
             'link_cover' => $linkCover,
             'tanggal_pengajuan' => now()->subDays(rand(3, 40)),
-            'sumber_form' => 'Google Form Pendaftaran',
+            'sumber_form' => 'Form Pengajuan Naskah',
             'status' => NaskahStatus::DataDiterima,
             'progress' => NaskahStatus::DataDiterima->progress(),
+            'kebijakan_akses' => NaskahFactory::KEBIJAKAN_AKSES_OPTIONS[$author->naskahs()->count() % 2],
+            'biaya' => NaskahFactory::BIAYA_OPTIONS[$author->naskahs()->count() % 2],
+            'nama_narahubung' => $author->nama,
+            'nomor_whatsapp_narahubung' => $author->nomor_whatsapp,
+            'email_narahubung' => $author->email,
+            'link_dummy_upload' => NaskahFactory::DUMMY_UPLOAD_OPTIONS[$author->naskahs()->count() % 2],
+            'link_dummy_pdf' => 'https://drive.google.com/file/d/example-dummy-pdf/view',
+            'link_dummy_word' => 'https://drive.google.com/file/d/example-dummy-word/view',
+            'link_surat_keaslian' => 'https://drive.google.com/file/d/example-surat-keaslian/view',
+            'link_surat_penerbitan' => 'https://drive.google.com/file/d/example-surat-penerbitan/view',
         ]);
 
         WorkflowService::transition(

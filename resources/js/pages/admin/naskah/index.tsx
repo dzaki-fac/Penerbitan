@@ -274,6 +274,17 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                                 <p className="text-xs text-muted-foreground">
                                                     {naskah.identitas}
                                                 </p>
+                                                {(naskah.penulis_status ||
+                                                    naskah.fakultas_sekolah) && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {[
+                                                            naskah.penulis_status,
+                                                            naskah.fakultas_sekolah,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(' · ')}
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 {naskah.tanggal_pengajuan}

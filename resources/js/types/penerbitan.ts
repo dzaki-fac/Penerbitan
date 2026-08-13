@@ -20,6 +20,16 @@ export type AuthorCard = {
     nomor_identitas: string;
 };
 
+export type AuthorDetail = AuthorCard & {
+    id?: number;
+    email?: string | null;
+    status?: string | null;
+    fakultas_sekolah?: string | null;
+    nomor_npwp?: string | null;
+    nomor_whatsapp?: string | null;
+    penulis_tambahan?: string | null;
+};
+
 export type NaskahCard = {
     id: number;
     judul: string;
@@ -29,6 +39,8 @@ export type NaskahCard = {
     tanggal_pengajuan: string;
     penulis?: string;
     identitas?: string;
+    penulis_status?: string | null;
+    fakultas_sekolah?: string | null;
 };
 
 export type NaskahDetail = {
@@ -39,7 +51,17 @@ export type NaskahDetail = {
     progress: number;
     tanggal_pengajuan: string;
     sumber_form: string | null;
-    author: AuthorCard & { id?: number; email?: string | null };
+    kebijakan_akses: string | null;
+    biaya: string | null;
+    nama_narahubung: string | null;
+    nomor_whatsapp_narahubung: string | null;
+    email_narahubung: string | null;
+    link_dummy_upload: string | null;
+    link_dummy_pdf: string | null;
+    link_dummy_word: string | null;
+    link_surat_keaslian: string | null;
+    link_surat_penerbitan: string | null;
+    author: AuthorDetail;
     layout: {
         id: number;
         versi: number;

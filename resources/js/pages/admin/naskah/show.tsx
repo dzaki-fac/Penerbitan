@@ -3,6 +3,7 @@ import {
     ArrowLeft,
     Check,
     ExternalLink,
+    FileText,
     History,
     LayoutTemplate,
     Pencil,
@@ -302,6 +303,148 @@ const JUMP_BUTTON_CLASS =
     'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
 const JUMP_REVISION_CLASS =
     'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+
+function Detail({
+    label,
+    children,
+}: {
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="flex items-start justify-between gap-4">
+            <dt className="shrink-0 text-muted-foreground">{label}</dt>
+            <dd className="text-right font-medium">{children}</dd>
+        </div>
+    );
+}
+
+function ExternalLinkValue({
+    label,
+    value,
+}: {
+    label: string;
+    value: string | null;
+}) {
+    if (!value) {
+        return (
+            <div className="flex items-start justify-between gap-4">
+                <dt className="shrink-0 text-muted-foreground">{label}</dt>
+                <dd className="text-right text-muted-foreground">-</dd>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-start justify-between gap-4">
+            <dt className="shrink-0 text-muted-foreground">{label}</dt>
+            <dd className="min-w-0 text-right">
+                <a
+                    href={value}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex max-w-full items-center gap-1 truncate font-medium text-primary underline underline-offset-4"
+                >
+                    <span className="truncate">Buka link</span>
+                    <ExternalLink className="size-3.5 shrink-0" />
+                </a>
+            </dd>
+        </div>
+    );
+}
+
+function PengajuanCard({ naskah }: { naskah: NaskahDetail }) {
+    return (
+        <CollapsibleCard
+            title="Data Pengajuan"
+            icon={<FileText className="size-4 text-muted-foreground" />}
+            contentClassName="space-y-4"
+        >
+            <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                    <p className="mb-2 text-sm font-semibold">Penulis</p>
+                    <dl className="space-y-2 text-sm">
+                        <Detail label="Status">
+                            {naskah.author.status ?? '-'}
+                        </Detail>
+                        <Detail label="Fakultas / Sekolah">
+                            {naskah.author.fakultas_sekolah ?? '-'}
+                        </Detail>
+                        <Detail label="Email">
+                            {naskah.author.email ?? '-'}
+                        </Detail>
+                        <Detail label="Nomor NPWP">
+                            {naskah.author.nomor_npwp ?? '-'}
+                        </Detail>
+                        <Detail label="No. WhatsApp">
+                            {naskah.author.nomor_whatsapp ?? '-'}
+                        </Detail>
+                        <Detail label="Penulis Tambahan">
+                            {naskah.author.penulis_tambahan ?? '-'}
+                        </Detail>
+                    </dl>
+                </div>
+                <div>
+                    <p className="mb-2 text-sm font-semibold">
+                        Naskah &amp; Narahubung
+                    </p>
+                    <dl className="space-y-2 text-sm">
+                        <Detail label="Sumber Form">
+                            {naskah.sumber_form ?? '-'}
+                        </Detail>
+                        <Detail label="Kebijakan Akses">
+                            {naskah.kebijakan_akses ?? '-'}
+                        </Detail>
+                        <Detail label="Biaya">{naskah.biaya ?? '-'}</Detail>
+                        <Detail label="Narahubung">
+                            {naskah.nama_narahubung ?? '-'}
+                        </Detail>
+                        <Detail label="WhatsApp Narahubung">
+                            {naskah.nomor_whatsapp_narahubung ?? '-'}
+                        </Detail>
+                        <Detail label="Email Narahubung">
+                            {naskah.email_narahubung ?? '-'}
+                        </Detail>
+                    </dl>
+                </div>
+            </div>
+
+            <Separator />
+
+            <div>
+                <p className="mb-2 text-sm font-semibold">
+                    Dokumen &amp; Surat
+                </p>
+                <dl className="space-y-2 text-sm">
+                    <ExternalLinkValue
+                        label="Cover"
+                        value={naskah.link_cover}
+                    />
+                    <ExternalLinkValue
+                        label="Dummy (Upload)"
+                        value={naskah.link_dummy_upload}
+                    />
+                    <ExternalLinkValue
+                        label="Dummy PDF"
+                        value={naskah.link_dummy_pdf}
+                    />
+                    <ExternalLinkValue
+                        label="Dummy Word"
+                        value={naskah.link_dummy_word}
+                    />
+                    <ExternalLinkValue
+                        label="Surat Keaslian"
+                        value={naskah.link_surat_keaslian}
+                    />
+                    <ExternalLinkValue
+                        label="Surat Penerbitan"
+                        value={naskah.link_surat_penerbitan}
+                    />
+                </dl>
+            </div>
+        </CollapsibleCard>
+    );
+}
 
 // Alias lama — semua tombol aksi workflow kini memakai warna yang sama.
 const GO_BUTTON_CLASS = ACTION_BUTTON_CLASS;
@@ -784,6 +927,8 @@ export default function NaskahShow({
                 </div>
 
                 <div className="flex flex-col gap-6">
+                    <PengajuanCard naskah={naskah} />
+
                     <CollapsibleCard
                         title="Progress Workflow"
                         icon={
