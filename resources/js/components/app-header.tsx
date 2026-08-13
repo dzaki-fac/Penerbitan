@@ -1,5 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { FileStack, LayoutGrid, Menu, Search, UserRoundCog } from 'lucide-react';
+import {
+    FileStack,
+    LayoutGrid,
+    Menu,
+    Search,
+    UserRoundCog,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -58,8 +64,7 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const activeItemStyles =
-    'text-foreground bg-primary/10';
+const activeItemStyles = 'text-foreground bg-primary/10';
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage();
@@ -91,16 +96,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     Navigation menu
                                 </SheetTitle>
                                 <SheetHeader className="flex flex-row items-center justify-start text-left">
-                                    <img
-                                        src="/assets/logo_undip.png"
-                                        alt=""
-                                        className="h-10 w-auto"
-                                    />
-                                    <img
-                                        src="/images/logo-upt.png"
-                                        alt=""
-                                        className="h-10 w-auto"
-                                    />
+                                    <AppLogo showName={false} />
                                 </SheetHeader>
                                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
@@ -176,10 +172,12 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     <Avatar className="size-8 overflow-hidden rounded-full">
                                         <AvatarImage
                                             src={auth.user?.avatar}
-                                            alt={auth.user?.name}
+                                            alt={auth.user?.nama_lengkap}
                                         />
                                         <AvatarFallback className="rounded-full bg-primary/10 text-foreground">
-                                            {getInitials(auth.user?.name ?? '')}
+                                            {getInitials(
+                                                auth.user?.nama_lengkap ?? '',
+                                            )}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>

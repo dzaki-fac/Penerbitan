@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { BookOpenText, Search } from 'lucide-react';
+import AppLogo from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { tracking } from '@/routes';
 
@@ -10,23 +11,17 @@ export default function Landing() {
 
             <div className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background p-6 text-foreground md:p-10">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="mb-1 flex items-center justify-center gap-4 rounded-md">
-                        <img
-                            src="/assets/logo_undip.png"
-                            alt="Logo UNDIP"
-                            className="h-24 w-auto"
-                        />
-                        <img
-                            src="/images/logo-upt.png"
-                            alt="Logo UPT Penerbitan"
-                            className="h-24 w-auto"
-                        />
-                    </div>
+                    <AppLogo
+                        size="lg"
+                        showName={false}
+                        className="mb-1 rounded-md"
+                    />
                     <h1 className="text-center text-2xl font-semibold tracking-[0.016em] sm:text-3xl">
                         Sistem Penerbitan UPT Perpustakaan dan UNDIP Press
                     </h1>
                     <p className="mx-auto max-w-xl text-center text-balance text-muted-foreground">
-                        Pantau proses penerbitan naskah Anda atau ajukan naskah baru untuk diterbitkan.
+                        Pantau proses penerbitan naskah Anda atau ajukan naskah
+                        baru untuk diterbitkan.
                     </p>
                 </div>
 
@@ -54,6 +49,10 @@ export default function Landing() {
                         </Link>
                     </Button>
                 </div>
+
+                <p className="text-center text-sm text-muted-foreground">
+                    Bersinergi, Inovasi, Literasi, Layanan Primer
+                </p>
             </div>
         </>
     );
