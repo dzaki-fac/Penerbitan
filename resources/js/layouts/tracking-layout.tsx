@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { home, tracking } from '@/routes';
+import { WhatsAppButton } from '@/components/whatsapp-button';
+import { home } from '@/routes';
 
 export default function TrackingLayout({
     children,
@@ -10,7 +11,9 @@ export default function TrackingLayout({
     children: React.ReactNode;
     className?: string;
 }) {
-    const { auth } = usePage().props as { auth: { user: { name: string } | null } };
+    const { auth } = usePage().props as {
+        auth: { user: { name: string } | null };
+    };
 
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -43,9 +46,12 @@ export default function TrackingLayout({
                     </nav>
                 </div>
             </header>
-            <main className={`mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 ${className}`}>
+            <main
+                className={`mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 ${className}`}
+            >
                 {children}
             </main>
+            {!auth.user && <WhatsAppButton />}
         </div>
     );
 }
