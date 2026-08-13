@@ -161,7 +161,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                     </div>
                                                     <div className="h-2 w-full overflow-hidden rounded-full bg-border/60">
                                                         <div
-                                                            className={`h-full rounded-full transition-all ${progressBarClass(naskah.status.value)}`}
+                                                            className={`h-full rounded-full transition-all ${progressBarClass(naskah.progress)}`}
                                                             style={{
                                                                 width: `${naskah.progress}%`,
                                                             }}

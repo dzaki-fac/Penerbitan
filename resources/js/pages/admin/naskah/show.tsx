@@ -957,7 +957,7 @@ export default function NaskahShow({
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className={`h-full rounded-full border border-primary-foreground/20 transition-all duration-500 ${progressBarClass(naskah.status.value)}`}
+                                className={`h-full rounded-full border border-primary-foreground/20 transition-all duration-500 ${progressBarClass(naskah.progress)}`}
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>

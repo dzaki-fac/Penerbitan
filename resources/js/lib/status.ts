@@ -135,26 +135,24 @@ export function activeContentClass(statusValue: string): string {
 }
 
 /**
- * Warna isian bar progress. Sengaja pakai gradasi (bukan biru polos satu warna)
- * supaya progress bar tidak monoton — tone revisi/selesai/tindakan tetap
- * dapat warna solid yang jelas maknanya.
+ * Warna isian bar progress mengikuti persentase penyelesaian:
+ * <50% kuning (baru mulai), 50–74% biru, 75–99% indigo (mendekati selesai),
+ * 100% hijau (selesai). Selalu solid satu warna per level, tidak "rainbow".
  */
-export function progressBarClass(statusValue: string): string {
-    const tone = toneFor(statusValue);
-
-    if (tone === 'revision') {
-        return 'bg-red-500';
-    }
-
-    if (tone === 'done') {
+export function progressBarClass(progress: number): string {
+    if (progress >= 100) {
         return 'bg-green-500';
     }
 
-    if (tone === 'action') {
-        return 'bg-amber-500';
+    if (progress >= 75) {
+        return 'bg-indigo-500';
     }
 
-    return 'bg-gradient-to-r from-cobalt-surface via-sky-400 to-emerald-400';
+    if (progress >= 50) {
+        return 'bg-cobalt-surface';
+    }
+
+    return 'bg-amber-500';
 }
 
 /** Kelas kotak "sudah selesai" pada timeline: selalu hijau, terlepas dari tone naskah saat ini. */
