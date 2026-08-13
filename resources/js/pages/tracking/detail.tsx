@@ -10,6 +10,7 @@ import {
     User,
 } from 'lucide-react';
 import CollapsibleCard from '@/components/collapsible-card';
+import NoteText from '@/components/note-text';
 import { ActionPanel } from '@/components/tracking/action-panel';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -70,12 +71,12 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                 </a>
 
                 <div
-                    className={`rounded-xl border ${statusBorderClass()} bg-card p-6`}
+                    className={`rounded-xl border ${statusBorderClass(naskah.status.value)} bg-card p-6`}
                 >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Badge className={statusBadgeClass()}>
+                                <Badge className={statusBadgeClass(naskah.status.value)}>
                                     {naskah.status.label}
                                 </Badge>
                             </div>
@@ -163,7 +164,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             className={cn(
                                                 'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                                                 active
-                                                    ? activeIndicatorClass()
+                                                    ? activeIndicatorClass(naskah.status.value)
                                                     : done
                                                       ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
                                                       : 'border-border bg-background text-muted-foreground',
@@ -195,7 +196,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             active &&
                                                 cn(
                                                     'rounded-lg p-3',
-                                                    activeContentClass(),
+                                                    activeContentClass(naskah.status.value),
                                                 ),
                                             !isLast && 'pb-6',
                                         )}
@@ -216,9 +217,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             {active && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className={activeStatusClass()}
+                                                    className={activeStatusClass(naskah.status.value)}
                                                 >
-                                                    {activeStatusLabel()}
+                                                    {activeStatusLabel(naskah.status.value)}
                                                 </Badge>
                                             )}
                                             {active && subBadge && (
@@ -246,7 +247,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                             : ''}
                                                         :
                                                     </span>{' '}
-                                                    {history.catatan}
+                                                    <NoteText
+                                                        text={history.catatan}
+                                                    />
                                                 </p>
                                             </div>
                                         )}
@@ -302,7 +305,11 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 Layout
                             </span>
                             {naskah.layout && (
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        naskah.layout.status.value,
+                                    )}
+                                >
                                     {naskah.layout.status.label}
                                 </Badge>
                             )}
@@ -327,7 +334,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 {naskah.layout.catatan_revisi && (
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         Catatan revisi:{' '}
-                                        {naskah.layout.catatan_revisi}
+                                        <NoteText
+                                            text={naskah.layout.catatan_revisi}
+                                        />
                                     </p>
                                 )}
                             </div>
@@ -344,7 +353,11 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">ISBN</span>
                             {naskah.isbn && (
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        naskah.isbn.status.value,
+                                    )}
+                                >
                                     {naskah.isbn.status.label}
                                 </Badge>
                             )}
@@ -365,7 +378,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 )}
                                 {naskah.isbn.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Catatan: {naskah.isbn.catatan}
+                                        Catatan: <NoteText text={naskah.isbn.catatan} />
                                     </p>
                                 )}
                             </div>
@@ -421,7 +434,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 </div>
                                 {history.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {history.catatan}
+                                        <NoteText text={history.catatan} />
                                     </p>
                                 )}
                             </li>

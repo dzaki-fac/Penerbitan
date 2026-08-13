@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import CollapsibleCard from '@/components/collapsible-card';
 import InputError from '@/components/input-error';
+import NoteText from '@/components/note-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +44,7 @@ import {
     activeIndicatorClass,
     activeStatusClass,
     activeStatusLabel,
+    statusBadgeClass,
     statusSubBadge,
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
@@ -723,7 +725,11 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
                                         {layout.tanggal}
                                     </p>
                                 </div>
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        layout.status.value,
+                                    )}
+                                >
                                     {layout.status.label}
                                 </Badge>
                                 <div className="flex gap-2">
@@ -885,7 +891,9 @@ export default function NaskahShow({
                             </h1>
                             <Badge
                                 variant="secondary"
-                                className={activeStatusClass()}
+                                className={activeStatusClass(
+                                    naskah.status.value,
+                                )}
                             >
                                 {naskah.status.label}
                             </Badge>
@@ -967,7 +975,7 @@ export default function NaskahShow({
                                                 <span
                                                     className={cn(
                                                         'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                        activeIndicatorClass(),
+                                                        activeIndicatorClass(naskah.status.value),
                                                     )}
                                                 >
                                                     <span className="text-xs font-semibold">
@@ -1011,7 +1019,9 @@ export default function NaskahShow({
                                                 active &&
                                                     cn(
                                                         'rounded-lg p-3',
-                                                        activeContentClass(),
+                                                        activeContentClass(
+                                                            naskah.status.value,
+                                                        ),
                                                     ),
                                                 !isLast && 'pb-6',
                                             )}
@@ -1032,9 +1042,13 @@ export default function NaskahShow({
                                                 {active && (
                                                     <Badge
                                                         variant="secondary"
-                                                        className={activeStatusClass()}
+                                                        className={activeStatusClass(
+                                                            naskah.status.value,
+                                                        )}
                                                     >
-                                                        {activeStatusLabel()}
+                                                        {activeStatusLabel(
+                                                            naskah.status.value,
+                                                        )}
                                                     </Badge>
                                                 )}
                                                 {active && subBadge && (
@@ -1062,7 +1076,9 @@ export default function NaskahShow({
                                                                 : ''}
                                                             :
                                                         </span>{' '}
-                                                        {history.catatan}
+                                                        <NoteText
+                                                            text={history.catatan}
+                                                        />
                                                     </p>
                                                     {history.can_edit_catatan && (
                                                         <div className="mt-1">
@@ -1242,7 +1258,7 @@ export default function NaskahShow({
                                 </div>
                                 {history.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {history.catatan}
+                                        <NoteText text={history.catatan} />
                                     </p>
                                 )}
                             </li>
@@ -1269,7 +1285,9 @@ export default function NaskahShow({
                                     </p>
                                     {revisi.catatan_penulis && (
                                         <p className="text-xs text-muted-foreground">
-                                            {revisi.catatan_penulis}
+                                            <NoteText
+                                                text={revisi.catatan_penulis}
+                                            />
                                         </p>
                                     )}
                                 </div>

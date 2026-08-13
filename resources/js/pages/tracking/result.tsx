@@ -124,7 +124,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`gap-4 ${statusBorderClass()}`}
+                                            className={`gap-4 ${statusBorderClass(naskah.status.value)}`}
                                         >
                                             {naskah.link_cover && (
                                                 <CoverThumbnail
@@ -138,7 +138,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                         {naskah.judul}
                                                     </CardTitle>
                                                     <Badge
-                                                        className={`shrink-0 ${statusBadgeClass()}`}
+                                                        className={`shrink-0 ${statusBadgeClass(naskah.status.value)}`}
                                                     >
                                                         {naskah.status.label}
                                                     </Badge>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\WorkflowConflictException;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,4 +27,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (WorkflowConflictException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 409);
+            }
+
+            flashError($e->getMessage());
+
+            return back()->withErrors(['concurrency' => $e->getMessage()]);
+        });
     })->create();
