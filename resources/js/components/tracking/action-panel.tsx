@@ -283,14 +283,13 @@ function ConfirmUploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-// Kelas warna tombol: seragam untuk semua tombol aksi workflow, dipisah di sini
-// supaya mudah diubah kalau mau ganti nuansa warnanya.
-const ACTION_BUTTON_CLASS =
-    'bg-primary text-primary-foreground hover:bg-primary/90';
-
-// Alias — sama warnanya dengan tombol aksi lainnya.
-const APPROVE_BUTTON_CLASS = ACTION_BUTTON_CLASS;
-const REJECT_BUTTON_CLASS = ACTION_BUTTON_CLASS;
+// Kelas warna tombol aksi. Acc dan Ajukan Revisi sengaja dibedakan warnanya
+// (hijau vs merah) supaya kedua pilihan langsung kelihatan beda, tidak
+// tertukar saat penulis buru-buru memilih.
+const APPROVE_BUTTON_CLASS =
+    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
+const REJECT_BUTTON_CLASS =
+    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600/40';
 
 export function ActionPanel({ naskah, action }: Props) {
     if (!action) {

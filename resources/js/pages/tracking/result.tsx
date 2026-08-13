@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     needsAuthorAction,
+    progressBarClass,
     statusBadgeClass,
     statusBorderClass,
 } from '@/lib/status';
@@ -81,9 +82,9 @@ export default function TrackingResult({ author, naskahs }: Props) {
                 </div>
 
                 {perluTindakan.length > 0 && (
-                    <div className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4">
-                        <AlertCircle className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-                        <p className="text-sm text-foreground">
+                    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
+                        <p className="text-sm text-amber-900">
                             Ada{' '}
                             <span className="font-semibold">
                                 {perluTindakan.length}
@@ -133,19 +134,17 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                 />
                                             )}
                                             <CardHeader className="gap-2">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <CardTitle className="text-base leading-snug">
-                                                        {naskah.judul}
-                                                    </CardTitle>
-                                                    <Badge
-                                                        className={`shrink-0 ${statusBadgeClass(naskah.status.value)}`}
-                                                    >
-                                                        {naskah.status.label}
-                                                    </Badge>
-                                                </div>
+                                                <CardTitle className="text-base leading-snug">
+                                                    {naskah.judul}
+                                                </CardTitle>
+                                                <Badge
+                                                    className={`h-auto w-fit max-w-full whitespace-normal text-left ${statusBadgeClass(naskah.status.value)}`}
+                                                >
+                                                    {naskah.status.label}
+                                                </Badge>
                                                 {perluAksi && (
-                                                    <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                                                        <AlertCircle className="size-3.5" />
+                                                    <p className="flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+                                                        <AlertCircle className="size-3.5 shrink-0" />
                                                         Perlu tindakan Anda
                                                     </p>
                                                 )}
@@ -162,7 +161,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                     </div>
                                                     <div className="h-2 w-full overflow-hidden rounded-full bg-border/60">
                                                         <div
-                                                            className="h-full rounded-full bg-primary transition-all"
+                                                            className={`h-full rounded-full transition-all ${progressBarClass(naskah.status.value)}`}
                                                             style={{
                                                                 width: `${naskah.progress}%`,
                                                             }}

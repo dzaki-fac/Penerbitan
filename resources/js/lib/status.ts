@@ -134,6 +134,39 @@ export function activeContentClass(statusValue: string): string {
     return TONE_COLORS[toneFor(statusValue)].content;
 }
 
+/**
+ * Warna isian bar progress. Sengaja pakai gradasi (bukan biru polos satu warna)
+ * supaya progress bar tidak monoton — tone revisi/selesai/tindakan tetap
+ * dapat warna solid yang jelas maknanya.
+ */
+export function progressBarClass(statusValue: string): string {
+    const tone = toneFor(statusValue);
+
+    if (tone === 'revision') {
+        return 'bg-red-500';
+    }
+
+    if (tone === 'done') {
+        return 'bg-green-500';
+    }
+
+    if (tone === 'action') {
+        return 'bg-amber-500';
+    }
+
+    return 'bg-gradient-to-r from-cobalt-surface via-sky-400 to-emerald-400';
+}
+
+/** Kelas kotak "sudah selesai" pada timeline: selalu hijau, terlepas dari tone naskah saat ini. */
+export const DONE_STEP_INDICATOR_CLASS =
+    'border-green-300 bg-green-50 text-green-700';
+
+/** Kelas garis penghubung timeline untuk step yang sudah selesai: hijau. */
+export const DONE_STEP_CONNECTOR_CLASS = 'bg-green-400/60';
+
+/** Kelas kotak catatan/informasi netral (bukan biru/lavender) supaya warna tidak monoton. */
+export const NOTE_BOX_CLASS = 'border-border bg-muted/70';
+
 /** True kalau status ini butuh tindakan dari penulis, termasuk status revisi */
 export function needsAuthorAction(statusValue: string): boolean {
     return (
