@@ -19,11 +19,12 @@ class AkunController extends Controller
     public function index(Request $request): Response
     {
         $users = User::query()
-            ->orderBy('name')
+            ->orderBy('nama_lengkap')
             ->get()
             ->map(fn (User $user) => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'nama_lengkap' => $user->nama_lengkap,
+                'nickname' => $user->nickname,
                 'email' => $user->email,
                 'verified' => $user->email_verified_at !== null,
                 'created_at' => $user->created_at->format('d M Y'),
@@ -41,7 +42,8 @@ class AkunController extends Controller
     public function store(AkunStoreRequest $request): RedirectResponse
     {
         User::create([
-            'name' => $request->validated('name'),
+            'nama_lengkap' => $request->validated('nama_lengkap'),
+            'nickname' => $request->validated('nickname'),
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
             'email_verified_at' => now(),

@@ -122,7 +122,7 @@ class TrackingController extends Controller
                     'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label(), 'stage' => $h->dari_status->stage()] : null,
                     'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label(), 'stage' => $h->ke_status->stage()],
                     'aktor' => ['value' => $h->aktor->value, 'label' => $h->aktor->label()],
-                    'admin' => $h->admin?->name ? initialsOf($h->admin->name) : null,
+                    'admin' => $h->admin?->nickname ?? $h->admin?->nama_lengkap,
                     'catatan' => $h->catatan,
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),

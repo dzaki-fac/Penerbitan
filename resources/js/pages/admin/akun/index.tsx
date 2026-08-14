@@ -63,7 +63,8 @@ import { destroy, store, update } from '@/routes/admin/akun';
 
 type AkunUser = {
     id: number;
-    name: string;
+    nama_lengkap: string;
+    nickname: string;
     email: string;
     verified: boolean;
     created_at: string;
@@ -77,7 +78,8 @@ type Props = {
 function CreateAkunDialog() {
     const [open, setOpen] = useState(false);
     const form = useForm({
-        name: '',
+        nama_lengkap: '',
+        nickname: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -112,17 +114,32 @@ function CreateAkunDialog() {
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Nama</Label>
+                        <Label htmlFor="nama_lengkap">Nama Lengkap</Label>
                         <Input
-                            id="name"
-                            value={form.data.name}
+                            id="nama_lengkap"
+                            value={form.data.nama_lengkap}
                             onChange={(e) =>
-                                form.setData('name', e.target.value)
+                                form.setData('nama_lengkap', e.target.value)
                             }
                             placeholder="Nama lengkap"
                             required
                         />
-                        <InputError message={form.errors.name} />
+                        <InputError message={form.errors.nama_lengkap} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="nickname">
+                            Nama Panggilan/Singkatan
+                        </Label>
+                        <Input
+                            id="nickname"
+                            value={form.data.nickname}
+                            onChange={(e) =>
+                                form.setData('nickname', e.target.value)
+                            }
+                            placeholder="Contoh: Budi / BS"
+                            required
+                        />
+                        <InputError message={form.errors.nickname} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email</Label>
@@ -188,7 +205,8 @@ function CreateAkunDialog() {
 function EditAkunDialog({ user }: { user: AkunUser }) {
     const [open, setOpen] = useState(false);
     const form = useForm({
-        name: user.name,
+        nama_lengkap: user.nama_lengkap,
+        nickname: user.nickname,
         email: user.email,
         password: '',
         password_confirmation: '',
@@ -196,7 +214,8 @@ function EditAkunDialog({ user }: { user: AkunUser }) {
 
     function openForEdit() {
         form.setData({
-            name: user.name,
+            nama_lengkap: user.nama_lengkap,
+            nickname: user.nickname,
             email: user.email,
             password: '',
             password_confirmation: '',
@@ -232,22 +251,39 @@ function EditAkunDialog({ user }: { user: AkunUser }) {
                 <DialogHeader>
                     <DialogTitle>Edit Akun Admin</DialogTitle>
                     <DialogDescription>
-                        Perbarui data akun "{user.name}". Kosongkan kata sandi
-                        jika tidak ingin mengubahnya.
+                        Perbarui data akun "{user.nama_lengkap}". Kosongkan kata
+                        sandi jika tidak ingin mengubahnya.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor={`name-${user.id}`}>Nama</Label>
+                        <Label htmlFor={`nama_lengkap-${user.id}`}>
+                            Nama Lengkap
+                        </Label>
                         <Input
-                            id={`name-${user.id}`}
-                            value={form.data.name}
+                            id={`nama_lengkap-${user.id}`}
+                            value={form.data.nama_lengkap}
                             onChange={(e) =>
-                                form.setData('name', e.target.value)
+                                form.setData('nama_lengkap', e.target.value)
                             }
                             required
                         />
-                        <InputError message={form.errors.name} />
+                        <InputError message={form.errors.nama_lengkap} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor={`nickname-${user.id}`}>
+                            Nama Panggilan/Singkatan
+                        </Label>
+                        <Input
+                            id={`nickname-${user.id}`}
+                            value={form.data.nickname}
+                            onChange={(e) =>
+                                form.setData('nickname', e.target.value)
+                            }
+                            placeholder="Contoh: Budi / BS"
+                            required
+                        />
+                        <InputError message={form.errors.nickname} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor={`email-${user.id}`}>Email</Label>
@@ -347,9 +383,9 @@ function DeleteAkunDialog({
                                     Hapus akun ini?
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Akun "{user.name}" ({user.email}) akan
-                                    dihapus permanen dari daftar. Tindakan ini
-                                    tidak dapat dibatalkan.
+                                    Akun "{user.nama_lengkap}" ({user.email})
+                                    akan dihapus permanen dari daftar. Tindakan
+                                    ini tidak dapat dibatalkan.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -447,7 +483,7 @@ export default function AkunIndex({ users, currentUserId }: Props) {
         let result = users.filter((user) => {
             const matchesSearch =
                 !query ||
-                user.name.toLowerCase().startsWith(query) ||
+                user.nama_lengkap.toLowerCase().startsWith(query) ||
                 user.email.toLowerCase().startsWith(query);
             const matchesStatus =
                 status === 'all' ||
@@ -461,7 +497,7 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                 let comparison = 0;
 
                 if (sortKey === 'name') {
-                    comparison = a.name.localeCompare(b.name);
+                    comparison = a.nama_lengkap.localeCompare(b.nama_lengkap);
                 } else {
                     comparison =
                         new Date(a.created_at).getTime() -
@@ -497,12 +533,14 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                 <div className="flex flex-col gap-2">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between gap-3">
-                            <h1 className="text-lg leading-none font-semibold">Akun Admin</h1>
+                            <h1 className="text-lg leading-none font-semibold">
+                                Akun Admin
+                            </h1>
                             <CreateAkunDialog />
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Akun tidak bisa didaftarkan sendiri, buat akun baru melalui
-                            halaman ini.
+                            Akun tidak bisa didaftarkan sendiri, buat akun baru
+                            melalui halaman ini.
                         </p>
                     </div>
                 </div>
@@ -572,22 +610,33 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                             <CardTitle className="flex items-center gap-2">
                                 <UserRoundCog className="size-4 text-muted-foreground" />
                                 Daftar Akun
-                                <Badge variant="secondary">{users.length}</Badge>
+                                <Badge variant="secondary">
+                                    {users.length}
+                                </Badge>
                             </CardTitle>
                             <Select
                                 value={sortKey ?? undefined}
-                                onValueChange={(value) => toggleSort(value as SortKey)}
+                                onValueChange={(value) =>
+                                    toggleSort(value as SortKey)
+                                }
                             >
-                                <SelectTrigger size="sm" className="w-28 text-xs sm:hidden">
+                                <SelectTrigger
+                                    size="sm"
+                                    className="w-28 text-xs sm:hidden"
+                                >
                                     <SelectValue placeholder="Urutkan" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="name">Nama</SelectItem>
-                                    <SelectItem value="created_at">Tanggal</SelectItem>
+                                    <SelectItem value="created_at">
+                                        Tanggal
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-                        <CardDescription>{users.length} akun admin terdaftar.</CardDescription>
+                        <CardDescription>
+                            {users.length} akun admin terdaftar.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="hidden overflow-x-auto sm:block">
@@ -644,22 +693,29 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                                         <Avatar className="size-8 rounded-full">
                                                             <AvatarFallback className="rounded-full bg-primary/10 text-foreground">
                                                                 {getInitials(
-                                                                    user.name,
+                                                                    user.nama_lengkap,
                                                                 )}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-medium">
-                                                                {user.name}
-                                                            </span>
-                                                            {isCurrentUser && (
-                                                                <Badge
-                                                                    variant="secondary"
-                                                                    className="text-[10px]"
-                                                                >
-                                                                    Anda
-                                                                </Badge>
-                                                            )}
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-medium">
+                                                                    {
+                                                                        user.nama_lengkap
+                                                                    }
+                                                                </span>
+                                                                {isCurrentUser && (
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="text-[10px]"
+                                                                    >
+                                                                        Anda
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <p className="truncate text-xs text-muted-foreground">
+                                                                {user.nickname}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -708,7 +764,7 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                         </div>
 
                         <div className="block space-y-3 p-4 sm:hidden">
-                                {visibleUsers.map((user) => {
+                            {visibleUsers.map((user) => {
                                 const isCurrentUser = user.id === currentUserId;
                                 const isLastAccount = users.length === 1;
                                 const canDelete =
@@ -726,21 +782,28 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <Avatar className="size-8 rounded-full">
                                                     <AvatarFallback className="rounded-full bg-primary/10 text-foreground">
-                                                        {getInitials(user.name)}
+                                                        {getInitials(
+                                                            user.nama_lengkap,
+                                                        )}
                                                     </AvatarFallback>
                                                 </Avatar>
-                                                <div className="flex min-w-0 items-center gap-2">
-                                                    <span className="truncate font-medium">
-                                                        {user.name}
-                                                    </span>
-                                                    {isCurrentUser && (
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="text-[10px]"
-                                                        >
-                                                            Anda
-                                                        </Badge>
-                                                    )}
+                                                <div className="min-w-0">
+                                                    <div className="flex min-w-0 items-center gap-2">
+                                                        <span className="truncate font-medium">
+                                                            {user.nama_lengkap}
+                                                        </span>
+                                                        {isCurrentUser && (
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-[10px]"
+                                                            >
+                                                                Anda
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="truncate text-xs text-muted-foreground">
+                                                        {user.nickname}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="flex shrink-0 gap-1">
