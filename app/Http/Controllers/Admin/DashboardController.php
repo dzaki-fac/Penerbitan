@@ -58,7 +58,11 @@ class DashboardController extends Controller
             'stats' => [
                 'total' => Naskah::count(),
                 'selesai' => Naskah::where('status', NaskahStatus::Selesai->value)->count(),
-                'sedang_proses' => Naskah::where('status', '!=', NaskahStatus::Selesai->value)->count(),
+                'penulis_mundur' => Naskah::where('status', NaskahStatus::PenulisMundur->value)->count(),
+                'sedang_proses' => Naskah::whereNotIn('status', [
+                    NaskahStatus::Selesai->value,
+                    NaskahStatus::PenulisMundur->value,
+                ])->count(),
             ],
             'statuses' => $statuses,
             'isbnStatuses' => $isbnStatuses,

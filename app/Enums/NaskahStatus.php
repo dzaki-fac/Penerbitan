@@ -18,6 +18,7 @@ enum NaskahStatus: string
     case ProsesCetak = 'proses_cetak';
     case SiapDiambil = 'siap_diambil';
     case Selesai = 'selesai';
+    case PenulisMundur = 'penulis_mundur';
 
     public function label(): string
     {
@@ -36,6 +37,7 @@ enum NaskahStatus: string
             self::ProsesCetak => 'Proses Cetak',
             self::SiapDiambil => 'Siap Diambil',
             self::Selesai => 'Selesai',
+            self::PenulisMundur => 'Penulis Mundur',
         };
     }
 
@@ -55,6 +57,7 @@ enum NaskahStatus: string
             self::ProsesCetak => 85,
             self::SiapDiambil => 95,
             self::Selesai => 100,
+            self::PenulisMundur => 100,
         };
     }
 
@@ -75,6 +78,7 @@ enum NaskahStatus: string
             self::ProsesCetak => 5,
             self::SiapDiambil => 6,
             self::Selesai => 7,
+            self::PenulisMundur => 8,
         };
     }
 
@@ -94,6 +98,7 @@ enum NaskahStatus: string
             self::ProsesCetak,
             self::SiapDiambil,
             self::Selesai,
+            self::PenulisMundur,
         ];
     }
 

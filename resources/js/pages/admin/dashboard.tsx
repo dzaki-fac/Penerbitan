@@ -7,6 +7,7 @@ import {
     Hourglass,
     ListChecks,
     RefreshCw,
+    UserMinus,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,6 +25,7 @@ type Props = {
         total: number;
         selesai: number;
         sedang_proses: number;
+        penulis_mundur: number;
     };
     statuses: Array<{
         value: string;
@@ -58,6 +60,11 @@ export default function AdminDashboard({
             icon: ListChecks,
         },
         { label: 'Selesai', value: stats.selesai, icon: CircleCheck },
+        {
+            label: 'Penulis Mundur',
+            value: stats.penulis_mundur,
+            icon: UserMinus,
+        },
     ];
 
     const isbnIcons = {
@@ -73,7 +80,7 @@ export default function AdminDashboard({
             <Head title="Dashboard Admin" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                     {summary.map((item) => (
                         <Card key={item.label}>
                             <CardContent className="flex items-center gap-4">

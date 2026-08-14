@@ -10,7 +10,7 @@ export const REVISION_STATUS_VALUES = [
     'revisi_proof_reading',
 ];
 
-type Tone = 'progress' | 'action' | 'revision' | 'done';
+type Tone = 'progress' | 'action' | 'revision' | 'done' | 'cancel';
 
 const TONE_BY_STATUS: Record<string, Tone> = {
     data_diterima: 'progress',
@@ -27,6 +27,7 @@ const TONE_BY_STATUS: Record<string, Tone> = {
     proses_cetak: 'progress',
     siap_diambil: 'action',
     selesai: 'done',
+    penulis_mundur: 'cancel',
     menunggu_review: 'progress',
     disetujui: 'done',
     proses: 'progress',
@@ -39,6 +40,7 @@ const LABEL_BY_TONE: Record<Tone, string> = {
     action: 'Perlu tindakan Anda',
     revision: 'Perlu revisi',
     done: 'Selesai',
+    cancel: 'Penulis Mundur',
 };
 
 /**
@@ -101,6 +103,13 @@ const TONE_COLORS: Record<
         active: 'bg-green-100 text-green-800',
         indicator: 'border-green-500 bg-green-100 text-green-700',
         content: 'border-2 border-green-400 bg-green-50',
+    },
+    cancel: {
+        border: 'border-red-300',
+        badge: 'bg-red-100 text-red-700 border-red-200',
+        active: 'bg-red-100 text-red-700',
+        indicator: 'border-red-500 bg-red-100 text-red-700',
+        content: 'border-2 border-red-400 bg-red-50',
     },
 };
 

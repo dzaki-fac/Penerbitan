@@ -314,7 +314,7 @@ class NaskahController extends Controller
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
             ],
-            'steps' => WorkflowService::steps(),
+            'steps' => WorkflowService::stepsFor($naskah->status),
             'adminTransitions' => WorkflowService::adminTransitionsFor($naskah->status->value),
             'authorAction' => WorkflowService::authorActionFor($naskah->status->value),
             'statusOptions' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
