@@ -46,6 +46,11 @@ class NaskahController extends Controller
             $query->where('status', $request->query('status'));
         }
 
+        if ($fakultas = $request->string('fakultas')->trim()->toString()) {
+            $query->whereHas('author', fn ($author) => $author
+                ->where('fakultas_sekolah', $fakultas));
+        }
+
         $perPage = $request->query('per_page', '10');
         $perPage = in_array($perPage, ['10', '20', 'all'], true) ? $perPage : '10';
 
@@ -76,8 +81,15 @@ class NaskahController extends Controller
                 'search' => $request->query('search', ''),
                 'status' => $request->query('status', ''),
                 'stage' => $request->query('stage', ''),
+                'fakultas' => $request->query('fakultas', ''),
                 'per_page' => $request->query('per_page', '10'),
             ],
+            'fakultasOptions' => Author::query()
+                ->whereNotNull('fakultas_sekolah')
+                ->where('fakultas_sekolah', '!=', '')
+                ->distinct()
+                ->orderBy('fakultas_sekolah')
+                ->pluck('fakultas_sekolah'),
             'statuses' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
                 'value' => $s->value,
                 'label' => $s->label(),
@@ -109,7 +121,7 @@ class NaskahController extends Controller
                 'nama' => $data['nama'],
                 'email' => $data['email'] ?? null,
                 'status' => $data['status'] ?? null,
-                'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+                'fakultas_sekolah' => normalizeFakultasSekolah($data['fakultas_sekolah'] ?? null),
                 'nomor_npwp' => $data['nomor_npwp'] ?? null,
                 'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
                 'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
@@ -196,7 +208,7 @@ class NaskahController extends Controller
             'nama' => $data['nama'],
             'email' => $data['email'] ?? null,
             'status' => $data['status'] ?? null,
-            'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+            'fakultas_sekolah' => normalizeFakultasSekolah($data['fakultas_sekolah'] ?? null),
             'nomor_npwp' => $data['nomor_npwp'] ?? null,
             'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
             'penulis_tambahan' => $data['penulis_tambahan'] ?? null,

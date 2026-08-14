@@ -35,7 +35,7 @@ class ImportNaskahFromForm
                 'nama' => $data['nama'],
                 'email' => $data['email'] ?? null,
                 'status' => $data['status'] ?? null,
-                'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+                'fakultas_sekolah' => normalizeFakultasSekolah($data['fakultas_sekolah'] ?? null),
                 'nomor_npwp' => $data['nomor_npwp'] ?? null,
                 'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
                 'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
