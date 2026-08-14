@@ -102,7 +102,7 @@ export default function AdminDashboard({
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <BadgeCheck className="size-4 text-muted-foreground" />
-                            Jumlah Status ISBN
+                            ISBN per Status
                         </CardTitle>
                         <CardDescription>
                             Distribusi data ISBN berdasarkan status.
