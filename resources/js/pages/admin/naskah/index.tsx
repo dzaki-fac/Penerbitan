@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { statusBadgeClass } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import { create, destroy, edit, show } from '@/routes/admin/naskah';
@@ -290,7 +291,11 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                                 {naskah.tanggal_pengajuan}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <Badge variant="secondary">
+                                                <Badge
+                                                    className={statusBadgeClass(
+                                                        naskah.status.value,
+                                                    )}
+                                                >
                                                     {naskah.status.label}
                                                 </Badge>
                                             </td>

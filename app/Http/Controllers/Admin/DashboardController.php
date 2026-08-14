@@ -42,7 +42,7 @@ class DashboardController extends Controller
                 'dari_status' => $h->dari_status?->label(),
                 'ke_status' => $h->ke_status->label(),
                 'aktor' => $h->aktor->label(),
-                'admin' => $h->admin?->name,
+                'admin' => $h->admin?->name ? initialsOf($h->admin->name) : null,
                 'waktu' => $h->created_at->format('d M Y H:i'),
             ]);
 

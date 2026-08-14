@@ -10,6 +10,7 @@ import {
     User,
 } from 'lucide-react';
 import CollapsibleCard from '@/components/collapsible-card';
+import NoteText from '@/components/note-text';
 import { ActionPanel } from '@/components/tracking/action-panel';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -18,8 +19,11 @@ import {
     activeIndicatorClass,
     activeStatusClass,
     activeStatusLabel,
-    statusBadgeClass,
+    DONE_STEP_CONNECTOR_CLASS,
+    DONE_STEP_INDICATOR_CLASS,
     needsAuthorAction,
+    progressBarClass,
+    statusBadgeClass,
     statusBorderClass,
     statusSubBadge,
 } from '@/lib/status';
@@ -70,12 +74,14 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                 </a>
 
                 <div
-                    className={`rounded-xl border ${statusBorderClass()} bg-card p-6`}
+                    className={`rounded-xl border ${statusBorderClass(naskah.status.value)} bg-card p-6`}
                 >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Badge className={statusBadgeClass()}>
+                                <Badge
+                                    className={`h-auto max-w-full whitespace-normal text-left ${statusBadgeClass(naskah.status.value)}`}
+                                >
                                     {naskah.status.label}
                                 </Badge>
                             </div>
@@ -83,40 +89,56 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 {naskah.judul}
                             </h1>
                             {perluAksi && (
-                                <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                                    <AlertCircle className="size-4" />
+                                <p className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800">
+                                    <AlertCircle className="size-4 shrink-0" />
                                     Naskah ini menunggu tindakan Anda — lihat
                                     bagian &quot;Aksi Penulis&quot; di bawah.
                                 </p>
                             )}
                         </div>
-                        <div className="text-right text-sm text-muted-foreground">
-                            <div className="flex items-center justify-end gap-1.5">
+                        <dl className="grid w-full shrink-0 grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1.5 text-sm sm:w-auto sm:min-w-56">
+                            <dt className="flex items-center gap-1.5 text-muted-foreground">
                                 <User className="size-4" />
+                                Penulis
+                            </dt>
+                            <dd className="text-right font-medium text-foreground">
                                 {naskah.author.nama}
-                            </div>
-                            <div>
-                                {naskah.author.jenis_identitas}:{' '}
+                            </dd>
+
+                            <dt className="text-muted-foreground">
+                                {naskah.author.jenis_identitas}
+                            </dt>
+                            <dd className="text-right text-foreground">
                                 {naskah.author.nomor_identitas}
-                            </div>
-                            <div className="mt-1 flex items-center justify-end gap-1.5">
+                            </dd>
+
+                            <dt className="flex items-center gap-1.5 text-muted-foreground">
                                 <CalendarDays className="size-4" />
+                                Pengajuan
+                            </dt>
+                            <dd className="text-right text-foreground">
                                 {naskah.tanggal_pengajuan}
-                            </div>
+                            </dd>
+
                             {naskah.link_cover && (
-                                <div className="mt-1 flex items-center justify-end gap-1.5">
-                                    <ExternalLink className="size-4" />
-                                    <a
-                                        href={naskah.link_cover}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="underline underline-offset-4 hover:text-foreground"
-                                    >
-                                        Lihat Cover
-                                    </a>
-                                </div>
+                                <>
+                                    <dt className="flex items-center gap-1.5 text-muted-foreground">
+                                        <ExternalLink className="size-4" />
+                                        Cover
+                                    </dt>
+                                    <dd className="text-right">
+                                        <a
+                                            href={naskah.link_cover}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                                        >
+                                            Lihat Cover
+                                        </a>
+                                    </dd>
+                                </>
                             )}
-                        </div>
+                        </dl>
                     </div>
 
                     <div className="mt-6 space-y-2">
@@ -130,7 +152,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className="h-full rounded-full border border-primary-foreground/20 bg-primary transition-all duration-500"
+                                className={`h-full rounded-full border border-primary-foreground/20 transition-all duration-500 ${progressBarClass(naskah.progress)}`}
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
@@ -163,9 +185,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             className={cn(
                                                 'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                                                 active
-                                                    ? activeIndicatorClass()
+                                                    ? activeIndicatorClass(naskah.status.value)
                                                     : done
-                                                      ? 'border-cobalt-surface/30 bg-lavender-wash text-primary'
+                                                      ? DONE_STEP_INDICATOR_CLASS
                                                       : 'border-border bg-background text-muted-foreground',
                                             )}
                                         >
@@ -182,7 +204,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                 className={cn(
                                                     'my-1 w-0.5 flex-1 rounded-full',
                                                     done
-                                                        ? 'bg-primary/40'
+                                                        ? DONE_STEP_CONNECTOR_CLASS
                                                         : 'bg-border',
                                                 )}
                                             />
@@ -195,7 +217,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             active &&
                                                 cn(
                                                     'rounded-lg p-3',
-                                                    activeContentClass(),
+                                                    activeContentClass(naskah.status.value),
                                                 ),
                                             !isLast && 'pb-6',
                                         )}
@@ -216,9 +238,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             {active && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className={activeStatusClass()}
+                                                    className={activeStatusClass(naskah.status.value)}
                                                 >
-                                                    {activeStatusLabel()}
+                                                    {activeStatusLabel(naskah.status.value)}
                                                 </Badge>
                                             )}
                                             {active && subBadge && (
@@ -237,7 +259,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             )}
                                         </div>
                                         {history?.catatan && (
-                                            <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                            <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                 <p className="text-sm text-muted-foreground">
                                                     <span className="font-medium text-foreground">
                                                         Catatan admin
@@ -246,7 +268,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                             : ''}
                                                         :
                                                     </span>{' '}
-                                                    {history.catatan}
+                                                    <NoteText
+                                                        text={history.catatan}
+                                                    />
                                                 </p>
                                             </div>
                                         )}
@@ -254,7 +278,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             index ===
                                                 isbnHistory.ke_status.stage &&
                                             naskah.isbn?.nomor_isbn && (
-                                                <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                     <p className="text-xs font-medium text-muted-foreground">
                                                         ISBN Terbit
                                                     </p>
@@ -302,7 +326,11 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 Layout
                             </span>
                             {naskah.layout && (
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        naskah.layout.status.value,
+                                    )}
+                                >
                                     {naskah.layout.status.label}
                                 </Badge>
                             )}
@@ -327,7 +355,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 {naskah.layout.catatan_revisi && (
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         Catatan revisi:{' '}
-                                        {naskah.layout.catatan_revisi}
+                                        <NoteText
+                                            text={naskah.layout.catatan_revisi}
+                                        />
                                     </p>
                                 )}
                             </div>
@@ -344,7 +374,11 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">ISBN</span>
                             {naskah.isbn && (
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        naskah.isbn.status.value,
+                                    )}
+                                >
                                     {naskah.isbn.status.label}
                                 </Badge>
                             )}
@@ -365,7 +399,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 )}
                                 {naskah.isbn.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Catatan: {naskah.isbn.catatan}
+                                        Catatan: <NoteText text={naskah.isbn.catatan} />
                                     </p>
                                 )}
                             </div>
@@ -421,7 +455,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 </div>
                                 {history.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {history.catatan}
+                                        <NoteText text={history.catatan} />
                                     </p>
                                 )}
                             </li>

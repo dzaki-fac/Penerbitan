@@ -26,7 +26,7 @@ class IsbnRequest extends FormRequest
             ])],
             'nomor_isbn' => [$isTerbit ? 'required' : 'nullable', 'string', 'max:255'],
             'penerbit' => [$isTerbit ? 'required' : 'nullable', 'string', 'max:255'],
-            'catatan' => ['nullable', 'string', 'max:1000'],
+            'catatan' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

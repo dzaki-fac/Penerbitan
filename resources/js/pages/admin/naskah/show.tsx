@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import CollapsibleCard from '@/components/collapsible-card';
 import InputError from '@/components/input-error';
+import NoteText from '@/components/note-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +44,10 @@ import {
     activeIndicatorClass,
     activeStatusClass,
     activeStatusLabel,
+    DONE_STEP_CONNECTOR_CLASS,
+    DONE_STEP_INDICATOR_CLASS,
+    progressBarClass,
+    statusBadgeClass,
     statusSubBadge,
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
@@ -723,7 +728,11 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
                                         {layout.tanggal}
                                     </p>
                                 </div>
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        layout.status.value,
+                                    )}
+                                >
                                     {layout.status.label}
                                 </Badge>
                                 <div className="flex gap-2">
@@ -879,13 +888,15 @@ export default function NaskahShow({
                                 Data Naskah
                             </Link>
                         </Button>
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="space-y-1.5">
                             <h1 className="text-lg font-semibold">
                                 {naskah.judul}
                             </h1>
                             <Badge
                                 variant="secondary"
-                                className={activeStatusClass()}
+                                className={`h-auto max-w-full whitespace-normal text-left ${activeStatusClass(
+                                    naskah.status.value,
+                                )}`}
                             >
                                 {naskah.status.label}
                             </Badge>
@@ -946,7 +957,7 @@ export default function NaskahShow({
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className="h-full rounded-full border border-primary-foreground/20 bg-primary transition-all duration-500"
+                                className={`h-full rounded-full border border-primary-foreground/20 transition-all duration-500 ${progressBarClass(naskah.progress)}`}
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
@@ -967,7 +978,7 @@ export default function NaskahShow({
                                                 <span
                                                     className={cn(
                                                         'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                        activeIndicatorClass(),
+                                                        activeIndicatorClass(naskah.status.value),
                                                     )}
                                                 >
                                                     <span className="text-xs font-semibold">
@@ -976,9 +987,10 @@ export default function NaskahShow({
                                                 </span>
                                             ) : done ? (
                                                 <span
-                                                    className={
-                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-cobalt-surface/30 bg-lavender-wash text-primary transition-colors'
-                                                    }
+                                                    className={cn(
+                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                        DONE_STEP_INDICATOR_CLASS,
+                                                    )}
                                                 >
                                                     <Check className="size-4" />
                                                 </span>
@@ -998,7 +1010,7 @@ export default function NaskahShow({
                                                     className={cn(
                                                         'my-1 w-0.5 flex-1 rounded-full',
                                                         done
-                                                            ? 'bg-primary/40'
+                                                            ? DONE_STEP_CONNECTOR_CLASS
                                                             : 'bg-border',
                                                     )}
                                                 />
@@ -1011,7 +1023,9 @@ export default function NaskahShow({
                                                 active &&
                                                     cn(
                                                         'rounded-lg p-3',
-                                                        activeContentClass(),
+                                                        activeContentClass(
+                                                            naskah.status.value,
+                                                        ),
                                                     ),
                                                 !isLast && 'pb-6',
                                             )}
@@ -1032,9 +1046,13 @@ export default function NaskahShow({
                                                 {active && (
                                                     <Badge
                                                         variant="secondary"
-                                                        className={activeStatusClass()}
+                                                        className={activeStatusClass(
+                                                            naskah.status.value,
+                                                        )}
                                                     >
-                                                        {activeStatusLabel()}
+                                                        {activeStatusLabel(
+                                                            naskah.status.value,
+                                                        )}
                                                     </Badge>
                                                 )}
                                                 {active && subBadge && (
@@ -1053,7 +1071,7 @@ export default function NaskahShow({
                                                 )}
                                             </div>
                                             {history?.catatan && (
-                                                <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                     <p className="text-sm text-muted-foreground">
                                                         <span className="font-medium text-foreground">
                                                             Catatan admin
@@ -1062,7 +1080,9 @@ export default function NaskahShow({
                                                                 : ''}
                                                             :
                                                         </span>{' '}
-                                                        {history.catatan}
+                                                        <NoteText
+                                                            text={history.catatan}
+                                                        />
                                                     </p>
                                                     {history.can_edit_catatan && (
                                                         <div className="mt-1">
@@ -1093,7 +1113,7 @@ export default function NaskahShow({
                                                     isbnHistory.ke_status
                                                         .stage &&
                                                 naskah.isbn?.nomor_isbn && (
-                                                    <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                    <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                         <p className="text-xs font-medium text-muted-foreground">
                                                             ISBN Terbit
                                                         </p>
@@ -1242,7 +1262,7 @@ export default function NaskahShow({
                                 </div>
                                 {history.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {history.catatan}
+                                        <NoteText text={history.catatan} />
                                     </p>
                                 )}
                             </li>
@@ -1269,7 +1289,9 @@ export default function NaskahShow({
                                     </p>
                                     {revisi.catatan_penulis && (
                                         <p className="text-xs text-muted-foreground">
-                                            {revisi.catatan_penulis}
+                                            <NoteText
+                                                text={revisi.catatan_penulis}
+                                            />
                                         </p>
                                     )}
                                 </div>
