@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import CollapsibleCard from '@/components/collapsible-card';
 import InputError from '@/components/input-error';
+import NoteText from '@/components/note-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,12 +39,21 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import {
+    ADVANCE_BUTTON_CLASS,
+    AUTHOR_ADVANCE_BUTTON_CLASS,
+    AUTHOR_REVISION_BUTTON_CLASS,
+    REVISION_BUTTON_CLASS,
     REVISION_STATUS_VALUES,
     activeContentClass,
     activeIndicatorClass,
     activeStatusClass,
     activeStatusLabel,
+    DONE_STEP_CONNECTOR_CLASS,
+    DONE_STEP_INDICATOR_CLASS,
+    progressBarClass,
+    statusBadgeClass,
     statusSubBadge,
+    transitionButtonClass,
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
@@ -110,7 +120,10 @@ function TransitionDialog({
             <DialogTrigger asChild>
                 <Button
                     size="sm"
-                    className={cn('justify-center', ACTION_BUTTON_CLASS)}
+                    className={cn(
+                        'justify-center',
+                        transitionButtonClass(target),
+                    )}
                 >
                     {targetLabel}
                 </Button>
@@ -180,7 +193,7 @@ function TransitionDialog({
                             disabled={form.processing}
                             className={cn(
                                 'justify-center',
-                                ACTION_BUTTON_CLASS,
+                                transitionButtonClass(target),
                             )}
                         >
                             {form.processing && <Spinner />}
@@ -297,12 +310,10 @@ function JumpTransitionDialog({
     );
 }
 
-const ACTION_BUTTON_CLASS =
-    'bg-primary text-primary-foreground hover:bg-primary/90';
-const JUMP_BUTTON_CLASS =
-    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
-const JUMP_REVISION_CLASS =
-    'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+// Tombol "Pindah ke Status Lain": tetap solid, warna mengikuti status tujuan
+// (revisi → merah, selain itu → hijau) agar konsisten dengan transisi biasa.
+const JUMP_BUTTON_CLASS = ADVANCE_BUTTON_CLASS;
+const JUMP_REVISION_CLASS = REVISION_BUTTON_CLASS;
 
 function Detail({
     label,
@@ -446,10 +457,6 @@ function PengajuanCard({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-// Alias lama — semua tombol aksi workflow kini memakai warna yang sama.
-const GO_BUTTON_CLASS = ACTION_BUTTON_CLASS;
-const REVISION_BUTTON_CLASS = ACTION_BUTTON_CLASS;
-
 function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     const [open, setOpen] = useState(false);
     const form = useForm({ catatan: '' });
@@ -466,7 +473,7 @@ function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${ACTION_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_REVISION_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <User />
@@ -523,7 +530,7 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${GO_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <User />
@@ -543,7 +550,7 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className={GO_BUTTON_CLASS}
+                            className={AUTHOR_ADVANCE_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}
                             Setujui (Acc)
@@ -571,7 +578,7 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${REVISION_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_REVISION_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <X />
@@ -606,7 +613,7 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className={REVISION_BUTTON_CLASS}
+                            className={AUTHOR_REVISION_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}
                             Ajukan Revisi
@@ -634,7 +641,7 @@ function AdminMarkDiambilDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${GO_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <Check />
@@ -654,7 +661,7 @@ function AdminMarkDiambilDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className={GO_BUTTON_CLASS}
+                            className={AUTHOR_ADVANCE_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}
                             Konfirmasi
@@ -723,7 +730,11 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
                                         {layout.tanggal}
                                     </p>
                                 </div>
-                                <Badge variant="outline">
+                                <Badge
+                                    className={statusBadgeClass(
+                                        layout.status.value,
+                                    )}
+                                >
                                     {layout.status.label}
                                 </Badge>
                                 <div className="flex gap-2">
@@ -879,13 +890,15 @@ export default function NaskahShow({
                                 Data Naskah
                             </Link>
                         </Button>
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="space-y-1.5">
                             <h1 className="text-lg font-semibold">
                                 {naskah.judul}
                             </h1>
                             <Badge
                                 variant="secondary"
-                                className={activeStatusClass()}
+                                className={`h-auto max-w-full whitespace-normal text-left ${activeStatusClass(
+                                    naskah.status.value,
+                                )}`}
                             >
                                 {naskah.status.label}
                             </Badge>
@@ -946,7 +959,7 @@ export default function NaskahShow({
                         </div>
                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                                className="h-full rounded-full border border-primary-foreground/20 bg-primary transition-all duration-500"
+                                className={`h-full rounded-full border border-primary-foreground/20 transition-all duration-500 ${progressBarClass(naskah.progress)}`}
                                 style={{ width: `${naskah.progress}%` }}
                             />
                         </div>
@@ -967,7 +980,7 @@ export default function NaskahShow({
                                                 <span
                                                     className={cn(
                                                         'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                        activeIndicatorClass(),
+                                                        activeIndicatorClass(naskah.status.value),
                                                     )}
                                                 >
                                                     <span className="text-xs font-semibold">
@@ -976,9 +989,10 @@ export default function NaskahShow({
                                                 </span>
                                             ) : done ? (
                                                 <span
-                                                    className={
-                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-cobalt-surface/30 bg-lavender-wash text-primary transition-colors'
-                                                    }
+                                                    className={cn(
+                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                        DONE_STEP_INDICATOR_CLASS,
+                                                    )}
                                                 >
                                                     <Check className="size-4" />
                                                 </span>
@@ -998,7 +1012,7 @@ export default function NaskahShow({
                                                     className={cn(
                                                         'my-1 w-0.5 flex-1 rounded-full',
                                                         done
-                                                            ? 'bg-primary/40'
+                                                            ? DONE_STEP_CONNECTOR_CLASS
                                                             : 'bg-border',
                                                     )}
                                                 />
@@ -1011,7 +1025,9 @@ export default function NaskahShow({
                                                 active &&
                                                     cn(
                                                         'rounded-lg p-3',
-                                                        activeContentClass(),
+                                                        activeContentClass(
+                                                            naskah.status.value,
+                                                        ),
                                                     ),
                                                 !isLast && 'pb-6',
                                             )}
@@ -1032,9 +1048,13 @@ export default function NaskahShow({
                                                 {active && (
                                                     <Badge
                                                         variant="secondary"
-                                                        className={activeStatusClass()}
+                                                        className={activeStatusClass(
+                                                            naskah.status.value,
+                                                        )}
                                                     >
-                                                        {activeStatusLabel()}
+                                                        {activeStatusLabel(
+                                                            naskah.status.value,
+                                                        )}
                                                     </Badge>
                                                 )}
                                                 {active && subBadge && (
@@ -1053,7 +1073,7 @@ export default function NaskahShow({
                                                 )}
                                             </div>
                                             {history?.catatan && (
-                                                <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                     <p className="text-sm text-muted-foreground">
                                                         <span className="font-medium text-foreground">
                                                             Catatan admin
@@ -1062,7 +1082,9 @@ export default function NaskahShow({
                                                                 : ''}
                                                             :
                                                         </span>{' '}
-                                                        {history.catatan}
+                                                        <NoteText
+                                                            text={history.catatan}
+                                                        />
                                                     </p>
                                                     {history.can_edit_catatan && (
                                                         <div className="mt-1">
@@ -1093,7 +1115,7 @@ export default function NaskahShow({
                                                     isbnHistory.ke_status
                                                         .stage &&
                                                 naskah.isbn?.nomor_isbn && (
-                                                    <div className="mt-2 rounded-md border border-border bg-lavender-wash/60 px-3 py-2">
+                                                    <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                         <p className="text-xs font-medium text-muted-foreground">
                                                             ISBN Terbit
                                                         </p>
@@ -1242,7 +1264,7 @@ export default function NaskahShow({
                                 </div>
                                 {history.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {history.catatan}
+                                        <NoteText text={history.catatan} />
                                     </p>
                                 )}
                             </li>
@@ -1269,7 +1291,9 @@ export default function NaskahShow({
                                     </p>
                                     {revisi.catatan_penulis && (
                                         <p className="text-xs text-muted-foreground">
-                                            {revisi.catatan_penulis}
+                                            <NoteText
+                                                text={revisi.catatan_penulis}
+                                            />
                                         </p>
                                     )}
                                 </div>

@@ -19,6 +19,7 @@ use App\Models\WorkflowHistory;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WorkflowController extends Controller
 {
@@ -45,15 +46,19 @@ class WorkflowController extends Controller
             ]);
         }
 
-        $this->syncIsbnStatus($naskah, $to);
+        DB::transaction(function () use ($naskah, $to, $request) {
+            WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-        WorkflowService::transition(
-            $naskah,
-            $to,
-            AktorType::Admin,
-            admin: $request->user(),
-            note: $request->validated('catatan'),
-        );
+            $this->syncIsbnStatus($naskah, $to);
+
+            WorkflowService::transition(
+                $naskah,
+                $to,
+                AktorType::Admin,
+                admin: $request->user(),
+                note: $request->validated('catatan'),
+            );
+        });
 
         flashSuccess(__('Status naskah diperbarui menjadi :status.', ['status' => $to->label()]));
 
@@ -70,29 +75,33 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:1000'],
+            'catatan' => ['nullable', 'string', 'max:255'],
         ]);
 
-        RevisiUpload::create([
-            'naskah_id' => $naskah->id,
-            'author_id' => $naskah->author_id,
-            'jenis' => $naskah->status === NaskahStatus::RevisiDokumen
-                ? RevisiJenis::Dokumen
-                : RevisiJenis::Naskah,
-            'catatan_penulis' => $validated['catatan'],
-        ]);
+        DB::transaction(function () use ($naskah, $request, $validated) {
+            WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-        $to = $naskah->status === NaskahStatus::RevisiDokumen
-            ? NaskahStatus::VerifikasiDokumen
-            : NaskahStatus::DalamProsesEditingLayout;
+            RevisiUpload::create([
+                'naskah_id' => $naskah->id,
+                'author_id' => $naskah->author_id,
+                'jenis' => $naskah->status === NaskahStatus::RevisiDokumen
+                    ? RevisiJenis::Dokumen
+                    : RevisiJenis::Naskah,
+                'catatan_penulis' => $validated['catatan'],
+            ]);
 
-        WorkflowService::transition(
-            $naskah,
-            $to,
-            AktorType::Admin,
-            admin: $request->user(),
-            note: __('Admin mengonfirmasi revisi telah diunggah'),
-        );
+            $to = $naskah->status === NaskahStatus::RevisiDokumen
+                ? NaskahStatus::VerifikasiDokumen
+                : NaskahStatus::DalamProsesEditingLayout;
+
+            WorkflowService::transition(
+                $naskah,
+                $to,
+                AktorType::Admin,
+                admin: $request->user(),
+                note: __('Admin mengonfirmasi revisi telah diunggah'),
+            );
+        });
 
         flashSuccess(__('Upload revisi dikonfirmasi.'));
 
@@ -108,18 +117,22 @@ class WorkflowController extends Controller
             abort(404);
         }
 
-        if ($layout = $naskah->latestLayout) {
-            $layout->status = LayoutStatus::Disetujui;
-            $layout->save();
-        }
+        DB::transaction(function () use ($naskah, $request) {
+            WorkflowService::assertFreshStatus($naskah, NaskahStatus::ProofReadingPenulis);
 
-        WorkflowService::transition(
-            $naskah,
-            NaskahStatus::AccProofReading,
-            AktorType::Admin,
-            admin: $request->user(),
-            note: __('Proof reading disetujui (Acc) oleh admin'),
-        );
+            if ($layout = $naskah->latestLayout) {
+                $layout->status = LayoutStatus::Disetujui;
+                $layout->save();
+            }
+
+            WorkflowService::transition(
+                $naskah,
+                NaskahStatus::AccProofReading,
+                AktorType::Admin,
+                admin: $request->user(),
+                note: __('Proof reading disetujui (Acc) oleh admin'),
+            );
+        });
 
         flashSuccess(__('Proof reading disetujui.'));
 
@@ -136,22 +149,26 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['required', 'string', 'max:1000'],
+            'catatan' => ['required', 'string', 'max:255'],
         ]);
 
-        if ($layout = $naskah->latestLayout) {
-            $layout->status = LayoutStatus::Revisi;
-            $layout->catatan_revisi = $validated['catatan'];
-            $layout->save();
-        }
+        DB::transaction(function () use ($naskah, $request, $validated) {
+            WorkflowService::assertFreshStatus($naskah, NaskahStatus::ProofReadingPenulis);
 
-        WorkflowService::transition(
-            $naskah,
-            NaskahStatus::RevisiProofReading,
-            AktorType::Admin,
-            admin: $request->user(),
-            note: __('Revisi proof reading diajukan oleh admin: ').$validated['catatan'],
-        );
+            if ($layout = $naskah->latestLayout) {
+                $layout->status = LayoutStatus::Revisi;
+                $layout->catatan_revisi = $validated['catatan'];
+                $layout->save();
+            }
+
+            WorkflowService::transition(
+                $naskah,
+                NaskahStatus::RevisiProofReading,
+                AktorType::Admin,
+                admin: $request->user(),
+                note: __('Revisi proof reading diajukan oleh admin: ').$validated['catatan'],
+            );
+        });
 
         flashSuccess(__('Revisi proof reading diajukan.'));
 
@@ -197,24 +214,30 @@ class WorkflowController extends Controller
             ]);
         }
 
-        $versi = ($naskah->layouts()->max('versi') ?? 0) + 1;
+        $versi = null;
 
-        Layout::create([
-            'naskah_id' => $naskah->id,
-            'versi' => $versi,
-            'preview_pdf_link' => $request->validated('preview_pdf_link'),
-            'status' => LayoutStatus::MenungguReview,
-        ]);
+        DB::transaction(function () use ($naskah, $request, &$versi) {
+            WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-        if ($naskah->status === NaskahStatus::RevisiProofReading) {
-            WorkflowService::transition(
-                $naskah,
-                NaskahStatus::ProofReadingPenulis,
-                AktorType::Admin,
-                admin: $request->user(),
-                note: __('Layout versi :versi dikirim untuk proof reading ulang.', ['versi' => $versi]),
-            );
-        }
+            $versi = ($naskah->layouts()->max('versi') ?? 0) + 1;
+
+            Layout::create([
+                'naskah_id' => $naskah->id,
+                'versi' => $versi,
+                'preview_pdf_link' => $request->validated('preview_pdf_link'),
+                'status' => LayoutStatus::MenungguReview,
+            ]);
+
+            if ($naskah->status === NaskahStatus::RevisiProofReading) {
+                WorkflowService::transition(
+                    $naskah,
+                    NaskahStatus::ProofReadingPenulis,
+                    AktorType::Admin,
+                    admin: $request->user(),
+                    note: __('Layout versi :versi dikirim untuk proof reading ulang.', ['versi' => $versi]),
+                );
+            }
+        });
 
         flashSuccess(__('Layout versi :versi berhasil dikirim.', ['versi' => $versi]));
 
@@ -242,25 +265,29 @@ class WorkflowController extends Controller
             ]);
         }
 
-        if ($to === NaskahStatus::IsbnTerbit) {
-            $isbn = $naskah->isbn ?? new Isbn(['naskah_id' => $naskah->id]);
+        DB::transaction(function () use ($naskah, $request, $to) {
+            WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-            $isbn->nomor_isbn = $request->validated('nomor_isbn');
-            $isbn->penerbit = $request->validated('penerbit');
-            $isbn->catatan = $request->validated('catatan');
-            $isbn->status = IsbnStatus::Proses;
-            $isbn->save();
-        }
+            if ($to === NaskahStatus::IsbnTerbit) {
+                $isbn = $naskah->isbn ?? new Isbn(['naskah_id' => $naskah->id]);
 
-        $this->syncIsbnStatus($naskah, $to);
+                $isbn->nomor_isbn = $request->validated('nomor_isbn');
+                $isbn->penerbit = $request->validated('penerbit');
+                $isbn->catatan = $request->validated('catatan');
+                $isbn->status = IsbnStatus::Proses;
+                $isbn->save();
+            }
 
-        WorkflowService::transition(
-            $naskah,
-            $to,
-            AktorType::Admin,
-            admin: $request->user(),
-            note: $request->validated('catatan'),
-        );
+            $this->syncIsbnStatus($naskah, $to);
+
+            WorkflowService::transition(
+                $naskah,
+                $to,
+                AktorType::Admin,
+                admin: $request->user(),
+                note: $request->validated('catatan'),
+            );
+        });
 
         flashSuccess($to === NaskahStatus::IsbnTerbit
             ? __('Data ISBN terbit disimpan dan status diperbarui menjadi :status.', ['status' => $to->label()])
@@ -296,7 +323,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:1000'],
+            'catatan' => ['nullable', 'string', 'max:255'],
         ]);
 
         $history->update(['catatan' => $validated['catatan']]);
