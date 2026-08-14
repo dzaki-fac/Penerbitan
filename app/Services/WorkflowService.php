@@ -52,7 +52,7 @@ class WorkflowService
         'revisi_dokumen' => [],
         'dalam_proses_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
         'revisi_editing_layout' => [],
-        'pengajuan_isbn' => [NaskahStatus::RevisiIsbn, NaskahStatus::IsbnTerbit],
+        'pengajuan_isbn' => [NaskahStatus::IsbnTerbit, NaskahStatus::RevisiIsbn],
         'revisi_isbn' => [NaskahStatus::PengajuanIsbn, NaskahStatus::IsbnTerbit],
         'isbn_terbit' => [NaskahStatus::ProofReadingPenulis],
         'proof_reading_penulis' => [],

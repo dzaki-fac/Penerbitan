@@ -155,6 +155,32 @@ export function progressBarClass(progress: number): string {
     return 'bg-amber-500';
 }
 
+/** Warna tombol aksi "lanjut"/maju ke tahap berikutnya: hijau solid. */
+export const ADVANCE_BUTTON_CLASS =
+    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
+
+/** Warna tombol aksi revisi: teks merah, border merah, latar putih. */
+export const REVISION_BUTTON_CLASS =
+    'border border-red-300 bg-background text-red-700 hover:bg-red-50 hover:text-red-800 focus-visible:ring-red-600/40';
+
+/** Warna tombol aksi penulis yang dipicu admin atas nama penulis (lanjut): outline hijau putus-putus. */
+export const AUTHOR_ADVANCE_BUTTON_CLASS =
+    'border-dashed border-green-300 bg-background text-green-700 hover:bg-green-50 hover:text-green-800';
+
+/** Warna tombol aksi penulis yang dipicu admin atas nama penulis (revisi): outline merah putus-putus. */
+export const AUTHOR_REVISION_BUTTON_CLASS =
+    'border border-dashed border-red-300 bg-background text-red-700 hover:bg-red-50 hover:text-red-800';
+
+/**
+ * Kelas tombol transisi berdasarkan status tujuan:
+ * status revisi → merah, selain itu (lanjut) → hijau.
+ */
+export function transitionButtonClass(targetStatus: string): string {
+    return REVISION_STATUS_VALUES.includes(targetStatus)
+        ? REVISION_BUTTON_CLASS
+        : ADVANCE_BUTTON_CLASS;
+}
+
 /** Kelas kotak "sudah selesai" pada timeline: selalu hijau, terlepas dari tone naskah saat ini. */
 export const DONE_STEP_INDICATOR_CLASS =
     'border-green-300 bg-green-50 text-green-700';

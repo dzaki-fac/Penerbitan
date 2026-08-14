@@ -39,6 +39,10 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import {
+    ADVANCE_BUTTON_CLASS,
+    AUTHOR_ADVANCE_BUTTON_CLASS,
+    AUTHOR_REVISION_BUTTON_CLASS,
+    REVISION_BUTTON_CLASS,
     REVISION_STATUS_VALUES,
     activeContentClass,
     activeIndicatorClass,
@@ -49,6 +53,7 @@ import {
     progressBarClass,
     statusBadgeClass,
     statusSubBadge,
+    transitionButtonClass,
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
@@ -115,7 +120,10 @@ function TransitionDialog({
             <DialogTrigger asChild>
                 <Button
                     size="sm"
-                    className={cn('justify-center', ACTION_BUTTON_CLASS)}
+                    className={cn(
+                        'justify-center',
+                        transitionButtonClass(target),
+                    )}
                 >
                     {targetLabel}
                 </Button>
@@ -185,7 +193,7 @@ function TransitionDialog({
                             disabled={form.processing}
                             className={cn(
                                 'justify-center',
-                                ACTION_BUTTON_CLASS,
+                                transitionButtonClass(target),
                             )}
                         >
                             {form.processing && <Spinner />}
@@ -302,12 +310,10 @@ function JumpTransitionDialog({
     );
 }
 
-const ACTION_BUTTON_CLASS =
-    'bg-primary text-primary-foreground hover:bg-primary/90';
-const JUMP_BUTTON_CLASS =
-    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
-const JUMP_REVISION_CLASS =
-    'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
+// Tombol "Pindah ke Status Lain": tetap solid, warna mengikuti status tujuan
+// (revisi → merah, selain itu → hijau) agar konsisten dengan transisi biasa.
+const JUMP_BUTTON_CLASS = ADVANCE_BUTTON_CLASS;
+const JUMP_REVISION_CLASS = REVISION_BUTTON_CLASS;
 
 function Detail({
     label,
@@ -451,10 +457,6 @@ function PengajuanCard({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-// Alias lama — semua tombol aksi workflow kini memakai warna yang sama.
-const GO_BUTTON_CLASS = ACTION_BUTTON_CLASS;
-const REVISION_BUTTON_CLASS = ACTION_BUTTON_CLASS;
-
 function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     const [open, setOpen] = useState(false);
     const form = useForm({ catatan: '' });
@@ -471,7 +473,7 @@ function AdminConfirmRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${ACTION_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_REVISION_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <User />
@@ -528,7 +530,7 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${GO_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <User />
@@ -548,7 +550,7 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className={GO_BUTTON_CLASS}
+                            className={AUTHOR_ADVANCE_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}
                             Setujui (Acc)
@@ -576,7 +578,7 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${REVISION_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_REVISION_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <X />
@@ -611,7 +613,7 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className={REVISION_BUTTON_CLASS}
+                            className={AUTHOR_REVISION_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}
                             Ajukan Revisi
@@ -639,7 +641,7 @@ function AdminMarkDiambilDialog({ naskah }: { naskah: NaskahDetail }) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className={`justify-center ${GO_BUTTON_CLASS}`}
+                    className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
                     <Check />
@@ -659,7 +661,7 @@ function AdminMarkDiambilDialog({ naskah }: { naskah: NaskahDetail }) {
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className={GO_BUTTON_CLASS}
+                            className={AUTHOR_ADVANCE_BUTTON_CLASS}
                         >
                             {form.processing && <Spinner />}
                             Konfirmasi

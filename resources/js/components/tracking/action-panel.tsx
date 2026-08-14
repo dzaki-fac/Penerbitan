@@ -16,6 +16,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    ADVANCE_BUTTON_CLASS,
+    REVISION_BUTTON_CLASS,
+} from '@/lib/status';
 import { diambil, revisi } from '@/routes/tracking';
 import {
     approve as approveProofReading,
@@ -244,7 +248,7 @@ function ConfirmUploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="lg">
+                <Button size="lg" className={REVISION_BUTTON_CLASS}>
                     <FileUp />
                     Konfirmasi Upload Revisi
                 </Button>
@@ -283,14 +287,6 @@ function ConfirmUploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-// Kelas warna tombol aksi. Acc dan Ajukan Revisi sengaja dibedakan warnanya
-// (hijau vs merah) supaya kedua pilihan langsung kelihatan beda, tidak
-// tertukar saat penulis buru-buru memilih.
-const APPROVE_BUTTON_CLASS =
-    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
-const REJECT_BUTTON_CLASS =
-    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600/40';
-
 export function ActionPanel({ naskah, action }: Props) {
     if (!action) {
         return (
@@ -314,7 +310,7 @@ export function ActionPanel({ naskah, action }: Props) {
                     submit={approveProofReading.url(naskah.id)}
                     buttonLabel="Acc Proof Reading"
                     icon={<Check />}
-                    buttonClassName={APPROVE_BUTTON_CLASS}
+                    buttonClassName={ADVANCE_BUTTON_CLASS}
                 />
                 <RejectDialog
                     naskah={naskah}
@@ -323,7 +319,7 @@ export function ActionPanel({ naskah, action }: Props) {
                     submit={rejectProofReading.url(naskah.id)}
                     buttonLabel="Ajukan Revisi"
                     placeholder="Tuliskan catatan revisi Anda"
-                    buttonClassName={REJECT_BUTTON_CLASS}
+                    buttonClassName={REVISION_BUTTON_CLASS}
                 />
                 {naskah.layout?.preview_pdf_link && (
                     <Button asChild variant="outline">
@@ -349,6 +345,7 @@ export function ActionPanel({ naskah, action }: Props) {
             submit={diambil.url(naskah.id)}
             buttonLabel="Buku Sudah Diambil"
             icon={<Check />}
+            buttonClassName={ADVANCE_BUTTON_CLASS}
         />
     );
 }
