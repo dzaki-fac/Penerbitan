@@ -1,5 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
-import { Activity, BookOpenCheck, CircleCheck, ListChecks } from 'lucide-react';
+import {
+    Activity,
+    BadgeCheck,
+    BookOpenCheck,
+    CircleCheck,
+    Hourglass,
+    ListChecks,
+    RefreshCw,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -24,6 +32,7 @@ type Props = {
         progress: number;
         count: number;
     }>;
+    isbnStatuses: Array<{ value: string; label: string; count: number }>;
     recentHistories: Array<{
         id: number;
         naskah: string;
@@ -38,6 +47,7 @@ type Props = {
 export default function AdminDashboard({
     stats,
     statuses,
+    isbnStatuses,
     recentHistories,
 }: Props) {
     const summary = [
@@ -49,6 +59,12 @@ export default function AdminDashboard({
         },
         { label: 'Selesai', value: stats.selesai, icon: CircleCheck },
     ];
+
+    const isbnIcons = {
+        proses: Hourglass,
+        terbit: BadgeCheck,
+        revisi: RefreshCw,
+    } as const;
 
     const maxCount = Math.max(...statuses.map((s) => s.count), 1);
 
@@ -74,6 +90,45 @@ export default function AdminDashboard({
                         </Card>
                     ))}
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <BadgeCheck className="size-4 text-muted-foreground" />
+                            Jumlah Status ISBN
+                        </CardTitle>
+                        <CardDescription>
+                            Distribusi data ISBN berdasarkan status.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            {isbnStatuses.map((status) => {
+                                const Icon =
+                                    isbnIcons[
+                                        status.value as keyof typeof isbnIcons
+                                    ] ?? Hourglass;
+
+                                return (
+                                    <div
+                                        key={status.value}
+                                        className="flex items-center gap-4 rounded-md border p-3"
+                                    >
+                                        <Icon className="size-7 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-xl font-bold">
+                                                {status.count}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {status.label}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader>

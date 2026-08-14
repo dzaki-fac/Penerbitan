@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\IsbnStatus;
 use App\Enums\NaskahStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Isbn;
 use App\Models\Naskah;
 use App\Models\WorkflowHistory;
 use Inertia\Inertia;
@@ -46,6 +48,12 @@ class DashboardController extends Controller
                 'waktu' => $h->created_at->format('d M Y H:i'),
             ]);
 
+        $isbnStatuses = collect(IsbnStatus::cases())->map(fn (IsbnStatus $status) => [
+            'value' => $status->value,
+            'label' => $status->label(),
+            'count' => Isbn::where('status', $status->value)->count(),
+        ]);
+
         return Inertia::render('admin/dashboard', [
             'stats' => [
                 'total' => Naskah::count(),
@@ -53,6 +61,7 @@ class DashboardController extends Controller
                 'sedang_proses' => Naskah::where('status', '!=', NaskahStatus::Selesai->value)->count(),
             ],
             'statuses' => $statuses,
+            'isbnStatuses' => $isbnStatuses,
             'recentHistories' => $recentHistories,
         ]);
     }
