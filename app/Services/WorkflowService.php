@@ -63,6 +63,39 @@ class WorkflowService
     ];
 
     /**
+     * Daftar tahapan utama untuk progress timeline.
+     *
+     * Status "Penulis Mundur" hanya disertakan apabila status naskah saat ini
+     * memang "Penulis Mundur", sehingga tidak tampil sebagai langkah default
+     * pada alur normal.
+     *
+     * @return array<int, array{value: string, label: string, progress: int, stage: int}>
+     */
+    public static function stepsFor(NaskahStatus $current): array
+    {
+        $steps = array_map(fn (NaskahStatus $status) => [
+            'value' => $status->value,
+            'label' => $status->label(),
+            'progress' => $status->progress(),
+            'stage' => $status->stage(),
+        ], array_filter(
+            NaskahStatus::ordered(),
+            fn (NaskahStatus $status) => $status !== NaskahStatus::PenulisMundur,
+        ));
+
+        if ($current === NaskahStatus::PenulisMundur) {
+            $steps[] = [
+                'value' => NaskahStatus::PenulisMundur->value,
+                'label' => NaskahStatus::PenulisMundur->label(),
+                'progress' => NaskahStatus::PenulisMundur->progress(),
+                'stage' => NaskahStatus::PenulisMundur->stage(),
+            ];
+        }
+
+        return $steps;
+    }
+
+    /**
      * Daftar seluruh tahapan utama untuk progress bar publik.
      *
      * @return array<int, array{value: string, label: string, progress: int, stage: int}>

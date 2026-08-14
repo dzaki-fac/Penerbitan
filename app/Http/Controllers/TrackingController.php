@@ -127,7 +127,7 @@ class TrackingController extends Controller
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
             ],
-            'steps' => WorkflowService::steps(),
+            'steps' => WorkflowService::stepsFor($naskah->status),
             'action' => $this->actionFor($naskah->status),
         ]);
     }

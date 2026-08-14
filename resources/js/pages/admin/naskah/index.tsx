@@ -39,23 +39,36 @@ type Props = {
         search: string;
         status: string;
         stage: string;
+        fakultas: string;
         per_page: string;
     };
     statuses: Array<{ value: string; label: string }>;
+    fakultasOptions: string[];
 };
 
-export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
+export default function NaskahIndex({
+    naskahs,
+    filters,
+    statuses,
+    fakultasOptions,
+}: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
+    const [fakultas, setFakultas] = useState(filters.fakultas);
     const [perPage, setPerPage] = useState(filters.per_page);
     const applied = useRef({
         search: filters.search,
         status: filters.status,
         stage: filters.stage,
+        fakultas: filters.fakultas,
         per_page: filters.per_page,
     });
 
-    function apply(next: { search?: string; status?: string }) {
+    function apply(next: {
+        search?: string;
+        status?: string;
+        fakultas?: string;
+    }) {
         applied.current = { ...applied.current, ...next };
         router.get(admin.naskah.index(), applied.current, {
             preserveState: true,
@@ -76,10 +89,12 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     function resetFilters() {
         setSearch('');
         setStatus('');
+        setFakultas('');
         applied.current = {
             search: '',
             status: '',
             stage: '',
+            fakultas: '',
             per_page: perPage,
         };
         router.get(admin.naskah.index(), applied.current, {
@@ -193,9 +208,34 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                 />
                             </div>
                             <div className="grid min-w-40 gap-2">
+                                <Label>Fakultas / Sekolah</Label>
+                                <Select
+                                    value={fakultas || 'all'}
+                                    onValueChange={(v) => {
+                                        const value = v === 'all' ? '' : v;
+                                        setFakultas(value);
+                                        apply({ fakultas: value });
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Semua fakultas/sekolah" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Semua fakultas/sekolah
+                                        </SelectItem>
+                                        {fakultasOptions.map((f) => (
+                                            <SelectItem key={f} value={f}>
+                                                {f}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid min-w-40 gap-2">
                                 <Label>Status</Label>
                                 <Select
-                                    value={status || undefined}
+                                    value={status || 'all'}
                                     onValueChange={(v) => {
                                         const value = v === 'all' ? '' : v;
                                         setStatus(value);
