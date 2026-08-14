@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
+import { WhatsAppButton } from '@/components/whatsapp-button';
 import { home } from '@/routes';
 
 export default function TrackingLayout({
@@ -48,6 +49,7 @@ export default function TrackingLayout({
             >
                 {children}
             </main>
+            {!auth.user && <WhatsAppButton />}
         </div>
     );
 }
