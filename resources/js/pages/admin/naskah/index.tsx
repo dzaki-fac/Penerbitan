@@ -6,9 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -174,26 +171,25 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                     </Button>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filter</CardTitle>
-                        <CardDescription>
-                            {naskahs.total} naskah ditemukan.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap items-end gap-3">
-                            <div className="grid min-w-56 flex-1 gap-2">
-                                <Label htmlFor="search">Cari</Label>
+                <Card className="py-4">
+                    <CardContent className="px-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="search" className="shrink-0">
+                                    Cari
+                                </Label>
                                 <Input
                                     id="search"
                                     value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    onChange={(e) =>
+                                        setSearch(e.target.value)
+                                    }
                                     placeholder="Judul, nama penulis, atau nomor identitas"
+                                    className="w-72"
                                 />
                             </div>
-                            <div className="grid min-w-40 gap-2">
-                                <Label>Status</Label>
+                            <div className="flex items-center gap-2">
+                                <Label className="shrink-0">Status</Label>
                                 <Select
                                     value={status || undefined}
                                     onValueChange={(v) => {
@@ -202,7 +198,7 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                         apply({ status: value });
                                     }}
                                 >
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className="w-44">
                                         <SelectValue placeholder="Semua status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -220,14 +216,21 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button variant="ghost" onClick={resetFilters}>
+                            <Button
+                                variant="ghost"
+                                onClick={resetFilters}
+                                className="h-9 px-3"
+                            >
                                 Reset
                             </Button>
+                            <p className="ml-auto text-sm text-muted-foreground">
+                                {naskahs.total} naskah ditemukan.
+                            </p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="pt-0">
                     <CardContent className="p-0">
                         {naskahs.data.length > 0 && paginationBar('border-b')}
                         <div className="overflow-x-auto">
