@@ -1066,13 +1066,13 @@ export default function NaskahShow({
                                                         {subBadge.label}
                                                     </Badge>
                                                 )}
-                                                {history && (
+                                                {(done || active) && history && (
                                                     <span className="text-xs text-muted-foreground">
                                                         {history.waktu}
                                                     </span>
                                                 )}
                                             </div>
-                                            {history?.catatan && (
+                                            {(done || active) && history?.catatan && (
                                                 <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
                                                     <p className="text-sm text-muted-foreground">
                                                         <span className="font-medium text-foreground">
@@ -1100,7 +1100,8 @@ export default function NaskahShow({
                                                     )}
                                                 </div>
                                             )}
-                                            {history &&
+                                            {(done || active) &&
+                                                history &&
                                                 history.can_edit_catatan &&
                                                 !history.catatan && (
                                                     <div className="mt-2">
