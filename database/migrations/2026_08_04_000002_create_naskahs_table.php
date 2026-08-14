@@ -16,12 +16,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('author_id')->constrained()->cascadeOnDelete();
             $table->string('judul');
-            $table->text('abstrak')->nullable();
-            $table->string('kategori')->nullable();
+            $table->string('link_cover')->nullable();
             $table->date('tanggal_pengajuan');
             $table->string('sumber_form')->nullable();
-            $table->enum('status', array_column(NaskahStatus::cases(), 'value'))
-                ->default(NaskahStatus::DataDiterima->value);
+            $table->string('status', 50)->default(NaskahStatus::DataDiterima->value);
             $table->unsignedTinyInteger('progress')->default(NaskahStatus::DataDiterima->progress());
             $table->text('catatan_admin')->nullable();
             $table->timestamps();

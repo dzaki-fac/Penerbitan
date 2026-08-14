@@ -1,7 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
 import { Activity, BookOpenCheck, CircleCheck, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import admin from '@/routes/admin';
 import { index as naskahIndex } from '@/routes/admin/naskah';
 
@@ -11,7 +17,13 @@ type Props = {
         selesai: number;
         sedang_proses: number;
     };
-    statuses: Array<{ value: string; label: string; progress: number; count: number }>;
+    statuses: Array<{
+        value: string;
+        label: string;
+        stage: number;
+        progress: number;
+        count: number;
+    }>;
     recentHistories: Array<{
         id: number;
         naskah: string;
@@ -23,10 +35,18 @@ type Props = {
     }>;
 };
 
-export default function AdminDashboard({ stats, statuses, recentHistories }: Props) {
+export default function AdminDashboard({
+    stats,
+    statuses,
+    recentHistories,
+}: Props) {
     const summary = [
         { label: 'Total Naskah', value: stats.total, icon: BookOpenCheck },
-        { label: 'Sedang Diproses', value: stats.sedang_proses, icon: ListChecks },
+        {
+            label: 'Sedang Diproses',
+            value: stats.sedang_proses,
+            icon: ListChecks,
+        },
         { label: 'Selesai', value: stats.selesai, icon: CircleCheck },
     ];
 
@@ -43,8 +63,12 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                             <CardContent className="flex items-center gap-4">
                                 <item.icon className="size-8 text-muted-foreground" />
                                 <div>
-                                    <p className="text-2xl font-bold">{item.value}</p>
-                                    <p className="text-sm text-muted-foreground">{item.label}</p>
+                                    <p className="text-2xl font-bold">
+                                        {item.value}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {item.label}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -55,7 +79,8 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                     <CardHeader>
                         <CardTitle>Naskah per Status</CardTitle>
                         <CardDescription>
-                            Distribusi seluruh naskah berdasarkan tahapan workflow.
+                            Distribusi seluruh naskah berdasarkan tahapan
+                            workflow.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -64,9 +89,9 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                                 <Link
                                     key={status.value}
                                     href={naskahIndex({
-                                        query: { status: status.value },
+                                        query: { stage: status.stage },
                                     })}
-                                    title={`Lihat naskah berstatus "${status.label}"`}
+                                    title={`Lihat naskah pada tahapan "${status.label}"`}
                                     className="group flex items-center gap-3 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50"
                                 >
                                     <span
@@ -95,8 +120,8 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                             ))}
                         </div>
                         <p className="mt-3 text-xs text-muted-foreground">
-                            Klik salah satu baris untuk melihat daftar naskah pada
-                            status tersebut.
+                            Klik salah satu baris untuk melihat daftar naskah
+                            pada status tersebut.
                         </p>
                     </CardContent>
                 </Card>
@@ -107,7 +132,9 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                             <Activity className="size-4 text-muted-foreground" />
                             Aktivitas Terbaru
                         </CardTitle>
-                        <CardDescription>10 perubahan status terakhir.</CardDescription>
+                        <CardDescription>
+                            10 perubahan status terakhir.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ul className="space-y-3">
@@ -121,10 +148,14 @@ export default function AdminDashboard({ stats, statuses, recentHistories }: Pro
                                     </span>
                                     {history.dari_status && (
                                         <span className="text-xs text-muted-foreground">
-                                            {history.dari_status} → {history.ke_status}
+                                            {history.dari_status} →{' '}
+                                            {history.ke_status}
                                         </span>
                                     )}
-                                    <Badge variant="secondary" className="text-[10px]">
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-[10px]"
+                                    >
                                         {history.aktor}
                                     </Badge>
                                     <span className="text-xs text-muted-foreground">

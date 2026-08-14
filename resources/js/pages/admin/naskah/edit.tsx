@@ -14,26 +14,56 @@ type Props = {
     naskah: {
         id: number;
         judul: string;
-        abstrak: string | null;
-        kategori: string | null;
+        link_cover: string | null;
         tanggal_pengajuan: string;
         sumber_form: string | null;
+        kebijakan_akses: string | null;
+        biaya: string | null;
+        nama_narahubung: string | null;
+        nomor_whatsapp_narahubung: string | null;
+        email_narahubung: string | null;
+        link_dummy_upload: string | null;
+        link_dummy_pdf: string | null;
+        link_dummy_word: string | null;
+        link_surat_keaslian: string | null;
+        link_surat_penerbitan: string | null;
         penulis: {
             nama: string;
             email: string | null;
             jenis_identitas: string;
             nomor_identitas: string;
+            status: string | null;
+            fakultas_sekolah: string | null;
+            nomor_npwp: string | null;
+            nomor_whatsapp: string | null;
+            penulis_tambahan: string | null;
         };
     };
 };
 
 export default function NaskahEdit({ naskah }: Props) {
     const form = useForm({
+        nama: naskah.penulis.nama,
+        email: naskah.penulis.email ?? '',
+        status: naskah.penulis.status ?? '',
+        fakultas_sekolah: naskah.penulis.fakultas_sekolah ?? '',
+        nomor_npwp: naskah.penulis.nomor_npwp ?? '',
+        nomor_whatsapp: naskah.penulis.nomor_whatsapp ?? '',
+        penulis_tambahan: naskah.penulis.penulis_tambahan ?? '',
         judul: naskah.judul,
-        abstrak: naskah.abstrak ?? '',
-        kategori: naskah.kategori ?? '',
+        link_cover: naskah.link_cover ?? '',
         tanggal_pengajuan: naskah.tanggal_pengajuan,
         sumber_form: naskah.sumber_form ?? '',
+        kebijakan_akses: naskah.kebijakan_akses ?? '',
+        biaya: naskah.biaya ?? '',
+        nama_narahubung: naskah.nama_narahubung ?? '',
+        nomor_whatsapp_narahubung: naskah.nomor_whatsapp_narahubung ?? '',
+        email_narahubung: naskah.email_narahubung ?? '',
+        link_dummy_upload: naskah.link_dummy_upload ?? '',
+        link_dummy_pdf: naskah.link_dummy_pdf ?? '',
+        link_dummy_word: naskah.link_dummy_word ?? '',
+        link_surat_keaslian: naskah.link_surat_keaslian ?? '',
+        link_surat_penerbitan: naskah.link_surat_penerbitan ?? '',
     });
 
     function submit(e: React.FormEvent) {
@@ -49,7 +79,9 @@ export default function NaskahEdit({ naskah }: Props) {
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <h1 className="text-lg font-semibold">Edit Naskah</h1>
-                        <p className="text-sm text-muted-foreground">{naskah.judul}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {naskah.judul}
+                        </p>
                     </div>
                     <Button asChild variant="outline" size="sm">
                         <Link href={show(naskah.id)}>
@@ -64,11 +96,7 @@ export default function NaskahEdit({ naskah }: Props) {
                         <CardHeader>
                             <CardTitle>Data Penulis</CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-4 sm:grid-cols-3">
-                            <div className="grid gap-2">
-                                <Label>Nama</Label>
-                                <Input value={naskah.penulis.nama} readOnly disabled />
-                            </div>
+                        <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2">
                                 <Label>Identitas</Label>
                                 <Input
@@ -78,8 +106,109 @@ export default function NaskahEdit({ naskah }: Props) {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Email</Label>
-                                <Input value={naskah.penulis.email ?? '-'} readOnly disabled />
+                                <Label htmlFor="nama">Nama</Label>
+                                <Input
+                                    id="nama"
+                                    value={form.data.nama}
+                                    onChange={(e) =>
+                                        form.setData('nama', e.target.value)
+                                    }
+                                />
+                                <InputError message={form.errors.nama} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email (opsional)</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={form.data.email}
+                                    onChange={(e) =>
+                                        form.setData('email', e.target.value)
+                                    }
+                                />
+                                <InputError message={form.errors.email} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="status">Status</Label>
+                                <Input
+                                    id="status"
+                                    value={form.data.status}
+                                    onChange={(e) =>
+                                        form.setData('status', e.target.value)
+                                    }
+                                    placeholder="Dosen / Mahasiswa / ..."
+                                />
+                                <InputError message={form.errors.status} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="fakultas_sekolah">
+                                    Fakultas / Sekolah
+                                </Label>
+                                <Input
+                                    id="fakultas_sekolah"
+                                    value={form.data.fakultas_sekolah}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'fakultas_sekolah',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.fakultas_sekolah}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="nomor_npwp">Nomor NPWP</Label>
+                                <Input
+                                    id="nomor_npwp"
+                                    value={form.data.nomor_npwp}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nomor_npwp',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError message={form.errors.nomor_npwp} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="nomor_whatsapp">
+                                    Nomor WhatsApp
+                                </Label>
+                                <Input
+                                    id="nomor_whatsapp"
+                                    value={form.data.nomor_whatsapp}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nomor_whatsapp',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.nomor_whatsapp}
+                                />
+                            </div>
+                            <div className="grid gap-2 sm:col-span-2">
+                                <Label htmlFor="penulis_tambahan">
+                                    Penulis Tambahan
+                                </Label>
+                                <Textarea
+                                    id="penulis_tambahan"
+                                    value={form.data.penulis_tambahan}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'penulis_tambahan',
+                                            e.target.value,
+                                        )
+                                    }
+                                    rows={2}
+                                    placeholder="Nama penulis lain, dipisah koma (opsional)"
+                                />
+                                <InputError
+                                    message={form.errors.penulis_tambahan}
+                                />
                             </div>
                         </CardContent>
                     </Card>
@@ -94,47 +223,251 @@ export default function NaskahEdit({ naskah }: Props) {
                                 <Input
                                     id="judul"
                                     value={form.data.judul}
-                                    onChange={(e) => form.setData('judul', e.target.value)}
+                                    onChange={(e) =>
+                                        form.setData('judul', e.target.value)
+                                    }
                                 />
                                 <InputError message={form.errors.judul} />
                             </div>
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="abstrak">Abstrak</Label>
-                                <Textarea
-                                    id="abstrak"
-                                    value={form.data.abstrak}
-                                    onChange={(e) => form.setData('abstrak', e.target.value)}
-                                    rows={4}
-                                />
-                                <InputError message={form.errors.abstrak} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="kategori">Kategori</Label>
+                                <Label htmlFor="link_cover">Link Cover</Label>
                                 <Input
-                                    id="kategori"
-                                    value={form.data.kategori}
-                                    onChange={(e) => form.setData('kategori', e.target.value)}
+                                    id="link_cover"
+                                    type="url"
+                                    value={form.data.link_cover}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'link_cover',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="URL sampul/cover buku (mis. Google Drive)"
                                 />
-                                <InputError message={form.errors.kategori} />
+                                <InputError message={form.errors.link_cover} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="tanggal_pengajuan">Tanggal Pengajuan</Label>
+                                <Label htmlFor="tanggal_pengajuan">
+                                    Tanggal Pengajuan
+                                </Label>
                                 <Input
                                     id="tanggal_pengajuan"
-                                    type="date"
+                                    type="datetime-local"
                                     value={form.data.tanggal_pengajuan}
-                                    onChange={(e) => form.setData('tanggal_pengajuan', e.target.value)}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'tanggal_pengajuan',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
-                                <InputError message={form.errors.tanggal_pengajuan} />
+                                <InputError
+                                    message={form.errors.tanggal_pengajuan}
+                                />
                             </div>
-                            <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="sumber_form">Sumber Google Form</Label>
+                            <div className="grid gap-2">
+                                <Label htmlFor="sumber_form">
+                                    Sumber Google Form
+                                </Label>
                                 <Input
                                     id="sumber_form"
                                     value={form.data.sumber_form}
-                                    onChange={(e) => form.setData('sumber_form', e.target.value)}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'sumber_form',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={form.errors.sumber_form} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="kebijakan_akses">
+                                    Kebijakan Akses
+                                </Label>
+                                <Input
+                                    id="kebijakan_akses"
+                                    value={form.data.kebijakan_akses}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'kebijakan_akses',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.kebijakan_akses}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="biaya">Biaya</Label>
+                                <Input
+                                    id="biaya"
+                                    value={form.data.biaya}
+                                    onChange={(e) =>
+                                        form.setData('biaya', e.target.value)
+                                    }
+                                />
+                                <InputError message={form.errors.biaya} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="nama_narahubung">
+                                    Nama Narahubung
+                                </Label>
+                                <Input
+                                    id="nama_narahubung"
+                                    value={form.data.nama_narahubung}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nama_narahubung',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.nama_narahubung}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="nomor_whatsapp_narahubung">
+                                    WhatsApp Narahubung
+                                </Label>
+                                <Input
+                                    id="nomor_whatsapp_narahubung"
+                                    value={form.data.nomor_whatsapp_narahubung}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nomor_whatsapp_narahubung',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={
+                                        form.errors.nomor_whatsapp_narahubung
+                                    }
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="email_narahubung">
+                                    Email Narahubung (opsional)
+                                </Label>
+                                <Input
+                                    id="email_narahubung"
+                                    type="email"
+                                    value={form.data.email_narahubung}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'email_narahubung',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.email_narahubung}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Dokumen &amp; Surat</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 sm:grid-cols-2">
+                            <div className="grid gap-2 sm:col-span-2">
+                                <Label htmlFor="link_dummy_upload">
+                                    Dokumen Dummy (Upload)
+                                </Label>
+                                <Input
+                                    id="link_dummy_upload"
+                                    type="url"
+                                    value={form.data.link_dummy_upload}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'link_dummy_upload',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.link_dummy_upload}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="link_dummy_pdf">
+                                    Dummy Buku (PDF)
+                                </Label>
+                                <Input
+                                    id="link_dummy_pdf"
+                                    type="url"
+                                    value={form.data.link_dummy_pdf}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'link_dummy_pdf',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.link_dummy_pdf}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="link_dummy_word">
+                                    Dummy Buku (Word)
+                                </Label>
+                                <Input
+                                    id="link_dummy_word"
+                                    type="url"
+                                    value={form.data.link_dummy_word}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'link_dummy_word',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.link_dummy_word}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="link_surat_keaslian">
+                                    Surat Pernyataan Keaslian Naskah
+                                </Label>
+                                <Input
+                                    id="link_surat_keaslian"
+                                    type="url"
+                                    value={form.data.link_surat_keaslian}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'link_surat_keaslian',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.link_surat_keaslian}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="link_surat_penerbitan">
+                                    Surat Pernyataan Penerbitan Buku
+                                </Label>
+                                <Input
+                                    id="link_surat_penerbitan"
+                                    type="url"
+                                    value={form.data.link_surat_penerbitan}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'link_surat_penerbitan',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.link_surat_penerbitan}
+                                />
                             </div>
                         </CardContent>
                     </Card>

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('naskah_id')->constrained()->cascadeOnDelete();
             $table->string('nomor_isbn')->nullable();
             $table->string('penerbit')->nullable();
-            $table->enum('status', array_column(IsbnStatus::cases(), 'value'))
+            $table->string('status', 50)
                 ->default(IsbnStatus::Proses->value);
             $table->string('catatan')->nullable();
             $table->timestamps();

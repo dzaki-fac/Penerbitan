@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AktorType;
-use App\Enums\IsbnStatus;
 use App\Enums\LayoutStatus;
 use App\Enums\NaskahStatus;
 use App\Enums\RevisiJenis;
@@ -16,6 +15,7 @@ use App\Models\Naskah;
 use App\Models\RevisiUpload;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -75,7 +75,6 @@ class TrackingController extends Controller
     {
         $naskah->load([
             'author',
-            'dokumens',
             'layouts',
             'isbn',
             'revisiUploads',
@@ -88,24 +87,15 @@ class TrackingController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'abstrak' => $naskah->abstrak,
-                'kategori' => $naskah->kategori,
-                'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
+                'link_cover' => $naskah->link_cover,
+                'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
-                'catatan_admin' => $naskah->catatan_admin,
                 'author' => [
                     'nama' => $naskah->author->nama,
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
                     'nomor_identitas' => $naskah->author->nomor_identitas,
                 ],
-                'dokumens' => $naskah->dokumens->map(fn ($d) => [
-                    'id' => $d->id,
-                    'nama_dokumen' => $d->nama_dokumen,
-                    'status' => ['value' => $d->status->value, 'label' => $d->status->label()],
-                    'catatan' => $d->catatan,
-                    'file_url' => $d->file_path ? Storage::disk('public')->url($d->file_path) : null,
-                ]),
                 'layout' => $latestLayout ? [
                     'id' => $latestLayout->id,
                     'versi' => $latestLayout->versi,
@@ -125,14 +115,14 @@ class TrackingController extends Controller
                     'jenis' => ['value' => $r->jenis->value, 'label' => $r->jenis->label()],
                     'catatan_penulis' => $r->catatan_penulis,
                     'tanggal' => $r->created_at->format('d M Y H:i'),
-                    'file_url' => Storage::disk('public')->url($r->file_path),
+                    'file_url' => $r->file_path ? Storage::disk('public')->url($r->file_path) : null,
                 ]),
                 'histories' => $naskah->histories->map(fn ($h) => [
                     'id' => $h->id,
-                    'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label()] : null,
-                    'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label()],
+                    'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label(), 'stage' => $h->dari_status->stage()] : null,
+                    'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label(), 'stage' => $h->ke_status->stage()],
                     'aktor' => ['value' => $h->aktor->value, 'label' => $h->aktor->label()],
-                    'admin' => $h->admin?->name,
+                    'admin' => $h->admin?->name ? initialsOf($h->admin->name) : null,
                     'catatan' => $h->catatan,
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
@@ -143,11 +133,11 @@ class TrackingController extends Controller
     }
 
     /**
-     * Penulis mengunggah revisi dokumen/naskah.
+     * Penulis mengonfirmasi telah mengunggah revisi dokumen/naskah ke link Drive.
      */
     public function uploadRevisi(Naskah $naskah, UploadRevisiRequest $request): RedirectResponse
     {
-        if (! in_array($naskah->status, [NaskahStatus::MenungguPerbaikanDokumen, NaskahStatus::RevisiEditingLayout], true)) {
+        if (! in_array($naskah->status, [NaskahStatus::RevisiDokumen, NaskahStatus::RevisiEditingLayout], true)) {
             abort(404);
         }
 
@@ -157,35 +147,36 @@ class TrackingController extends Controller
             ]);
         }
 
-        $path = $request->file('file')->store('revisi', 'public');
+        DB::transaction(function () use ($naskah, $request) {
+            WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-        RevisiUpload::create([
-            'naskah_id' => $naskah->id,
-            'author_id' => $naskah->author_id,
-            'jenis' => $naskah->status === NaskahStatus::MenungguPerbaikanDokumen
-                ? RevisiJenis::Dokumen
-                : RevisiJenis::Naskah,
-            'file_path' => $path,
-            'catatan_penulis' => $request->validated('catatan_penulis'),
-        ]);
+            RevisiUpload::create([
+                'naskah_id' => $naskah->id,
+                'author_id' => $naskah->author_id,
+                'jenis' => $naskah->status === NaskahStatus::RevisiDokumen
+                    ? RevisiJenis::Dokumen
+                    : RevisiJenis::Naskah,
+                'catatan_penulis' => $request->validated('catatan_penulis'),
+            ]);
 
-        $to = $naskah->status === NaskahStatus::MenungguPerbaikanDokumen
-            ? NaskahStatus::VerifikasiDokumen
-            : NaskahStatus::DalamProsesEditingLayout;
+            $to = $naskah->status === NaskahStatus::RevisiDokumen
+                ? NaskahStatus::VerifikasiDokumen
+                : NaskahStatus::DalamProsesEditingLayout;
 
-        WorkflowService::transition($naskah, $to, AktorType::Penulis, note: __('Revisi diunggah oleh penulis'));
+            WorkflowService::transition($naskah, $to, AktorType::Penulis, note: __('Penulis mengonfirmasi revisi telah diunggah ke link Drive'));
+        });
 
-        flashSuccess(__('Revisi berhasil diunggah.'));
+        flashSuccess(__('Konfirmasi upload revisi berhasil.'));
 
         return back();
     }
 
     /**
-     * Penulis menyetujui hasil editing & layout.
+     * Penulis menyetujui (Acc) hasil proof reading.
      */
-    public function approveLayout(Naskah $naskah, TrackingIdentityRequest $request): RedirectResponse
+    public function approveProofReading(Naskah $naskah, TrackingIdentityRequest $request): RedirectResponse
     {
-        if ($naskah->status !== NaskahStatus::MenungguReviewEditingLayout) {
+        if ($naskah->status !== NaskahStatus::ProofReadingPenulis) {
             abort(404);
         }
 
@@ -195,24 +186,28 @@ class TrackingController extends Controller
             ]);
         }
 
-        if ($layout = $naskah->latestLayout) {
-            $layout->status = LayoutStatus::Disetujui;
-            $layout->save();
-        }
+        DB::transaction(function () use ($naskah) {
+            WorkflowService::assertFreshStatus($naskah, NaskahStatus::ProofReadingPenulis);
 
-        WorkflowService::transition($naskah, NaskahStatus::PengajuanIsbn, AktorType::Penulis, note: __('Editing & layout disetujui oleh penulis'));
+            if ($layout = $naskah->latestLayout) {
+                $layout->status = LayoutStatus::Disetujui;
+                $layout->save();
+            }
 
-        flashSuccess(__('Editing & layout disetujui.'));
+            WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Proof reading disetujui (Acc) oleh penulis'));
+        });
+
+        flashSuccess(__('Proof reading disetujui.'));
 
         return back();
     }
 
     /**
-     * Penulis mengajukan revisi hasil editing & layout.
+     * Penulis mengajukan revisi hasil proof reading.
      */
-    public function rejectLayout(Naskah $naskah, TrackingRejectRequest $request): RedirectResponse
+    public function rejectProofReading(Naskah $naskah, TrackingRejectRequest $request): RedirectResponse
     {
-        if ($naskah->status !== NaskahStatus::MenungguReviewEditingLayout) {
+        if ($naskah->status !== NaskahStatus::ProofReadingPenulis) {
             abort(404);
         }
 
@@ -222,80 +217,24 @@ class TrackingController extends Controller
             ]);
         }
 
-        if ($layout = $naskah->latestLayout) {
-            $layout->status = LayoutStatus::Revisi;
-            $layout->catatan_revisi = $request->validated('catatan');
-            $layout->save();
-        }
+        DB::transaction(function () use ($naskah, $request) {
+            WorkflowService::assertFreshStatus($naskah, NaskahStatus::ProofReadingPenulis);
 
-        WorkflowService::transition(
-            $naskah,
-            NaskahStatus::RevisiEditingLayout,
-            AktorType::Penulis,
-            note: __('Penulis mengajukan revisi editing & layout: ').$request->validated('catatan'),
-        );
+            if ($layout = $naskah->latestLayout) {
+                $layout->status = LayoutStatus::Revisi;
+                $layout->catatan_revisi = $request->validated('catatan');
+                $layout->save();
+            }
 
-        flashSuccess(__('Revisi editing & layout diajukan.'));
+            WorkflowService::transition(
+                $naskah,
+                NaskahStatus::RevisiProofReading,
+                AktorType::Penulis,
+                note: __('Penulis mengajukan revisi proof reading: ').$request->validated('catatan'),
+            );
+        });
 
-        return back();
-    }
-
-    /**
-     * Penulis menyetujui data ISBN.
-     */
-    public function approveIsbn(Naskah $naskah, TrackingIdentityRequest $request): RedirectResponse
-    {
-        if ($naskah->status !== NaskahStatus::MenungguPersetujuanIsbn) {
-            abort(404);
-        }
-
-        if (! WorkflowService::verifyAuthor($naskah, $request->validated('jenis_identitas'), $request->validated('nomor_identitas'))) {
-            return back()->withErrors([
-                'nomor_identitas' => __('Identitas tidak cocok dengan naskah ini.'),
-            ]);
-        }
-
-        if ($isbn = $naskah->isbn) {
-            $isbn->status = IsbnStatus::Disetujui;
-            $isbn->save();
-        }
-
-        WorkflowService::transition($naskah, NaskahStatus::Finalisasi, AktorType::Penulis, note: __('ISBN disetujui oleh penulis'));
-
-        flashSuccess(__('ISBN disetujui.'));
-
-        return back();
-    }
-
-    /**
-     * Penulis mengajukan revisi data ISBN.
-     */
-    public function rejectIsbn(Naskah $naskah, TrackingRejectRequest $request): RedirectResponse
-    {
-        if ($naskah->status !== NaskahStatus::MenungguPersetujuanIsbn) {
-            abort(404);
-        }
-
-        if (! WorkflowService::verifyAuthor($naskah, $request->validated('jenis_identitas'), $request->validated('nomor_identitas'))) {
-            return back()->withErrors([
-                'nomor_identitas' => __('Identitas tidak cocok dengan naskah ini.'),
-            ]);
-        }
-
-        if ($isbn = $naskah->isbn) {
-            $isbn->status = IsbnStatus::Revisi;
-            $isbn->catatan = $request->validated('catatan');
-            $isbn->save();
-        }
-
-        WorkflowService::transition(
-            $naskah,
-            NaskahStatus::RevisiIsbn,
-            AktorType::Penulis,
-            note: __('Penulis mengajukan revisi ISBN: ').$request->validated('catatan'),
-        );
-
-        flashSuccess(__('Revisi ISBN diajukan.'));
+        flashSuccess(__('Revisi proof reading diajukan.'));
 
         return back();
     }
@@ -315,7 +254,7 @@ class TrackingController extends Controller
             ]);
         }
 
-        WorkflowService::transition($naskah, NaskahStatus::BukuDiambil, AktorType::Penulis, note: __('Buku ditandai telah diambil oleh penulis'));
+        WorkflowService::transition($naskah, NaskahStatus::Selesai, AktorType::Penulis, note: __('Buku ditandai telah diambil oleh penulis'));
 
         flashSuccess(__('Buku telah ditandai diambil.'));
 
@@ -328,13 +267,13 @@ class TrackingController extends Controller
     private function actionFor(NaskahStatus $status): ?array
     {
         return match ($status) {
-            NaskahStatus::MenungguPerbaikanDokumen, NaskahStatus::RevisiEditingLayout => [
+            NaskahStatus::RevisiDokumen, NaskahStatus::RevisiEditingLayout => [
                 'jenis' => 'upload_revisi',
                 'label' => 'Upload Revisi',
             ],
-            NaskahStatus::MenungguReviewEditingLayout, NaskahStatus::MenungguPersetujuanIsbn => [
+            NaskahStatus::ProofReadingPenulis => [
                 'jenis' => 'review',
-                'label' => 'Setujui / Ajukan Revisi',
+                'label' => 'Acc / Ajukan Revisi',
             ],
             NaskahStatus::SiapDiambil => [
                 'jenis' => 'diambil',
@@ -352,6 +291,7 @@ class TrackingController extends Controller
         return [
             'id' => $naskah->id,
             'judul' => $naskah->judul,
+            'link_cover' => $naskah->link_cover,
             'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
             'progress' => $naskah->progress,
             'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),

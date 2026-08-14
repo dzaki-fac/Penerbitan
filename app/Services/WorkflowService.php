@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\AktorType;
 use App\Enums\NaskahStatus;
+use App\Exceptions\WorkflowConflictException;
 use App\Models\Naskah;
 use App\Models\User;
 use App\Models\WorkflowHistory;
@@ -18,28 +19,23 @@ class WorkflowService
      * @var array<string, array{to: NaskahStatus, aksi: string, label: string}>
      */
     public const AUTHOR_ACTIONS = [
-        'menunggu_perbaikan_dokumen' => [
+        'revisi_dokumen' => [
             'to' => NaskahStatus::VerifikasiDokumen,
             'aksi' => 'upload_revisi',
-            'label' => 'Upload Revisi',
+            'label' => 'Upload Revisi Dokumen',
         ],
         'revisi_editing_layout' => [
             'to' => NaskahStatus::DalamProsesEditingLayout,
             'aksi' => 'upload_revisi',
             'label' => 'Upload Revisi',
         ],
-        'menunggu_review_editing_layout' => [
-            'to' => NaskahStatus::PengajuanIsbn,
-            'aksi' => 'approve',
-            'label' => 'Setujui Naskah & Layout',
-        ],
-        'menunggu_persetujuan_isbn' => [
-            'to' => NaskahStatus::Finalisasi,
-            'aksi' => 'approve',
-            'label' => 'Setujui',
+        'proof_reading_penulis' => [
+            'to' => NaskahStatus::AccProofReading,
+            'aksi' => 'review',
+            'label' => 'Acc / Ajukan Revisi',
         ],
         'siap_diambil' => [
-            'to' => NaskahStatus::BukuDiambil,
+            'to' => NaskahStatus::Selesai,
             'aksi' => 'approve',
             'label' => 'Buku Sudah Diambil',
         ],
@@ -52,20 +48,24 @@ class WorkflowService
      */
     public const ADMIN_TRANSITIONS = [
         'data_diterima' => [NaskahStatus::VerifikasiDokumen],
-        'verifikasi_dokumen' => [NaskahStatus::DalamProsesEditingLayout, NaskahStatus::MenungguPerbaikanDokumen],
-        'dalam_proses_editing_layout' => [NaskahStatus::MenungguReviewEditingLayout],
-        'menunggu_review_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
-        'revisi_editing_layout' => [NaskahStatus::DalamProsesEditingLayout],
-        'pengajuan_isbn' => [NaskahStatus::MenungguPersetujuanIsbn],
-        'revisi_isbn' => [NaskahStatus::PengajuanIsbn],
-        'finalisasi' => [NaskahStatus::MasukCetak],
-        'masuk_cetak' => [NaskahStatus::SiapDiambil],
+        'verifikasi_dokumen' => [NaskahStatus::DalamProsesEditingLayout, NaskahStatus::RevisiDokumen],
+        'revisi_dokumen' => [],
+        'dalam_proses_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
+        'revisi_editing_layout' => [],
+        'pengajuan_isbn' => [NaskahStatus::IsbnTerbit, NaskahStatus::RevisiIsbn],
+        'revisi_isbn' => [NaskahStatus::PengajuanIsbn, NaskahStatus::IsbnTerbit],
+        'isbn_terbit' => [NaskahStatus::ProofReadingPenulis],
+        'proof_reading_penulis' => [],
+        'revisi_proof_reading' => [NaskahStatus::ProofReadingPenulis],
+        'acc_proof_reading' => [NaskahStatus::ProsesCetak],
+        'proses_cetak' => [NaskahStatus::SiapDiambil],
+        'siap_diambil' => [],
     ];
 
     /**
-     * Daftar seluruh status untuk progress bar publik.
+     * Daftar seluruh tahapan utama untuk progress bar publik.
      *
-     * @return array<int, array{value: string, label: string, progress: int}>
+     * @return array<int, array{value: string, label: string, progress: int, stage: int}>
      */
     public static function steps(): array
     {
@@ -73,11 +73,19 @@ class WorkflowService
             'value' => $status->value,
             'label' => $status->label(),
             'progress' => $status->progress(),
+            'stage' => $status->stage(),
         ], NaskahStatus::ordered());
     }
 
     /**
      * Transisi status naskah dengan pencatatan histori.
+     *
+     * Baris naskah dikunci (lockForUpdate) dan statusnya dicek ulang di dalam
+     * transaksi agar dua admin yang submit bersamaan tidak saling menimpa
+     * atau menghasilkan status ganda yang tidak konsisten.
+     *
+     * @throws WorkflowConflictException
+     * @throws ModelNotFoundException
      */
     public static function transition(
         Naskah $naskah,
@@ -89,13 +97,15 @@ class WorkflowService
         $from = $naskah->status;
 
         DB::transaction(function () use ($naskah, $from, $to, $aktor, $admin, $note) {
+            self::assertFreshStatus($naskah, $from);
+
             $naskah->status = $to;
             $naskah->progress = $to->progress();
             $naskah->save();
 
             WorkflowHistory::create([
                 'naskah_id' => $naskah->id,
-                'dari_status' => $from?->value,
+                'dari_status' => $from->value,
                 'ke_status' => $to->value,
                 'aktor' => $aktor->value,
                 'admin_id' => $admin?->id,
@@ -105,7 +115,29 @@ class WorkflowService
     }
 
     /**
+     * Kunci baris naskah (harus dipanggil di dalam transaksi aktif) dan pastikan
+     * status di database masih sama dengan yang diharapkan. Melindungi aksi
+     * multi-tulis (upload revisi, layout, ISBN, dll.) dari race condition.
+     *
+     * @throws WorkflowConflictException
+     * @throws ModelNotFoundException
+     */
+    public static function assertFreshStatus(Naskah $naskah, NaskahStatus $expected): void
+    {
+        $fresh = Naskah::query()
+            ->whereKey($naskah->getKey())
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        if ($fresh->status !== $expected) {
+            throw new WorkflowConflictException;
+        }
+    }
+
+    /**
      * Cek apakah penulis dapat memicu aksi pada status tertentu.
+     *
+     * @return array{to: NaskahStatus, aksi: string, label: string}|null
      */
     public static function authorActionFor(string $status): ?array
     {

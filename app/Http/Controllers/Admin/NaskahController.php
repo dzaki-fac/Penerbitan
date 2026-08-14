@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AktorType;
-use App\Enums\DokumenStatus;
 use App\Enums\NaskahStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\NaskahStoreRequest;
 use App\Http\Requests\Admin\NaskahUpdateRequest;
 use App\Models\Author;
-use App\Models\Dokumen;
 use App\Models\Naskah;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
@@ -36,6 +34,14 @@ class NaskahController extends Controller
             });
         }
 
+        if ($stageStr = $request->query('stage')) {
+            $stage = (int) $stageStr;
+            $query->whereIn(
+                'status',
+                array_map(fn (NaskahStatus $s) => $s->value, NaskahStatus::forStage($stage)),
+            );
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
         }
@@ -54,12 +60,14 @@ class NaskahController extends Controller
             ->through(fn (Naskah $naskah) => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'kategori' => $naskah->kategori,
+                'link_cover' => $naskah->link_cover,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
                 'progress' => $naskah->progress,
-                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
+                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
                 'penulis' => $naskah->author->nama,
                 'identitas' => $naskah->author->jenis_identitas->label().' '.$naskah->author->nomor_identitas,
+                'penulis_status' => $naskah->author->status,
+                'fakultas_sekolah' => $naskah->author->fakultas_sekolah,
             ]);
 
         return Inertia::render('admin/naskah/index', [
@@ -67,6 +75,7 @@ class NaskahController extends Controller
             'filters' => [
                 'search' => $request->query('search', ''),
                 'status' => $request->query('status', ''),
+                'stage' => $request->query('stage', ''),
                 'per_page' => $request->query('per_page', '10'),
             ],
             'statuses' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
@@ -85,7 +94,7 @@ class NaskahController extends Controller
     }
 
     /**
-     * Menyimpan naskah baru beserta penulis dan dokumen awal.
+     * Menyimpan naskah baru beserta penulis.
      */
     public function store(NaskahStoreRequest $request): RedirectResponse
     {
@@ -99,29 +108,33 @@ class NaskahController extends Controller
             [
                 'nama' => $data['nama'],
                 'email' => $data['email'] ?? null,
+                'status' => $data['status'] ?? null,
+                'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+                'nomor_npwp' => $data['nomor_npwp'] ?? null,
+                'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
+                'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
             ],
         );
 
         $naskah = Naskah::create([
             'author_id' => $author->id,
             'judul' => $data['judul'],
-            'abstrak' => $data['abstrak'] ?? null,
-            'kategori' => $data['kategori'] ?? null,
+            'link_cover' => $data['link_cover'] ?? null,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
+            'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
+            'biaya' => $data['biaya'] ?? null,
+            'nama_narahubung' => $data['nama_narahubung'] ?? null,
+            'nomor_whatsapp_narahubung' => $data['nomor_whatsapp_narahubung'] ?? null,
+            'email_narahubung' => $data['email_narahubung'] ?? null,
+            'link_dummy_upload' => $data['link_dummy_upload'] ?? null,
+            'link_dummy_pdf' => $data['link_dummy_pdf'] ?? null,
+            'link_dummy_word' => $data['link_dummy_word'] ?? null,
+            'link_surat_keaslian' => $data['link_surat_keaslian'] ?? null,
+            'link_surat_penerbitan' => $data['link_surat_penerbitan'] ?? null,
             'status' => NaskahStatus::DataDiterima,
             'progress' => NaskahStatus::DataDiterima->progress(),
         ]);
-
-        $namaDokumen = $data['dokumen'] ?? ['Naskah Utuh', 'Abstrak', 'Pernyataan Orisinalitas'];
-
-        foreach ($namaDokumen as $nama) {
-            Dokumen::create([
-                'naskah_id' => $naskah->id,
-                'nama_dokumen' => $nama,
-                'status' => DokumenStatus::Belum,
-            ]);
-        }
 
         WorkflowService::transition(
             $naskah,
@@ -144,15 +157,29 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'abstrak' => $naskah->abstrak,
-                'kategori' => $naskah->kategori,
-                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d'),
+                'link_cover' => $naskah->link_cover,
+                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d\TH:i'),
                 'sumber_form' => $naskah->sumber_form,
+                'kebijakan_akses' => $naskah->kebijakan_akses,
+                'biaya' => $naskah->biaya,
+                'nama_narahubung' => $naskah->nama_narahubung,
+                'nomor_whatsapp_narahubung' => $naskah->nomor_whatsapp_narahubung,
+                'email_narahubung' => $naskah->email_narahubung,
+                'link_dummy_upload' => $naskah->link_dummy_upload,
+                'link_dummy_pdf' => $naskah->link_dummy_pdf,
+                'link_dummy_word' => $naskah->link_dummy_word,
+                'link_surat_keaslian' => $naskah->link_surat_keaslian,
+                'link_surat_penerbitan' => $naskah->link_surat_penerbitan,
                 'penulis' => [
                     'nama' => $naskah->author->nama,
                     'email' => $naskah->author->email,
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
                     'nomor_identitas' => $naskah->author->nomor_identitas,
+                    'status' => $naskah->author->status,
+                    'fakultas_sekolah' => $naskah->author->fakultas_sekolah,
+                    'nomor_npwp' => $naskah->author->nomor_npwp,
+                    'nomor_whatsapp' => $naskah->author->nomor_whatsapp,
+                    'penulis_tambahan' => $naskah->author->penulis_tambahan,
                 ],
             ],
         ]);
@@ -163,7 +190,34 @@ class NaskahController extends Controller
      */
     public function update(Naskah $naskah, NaskahUpdateRequest $request): RedirectResponse
     {
-        $naskah->update($request->validated());
+        $data = $request->validated();
+
+        $naskah->author->update([
+            'nama' => $data['nama'],
+            'email' => $data['email'] ?? null,
+            'status' => $data['status'] ?? null,
+            'fakultas_sekolah' => $data['fakultas_sekolah'] ?? null,
+            'nomor_npwp' => $data['nomor_npwp'] ?? null,
+            'nomor_whatsapp' => $data['nomor_whatsapp'] ?? null,
+            'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
+        ]);
+
+        $naskah->update([
+            'judul' => $data['judul'],
+            'link_cover' => $data['link_cover'] ?? null,
+            'tanggal_pengajuan' => $data['tanggal_pengajuan'],
+            'sumber_form' => $data['sumber_form'] ?? null,
+            'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
+            'biaya' => $data['biaya'] ?? null,
+            'nama_narahubung' => $data['nama_narahubung'] ?? null,
+            'nomor_whatsapp_narahubung' => $data['nomor_whatsapp_narahubung'] ?? null,
+            'email_narahubung' => $data['email_narahubung'] ?? null,
+            'link_dummy_upload' => $data['link_dummy_upload'] ?? null,
+            'link_dummy_pdf' => $data['link_dummy_pdf'] ?? null,
+            'link_dummy_word' => $data['link_dummy_word'] ?? null,
+            'link_surat_keaslian' => $data['link_surat_keaslian'] ?? null,
+            'link_surat_penerbitan' => $data['link_surat_penerbitan'] ?? null,
+        ]);
 
         flashSuccess(__('Naskah berhasil diperbarui.'));
 
@@ -177,7 +231,6 @@ class NaskahController extends Controller
     {
         $naskah->load([
             'author',
-            'dokumens',
             'layouts',
             'isbn',
             'revisiUploads',
@@ -188,27 +241,33 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'abstrak' => $naskah->abstrak,
-                'kategori' => $naskah->kategori,
-                'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
+                'link_cover' => $naskah->link_cover,
+                'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
-                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y'),
+                'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
                 'sumber_form' => $naskah->sumber_form,
-                'catatan_admin' => $naskah->catatan_admin,
+                'kebijakan_akses' => $naskah->kebijakan_akses,
+                'biaya' => $naskah->biaya,
+                'nama_narahubung' => $naskah->nama_narahubung,
+                'nomor_whatsapp_narahubung' => $naskah->nomor_whatsapp_narahubung,
+                'email_narahubung' => $naskah->email_narahubung,
+                'link_dummy_upload' => $naskah->link_dummy_upload,
+                'link_dummy_pdf' => $naskah->link_dummy_pdf,
+                'link_dummy_word' => $naskah->link_dummy_word,
+                'link_surat_keaslian' => $naskah->link_surat_keaslian,
+                'link_surat_penerbitan' => $naskah->link_surat_penerbitan,
                 'author' => [
                     'id' => $naskah->author->id,
                     'nama' => $naskah->author->nama,
                     'email' => $naskah->author->email,
                     'jenis_identitas' => $naskah->author->jenis_identitas->label(),
                     'nomor_identitas' => $naskah->author->nomor_identitas,
+                    'status' => $naskah->author->status,
+                    'fakultas_sekolah' => $naskah->author->fakultas_sekolah,
+                    'nomor_npwp' => $naskah->author->nomor_npwp,
+                    'nomor_whatsapp' => $naskah->author->nomor_whatsapp,
+                    'penulis_tambahan' => $naskah->author->penulis_tambahan,
                 ],
-                'dokumens' => $naskah->dokumens->map(fn ($d) => [
-                    'id' => $d->id,
-                    'nama_dokumen' => $d->nama_dokumen,
-                    'status' => ['value' => $d->status->value, 'label' => $d->status->label()],
-                    'catatan' => $d->catatan,
-                    'file_url' => $d->file_path ? Storage::disk('public')->url($d->file_path) : null,
-                ]),
                 'layouts' => $naskah->layouts->map(fn ($l) => [
                     'id' => $l->id,
                     'versi' => $l->versi,
@@ -230,20 +289,22 @@ class NaskahController extends Controller
                     'jenis' => ['value' => $r->jenis->value, 'label' => $r->jenis->label()],
                     'catatan_penulis' => $r->catatan_penulis,
                     'tanggal' => $r->created_at->format('d M Y H:i'),
-                    'file_url' => Storage::disk('public')->url($r->file_path),
+                    'file_url' => $r->file_path ? Storage::disk('public')->url($r->file_path) : null,
                 ]),
                 'histories' => $naskah->histories->map(fn ($h) => [
                     'id' => $h->id,
-                    'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label()] : null,
-                    'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label()],
+                    'dari_status' => $h->dari_status ? ['value' => $h->dari_status->value, 'label' => $h->dari_status->label(), 'stage' => $h->dari_status->stage()] : null,
+                    'ke_status' => ['value' => $h->ke_status->value, 'label' => $h->ke_status->label(), 'stage' => $h->ke_status->stage()],
                     'aktor' => ['value' => $h->aktor->value, 'label' => $h->aktor->label()],
-                    'admin' => $h->admin?->name,
+                    'admin' => $h->admin?->name ? initialsOf($h->admin->name) : null,
                     'catatan' => $h->catatan,
+                    'can_edit_catatan' => $h->admin_id !== null,
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
             ],
             'steps' => WorkflowService::steps(),
             'adminTransitions' => WorkflowService::adminTransitionsFor($naskah->status->value),
+            'authorAction' => WorkflowService::authorActionFor($naskah->status->value),
             'statusOptions' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
                 'value' => $s->value,
                 'label' => $s->label(),

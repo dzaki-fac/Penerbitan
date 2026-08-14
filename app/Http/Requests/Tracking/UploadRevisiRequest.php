@@ -17,8 +17,7 @@ class UploadRevisiRequest extends FormRequest
         return [
             'jenis_identitas' => ['required', 'in:nim,nip'],
             'nomor_identitas' => ['required', 'string', 'max:50'],
-            'file' => ['required', 'file', 'mimes:pdf,doc,docx,zip', 'max:20480'],
-            'catatan_penulis' => ['nullable', 'string', 'max:1000'],
+            'catatan_penulis' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

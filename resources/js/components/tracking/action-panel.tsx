@@ -16,15 +16,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    ADVANCE_BUTTON_CLASS,
+    REVISION_BUTTON_CLASS,
+} from '@/lib/status';
 import { diambil, revisi } from '@/routes/tracking';
 import {
-    approve as approveIsbn,
-    reject as rejectIsbn,
-} from '@/routes/tracking/isbn';
-import {
-    approve as approveLayout,
-    reject as rejectLayout,
-} from '@/routes/tracking/layout';
+    approve as approveProofReading,
+    reject as rejectProofReading,
+} from '@/routes/tracking/proofreading';
 import type { NaskahDetail, TrackingAction } from '@/types';
 
 type Props = {
@@ -194,7 +194,7 @@ function RejectDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className={buttonClassName}>
+                <Button className={buttonClassName}>
                     <X />
                     {buttonLabel}
                 </Button>
@@ -230,11 +230,10 @@ function RejectDialog({
     );
 }
 
-function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
+function ConfirmUploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     const [open, setOpen] = useState(false);
     const form = useForm({
         ...identityDefaults(naskah),
-        file: null as File | null,
         catatan_penulis: '',
     });
 
@@ -249,36 +248,21 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="lg">
+                <Button size="lg" className={REVISION_BUTTON_CLASS}>
                     <FileUp />
-                    Upload Revisi
+                    Konfirmasi Upload Revisi
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Upload Revisi</DialogTitle>
+                    <DialogTitle>Konfirmasi Upload Revisi</DialogTitle>
                     <DialogDescription>
-                        Unggah dokumen revisi yang diminta oleh admin. File PDF,
-                        Word, atau ZIP (maksimal 20 MB).
+                        Unggah file revisi yang diminta ke link yang diberikan
+                        admin pada catatan, lalu konfirmasi di sini.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
                     <IdentityFields form={form} errors={form.errors} />
-                    <div className="grid gap-2">
-                        <Label htmlFor="file">File Revisi</Label>
-                        <Input
-                            id="file"
-                            type="file"
-                            accept=".pdf,.doc,.docx,.zip"
-                            onChange={(e) =>
-                                form.setData(
-                                    'file',
-                                    e.target.files?.[0] ?? null,
-                                )
-                            }
-                        />
-                        <InputError message={form.errors.file} />
-                    </div>
                     <div className="grid gap-2">
                         <Label htmlFor="catatan_penulis">Catatan Penulis</Label>
                         <Textarea
@@ -287,14 +271,14 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
                             onChange={(e) =>
                                 form.setData('catatan_penulis', e.target.value)
                             }
-                            placeholder="Jelaskan perubahan yang dilakukan (opsional)"
+                            placeholder="Keterangan singkat mengenai revisi (opsional)"
                             rows={3}
                         />
                         <InputError message={form.errors.catatan_penulis} />
                     </div>
                     <DialogFooter>
                         <SubmitButton processing={form.processing}>
-                            Unggah
+                            Konfirmasi Upload
                         </SubmitButton>
                     </DialogFooter>
                 </form>
@@ -302,13 +286,6 @@ function UploadRevisiDialog({ naskah }: { naskah: NaskahDetail }) {
         </Dialog>
     );
 }
-
-// Kelas warna tombol: hijau untuk Setujui, outline merah untuk Ajukan Revisi.
-// Disatukan di sini supaya mudah diubah kalau mau ganti nuansa warnanya.
-const APPROVE_BUTTON_CLASS =
-    'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/40';
-const REJECT_BUTTON_CLASS =
-    'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800';
 
 export function ActionPanel({ naskah, action }: Props) {
     if (!action) {
@@ -320,63 +297,31 @@ export function ActionPanel({ naskah, action }: Props) {
     }
 
     if (action.jenis === 'upload_revisi') {
-        return <UploadRevisiDialog naskah={naskah} />;
+        return <ConfirmUploadRevisiDialog naskah={naskah} />;
     }
 
     if (action.jenis === 'review') {
-        const isMergedReview =
-            naskah.status.value === 'menunggu_review_editing_layout';
-        const isIsbn = naskah.status.value === 'menunggu_persetujuan_isbn';
-
         return (
             <div className="flex flex-wrap items-center gap-3">
                 <ApproveDialog
                     naskah={naskah}
-                    title={
-                        isMergedReview ? 'Setujui Naskah & Layout' : 'Setujui'
-                    }
-                    description={
-                        isMergedReview
-                            ? 'Konfirmasi bahwa Anda menyetujui hasil editing dan layout naskah.'
-                            : 'Konfirmasi persetujuan Anda terhadap data yang diajukan.'
-                    }
-                    submit={
-                        isMergedReview
-                            ? approveLayout.url(naskah.id)
-                            : isIsbn
-                              ? approveIsbn.url(naskah.id)
-                              : '#'
-                    }
-                    buttonLabel={
-                        isMergedReview ? 'Setujui Naskah & Layout' : 'Setujui'
-                    }
+                    title="Acc Proof Reading"
+                    description="Konfirmasi bahwa Anda menyetujui (Acc) hasil proof reading naskah."
+                    submit={approveProofReading.url(naskah.id)}
+                    buttonLabel="Acc Proof Reading"
                     icon={<Check />}
-                    buttonClassName={APPROVE_BUTTON_CLASS}
+                    buttonClassName={ADVANCE_BUTTON_CLASS}
                 />
                 <RejectDialog
                     naskah={naskah}
-                    title={
-                        isMergedReview
-                            ? 'Ajukan Revisi Naskah & Layout'
-                            : 'Ajukan Revisi'
-                    }
-                    description="Jelaskan alasan revisi agar dapat ditindaklanjuti admin."
-                    submit={
-                        isMergedReview
-                            ? rejectLayout.url(naskah.id)
-                            : isIsbn
-                              ? rejectIsbn.url(naskah.id)
-                              : '#'
-                    }
-                    buttonLabel={
-                        isMergedReview
-                            ? 'Ajukan Revisi Naskah & Layout'
-                            : 'Ajukan Revisi'
-                    }
+                    title="Ajukan Revisi Proof Reading"
+                    description="Jelaskan bagian hasil proof reading yang perlu diperbaiki."
+                    submit={rejectProofReading.url(naskah.id)}
+                    buttonLabel="Ajukan Revisi"
                     placeholder="Tuliskan catatan revisi Anda"
-                    buttonClassName={REJECT_BUTTON_CLASS}
+                    buttonClassName={REVISION_BUTTON_CLASS}
                 />
-                {isMergedReview && naskah.layout?.preview_pdf_link && (
+                {naskah.layout?.preview_pdf_link && (
                     <Button asChild variant="outline">
                         <a
                             href={naskah.layout.preview_pdf_link}
@@ -400,6 +345,7 @@ export function ActionPanel({ naskah, action }: Props) {
             submit={diambil.url(naskah.id)}
             buttonLabel="Buku Sudah Diambil"
             icon={<Check />}
+            buttonClassName={ADVANCE_BUTTON_CLASS}
         />
     );
 }

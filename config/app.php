@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Form Submission Webhook Token
+    |--------------------------------------------------------------------------
+    |
+    | Token rahasia yang wajib dikirim sebagai Bearer token oleh webhook
+    | Google Apps Script agar data Google Form dapat diimpor ke database.
+    |
+    */
+
+    'form_submission_token' => env('FORM_SUBMISSION_TOKEN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

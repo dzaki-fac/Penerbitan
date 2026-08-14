@@ -16,17 +16,25 @@ use App\Enums\NaskahStatus;
  * @property int $id
  * @property int $author_id
  * @property string $judul
- * @property string|null $abstrak
- * @property string|null $kategori
+ * @property string|null $link_cover
  * @property Carbon $tanggal_pengajuan
  * @property string|null $sumber_form
+ * @property string|null $kebijakan_akses
+ * @property string|null $biaya
+ * @property string|null $nama_narahubung
+ * @property string|null $nomor_whatsapp_narahubung
+ * @property string|null $email_narahubung
+ * @property string|null $link_dummy_upload
+ * @property string|null $link_dummy_pdf
+ * @property string|null $link_dummy_word
+ * @property string|null $link_surat_keaslian
+ * @property string|null $link_surat_penerbitan
  * @property NaskahStatus $status
  * @property int $progress
- * @property string|null $catatan_admin
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['author_id', 'judul', 'abstrak', 'kategori', 'tanggal_pengajuan', 'sumber_form', 'status', 'progress', 'catatan_admin'])]
+#[Fillable(['author_id', 'judul', 'link_cover', 'tanggal_pengajuan', 'sumber_form', 'kebijakan_akses', 'biaya', 'nama_narahubung', 'nomor_whatsapp_narahubung', 'email_narahubung', 'link_dummy_upload', 'link_dummy_pdf', 'link_dummy_word', 'link_surat_keaslian', 'link_surat_penerbitan', 'status', 'progress'])]
 class Naskah extends Model
 {
     /** @use HasFactory<NaskahFactory> */
@@ -39,7 +47,7 @@ class Naskah extends Model
     {
         return [
             'status' => NaskahStatus::class,
-            'tanggal_pengajuan' => 'date',
+            'tanggal_pengajuan' => 'datetime',
         ];
     }
 
@@ -49,14 +57,6 @@ class Naskah extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
-    }
-
-    /**
-     * @return HasMany<Dokumen, $this>
-     */
-    public function dokumens(): HasMany
-    {
-        return $this->hasMany(Dokumen::class)->orderBy('id');
     }
 
     /**

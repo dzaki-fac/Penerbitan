@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['jenis_identitas', 'nomor_identitas']);
+            $table->index('email');
         });
     }
 

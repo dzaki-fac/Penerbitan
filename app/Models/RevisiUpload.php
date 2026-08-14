@@ -15,7 +15,7 @@ use App\Enums\RevisiJenis;
  * @property int $naskah_id
  * @property int|null $author_id
  * @property RevisiJenis $jenis
- * @property string $file_path
+ * @property string|null $file_path
  * @property string|null $catatan_penulis
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
