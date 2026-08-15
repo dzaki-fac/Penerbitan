@@ -48,7 +48,7 @@ class NaskahController extends Controller
 
         if ($fakultas = $request->string('fakultas')->trim()->toString()) {
             $query->whereHas('author', fn ($author) => $author
-                ->where('fakultas_sekolah', $fakultas));
+                ->whereRaw('LOWER(fakultas_sekolah) = ?', [mb_strtolower($fakultas)]));
         }
 
         $perPage = $request->query('per_page', '10');
@@ -84,12 +84,6 @@ class NaskahController extends Controller
                 'fakultas' => $request->query('fakultas', ''),
                 'per_page' => $request->query('per_page', '10'),
             ],
-            'fakultasOptions' => Author::query()
-                ->whereNotNull('fakultas_sekolah')
-                ->where('fakultas_sekolah', '!=', '')
-                ->distinct()
-                ->orderBy('fakultas_sekolah')
-                ->pluck('fakultas_sekolah'),
             'statuses' => collect(NaskahStatus::cases())->map(fn (NaskahStatus $s) => [
                 'value' => $s->value,
                 'label' => $s->label(),

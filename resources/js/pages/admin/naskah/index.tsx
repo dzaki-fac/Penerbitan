@@ -3,10 +3,7 @@ import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { FAKULTAS_OPTIONS } from '@/lib/fakultas';
 import { statusBadgeClass } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
@@ -40,14 +38,12 @@ type Props = {
         per_page: string;
     };
     statuses: Array<{ value: string; label: string }>;
-    fakultasOptions: string[];
 };
 
 export default function NaskahIndex({
     naskahs,
     filters,
     statuses,
-    fakultasOptions,
 }: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
@@ -196,17 +192,11 @@ export default function NaskahIndex({
                                 <Input
                                     id="search"
                                     value={search}
-                                    onChange={(e) =>
-                                        setSearch(e.target.value)
-                                    }
+                                    onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Judul, nama penulis, atau nomor identitas"
                                     className="w-72"
                                 />
                             </div>
-<<<<<<< HEAD
-                            <div className="flex items-center gap-2">
-                                <Label className="shrink-0">Status</Label>
-=======
                             <div className="grid min-w-40 gap-2">
                                 <Label>Fakultas / Sekolah</Label>
                                 <Select
@@ -224,9 +214,12 @@ export default function NaskahIndex({
                                         <SelectItem value="all">
                                             Semua fakultas/sekolah
                                         </SelectItem>
-                                        {fakultasOptions.map((f) => (
-                                            <SelectItem key={f} value={f}>
-                                                {f}
+                                        {FAKULTAS_OPTIONS.map((f) => (
+                                            <SelectItem
+                                                key={f.value}
+                                                value={f.value}
+                                            >
+                                                {f.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -234,7 +227,6 @@ export default function NaskahIndex({
                             </div>
                             <div className="grid min-w-40 gap-2">
                                 <Label>Status</Label>
->>>>>>> 0971fbd3ea75b1a6008669fef33249355e5eeea3
                                 <Select
                                     value={status || 'all'}
                                     onValueChange={(v) => {

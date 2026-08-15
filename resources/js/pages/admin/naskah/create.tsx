@@ -9,11 +9,23 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Combobox } from '@/components/ui/combobox';
+import { DatetimeInput } from '@/components/ui/datetime-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { FAKULTAS_OPTIONS } from '@/lib/fakultas';
 import admin from '@/routes/admin';
 import { index, store } from '@/routes/admin/naskah';
+
+function toLocalDatetimeLocal(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    return [
+        `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+        `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+    ].join('T');
+}
 
 export default function NaskahCreate() {
     const form = useForm({
@@ -28,7 +40,7 @@ export default function NaskahCreate() {
         penulis_tambahan: '',
         judul: '',
         link_cover: '',
-        tanggal_pengajuan: new Date().toISOString().slice(0, 16),
+        tanggal_pengajuan: toLocalDatetimeLocal(new Date()),
         sumber_form: '',
         kebijakan_akses: '',
         biaya: '',
@@ -162,16 +174,14 @@ export default function NaskahCreate() {
                                 <Label htmlFor="fakultas_sekolah">
                                     Fakultas / Sekolah
                                 </Label>
-                                <Input
+                                <Combobox
                                     id="fakultas_sekolah"
                                     value={form.data.fakultas_sekolah}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'fakultas_sekolah',
-                                            e.target.value,
-                                        )
+                                    options={FAKULTAS_OPTIONS}
+                                    onValueChange={(value) =>
+                                        form.setData('fakultas_sekolah', value)
                                     }
-                                    placeholder="Fakultas Teknik, dll."
+                                    placeholder="Pilih atau ketik fakultas/sekolah"
                                 />
                                 <InputError
                                     message={form.errors.fakultas_sekolah}
@@ -269,15 +279,11 @@ export default function NaskahCreate() {
                                 <Label htmlFor="tanggal_pengajuan">
                                     Tanggal Pengajuan
                                 </Label>
-                                <Input
+                                <DatetimeInput
                                     id="tanggal_pengajuan"
-                                    type="datetime-local"
                                     value={form.data.tanggal_pengajuan}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'tanggal_pengajuan',
-                                            e.target.value,
-                                        )
+                                    onValueChange={(value) =>
+                                        form.setData('tanggal_pengajuan', value)
                                     }
                                 />
                                 <InputError
