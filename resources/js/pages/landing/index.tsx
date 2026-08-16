@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { NotebookPen, Stamp } from 'lucide-react';
+import { FilePlus2, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { tracking } from '@/routes';
@@ -8,14 +8,20 @@ const GFORM_URL =
     'https://docs.google.com/forms/d/e/1FAIpQLScioScW9vQOXXFCuHEaQNIg0cx3usvWyOXTf_9SQzKnMlbdjA/viewform';
 
 const BG_IMAGE_URL =
-    'https://fisika.fsm.undip.ac.id/v2/wp-content/uploads/2025/10/perpus.jpg';
+    'https://fisika.fsm.Undip.ac.id/v2/wp-content/uploads/2025/10/perpus.jpg';
 
 export default function Landing() {
     return (
         <>
             <Head title="Beranda">
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&display=swap"
+                    rel="preconnect"
+                    href="https://fonts.gstatic.com"
+                    crossOrigin="anonymous"
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
                     rel="stylesheet"
                 />
             </Head>
@@ -38,12 +44,12 @@ export default function Landing() {
                         <AppLogo size="md" showName={false} className="mb-5" />
                         <h1
                             className="text-2xl font-semibold tracking-[0.016em] text-slate-900"
-                            style={{ fontFamily: "'Fraunces', serif" }}
+                            style={{ fontFamily: "'Source Serif 4', serif" }}
                         >
                             Sistem Penerbitan
                         </h1>
                         <p className="mt-1 text-lg text-slate-600">
-                            UPT Perpustakaan dan UNDIP Press
+                            UPT Perpustakaan dan Undip Press
                         </p>
                     </div>
 
@@ -60,24 +66,24 @@ export default function Landing() {
                             asChild
                             size="lg"
                             variant="outline"
-                            className="w-full justify-center gap-2 border-slate-300 text-slate-800"
+                            className="w-full justify-center gap-2 border-[#B8862B]/30 bg-white text-[#8a661f] hover:border-[#B8862B] hover:bg-[#B8862B] hover:text-white active:border-[#B8862B] active:bg-[#B8862B] active:text-white"
                         >
                             <a
                                 href={GFORM_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                <NotebookPen />
+                                <FilePlus2 size={18} />
                                 Ajukan Naskah Baru
                             </a>
                         </Button>
                         <Button
                             asChild
                             size="lg"
-                            className="w-full justify-center gap-2"
+                            className="w-full justify-center gap-2 border border-[#B8862B]/30 bg-white text-[#8a661f] shadow-none hover:border-[#B8862B] hover:bg-[#B8862B] hover:text-white active:border-[#B8862B] active:bg-[#B8862B] active:text-white"
                         >
                             <Link href={tracking()}>
-                                <Stamp />
+                                <Search size={18} />
                                 Lacak Proses Naskah
                             </Link>
                         </Button>
@@ -89,8 +95,10 @@ export default function Landing() {
                 </div>
 
                 <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-white/70">
-                    © {new Date().getFullYear()} UPT Perpustakaan dan UNDIP
-                    Press, Universitas Diponegoro. Semua hak dilindungi.
+                    <span className="sm:hidden">© {new Date().getFullYear()} UPT Perpustakaan &amp; UNDIP Press</span>
+                    <span className="hidden sm:inline">
+                        © {new Date().getFullYear()} UPT Perpustakaan dan UNDIP Press, Universitas Diponegoro. Semua hak dilindungi.
+                    </span>
                 </p>
             </div>
         </>
