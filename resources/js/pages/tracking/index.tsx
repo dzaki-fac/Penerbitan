@@ -1,16 +1,21 @@
-import { Head, useForm } from '@inertiajs/react';
-import { Check, Search } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Phone, Search } from 'lucide-react';
+import AppLogo from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { home } from '@/routes';
 import { search } from '@/routes/tracking';
 
 const METODE = [
-    { key: 'nim', label: 'NIM', keterangan: 'Mahasiswa' },
-    { key: 'nip', label: 'NIP', keterangan: 'Dosen / Staf' },
-    { key: 'email', label: 'Email', keterangan: 'Jika lupa NIM/NIP' },
+    { key: 'nim', label: 'NIM', keterangan: 'Untuk mahasiswa.' },
+    { key: 'nip', label: 'NIP', keterangan: 'Untuk dosen dan staf.' },
+    { key: 'email', label: 'Email', keterangan: 'Jika Anda lupa NIM/NIP.' },
 ] as const;
+
+const BG_IMAGE_URL =
+    'https://fisika.fsm.undip.ac.id/v2/wp-content/uploads/2025/10/perpus.jpg';
 
 export default function TrackingIndex() {
     const { data, setData, post, errors, processing } = useForm({
@@ -23,100 +28,139 @@ export default function TrackingIndex() {
         post(search.url());
     }
 
+    const activeMetode = METODE.find((m) => m.key === data.jenis_identitas)!;
+
     const placeholder =
         data.jenis_identitas === 'email'
             ? 'Contoh: penulis@email.com'
-            : 'Contoh: 21111000 atau 198501012010121001';
+            : data.jenis_identitas === 'nip'
+              ? 'Contoh: 198501012010121001'
+              : 'Contoh: 21111000';
 
     return (
         <>
             <Head title="Tracking Naskah" />
 
-            <div className="flex flex-1 flex-col items-center justify-center">
-                <div className="mx-auto max-w-xl text-center">
-                    <span className="inline-flex items-center rounded-full bg-lavender-wash px-4 py-1 text-sm font-medium tracking-[0.004em] text-foreground">
-                        Tracking Penerbitan
-                    </span>
-                    <h1 className="mt-6 text-4xl font-semibold tracking-[0.016em] sm:text-5xl">
-                        Lacak Proses Penerbitan Naskah Anda
-                    </h1>
-                    <p className="mt-5 text-lg text-muted-foreground">
-                        Masukkan NIM, NIP, atau email untuk melihat seluruh naskah
-                        dan perkembangan proses penerbitan Anda.
-                    </p>
-                </div>
+            <div className="relative flex min-h-svh items-center justify-center px-4 py-14 sm:py-20">
+                <div
+                    aria-hidden
+                    className="fixed inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${BG_IMAGE_URL})` }}
+                />
+                <div
+                    aria-hidden
+                    className="fixed inset-0 bg-slate-900/55 backdrop-blur-[2px]"
+                />
 
-                <form
-                    onSubmit={submit}
-                    className="mt-10 w-full max-w-lg space-y-6 rounded-xl border border-border bg-card p-6"
-                >
-                    <div className="grid gap-2">
-                        <Label htmlFor="jenis_identitas">Cari Berdasarkan</Label>
-                        <p className="text-xs text-muted-foreground">
-                            Pilih jenis identitas yang Anda gunakan saat mendaftar.
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
-                            {METODE.map(({ key, label, keterangan }) => {
-                                const active = data.jenis_identitas === key;
+                <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+                    <div className="text-center">
+                        <Link
+                            href={home()}
+                            className="inline-flex justify-center"
+                        >
+                            <AppLogo
+                                size="md"
+                                showName={false}
+                                className="mb-6 justify-center transition-opacity hover:opacity-80"
+                            />
+                        </Link>
+                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                            Lacak Naskah Anda
+                        </h1>
+                    </div>
 
-                                return (
-                                    <button
-                                        key={key}
-                                        type="button"
-                                        onClick={() => setData('jenis_identitas', key)}
-                                        aria-pressed={active}
-                                        className={`relative flex flex-col items-center gap-0.5 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-                                            active
-                                                ? 'border-cobalt-surface/40 bg-lavender-wash text-foreground'
-                                                : 'border-input bg-background hover:bg-accent'
-                                        }`}
-                                    >
-                                        {active && (
-                                            <Check className="absolute right-1.5 top-1.5 size-3.5 text-primary" />
-                                        )}
-                                        <span>{label}</span>
-                                        <span className="text-[11px] font-normal text-muted-foreground">
-                                            {keterangan}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+                    <form onSubmit={submit} className="mt-8 space-y-5">
+                        <div className="grid gap-2">
+                            <Label htmlFor="jenis_identitas" className="text-slate-800">
+                                Cari Berdasarkan
+                            </Label>
+                            <div className="inline-flex w-full rounded-lg bg-slate-100 p-1">
+                                {METODE.map(({ key, label }) => {
+                                    const active =
+                                        data.jenis_identitas === key;
+
+                                    return (
+                                        <button
+                                            key={key}
+                                            type="button"
+                                            onClick={() =>
+                                                setData('jenis_identitas', key)
+                                            }
+                                            aria-pressed={active}
+                                            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                                                active
+                                                    ? 'bg-white text-slate-900 shadow-sm'
+                                                    : 'text-slate-500 hover:text-slate-800'
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                {activeMetode.keterangan}
+                            </p>
                         </div>
-                    </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="nomor_identitas">
-                            {data.jenis_identitas === 'email' ? 'Alamat Email' : 'Nomor Identitas'}
-                        </Label>
-                        <Input
-                            id="nomor_identitas"
-                            type={data.jenis_identitas === 'email' ? 'email' : 'text'}
-                            value={data.nomor_identitas}
-                            onChange={(e) => setData('nomor_identitas', e.target.value)}
-                            placeholder={placeholder}
-                            autoFocus
-                        />
-                        {errors.nomor_identitas ? (
-                            <p className="text-sm text-destructive">
-                                {errors.nomor_identitas}
+                        <div className="grid gap-2">
+                            <Label htmlFor="nomor_identitas" className="text-slate-800">
+                                {data.jenis_identitas === 'email'
+                                    ? 'Alamat Email'
+                                    : 'Nomor Identitas'}
+                            </Label>
+                            <Input
+                                id="nomor_identitas"
+                                type={
+                                    data.jenis_identitas === 'email'
+                                        ? 'email'
+                                        : 'text'
+                                }
+                                value={data.nomor_identitas}
+                                onChange={(e) =>
+                                    setData('nomor_identitas', e.target.value)
+                                }
+                                placeholder={placeholder}
+                                autoFocus
+                                className="bg-white"
+                            />
+                            {errors.nomor_identitas && (
+                                <p className="text-sm text-destructive">
+                                    {errors.nomor_identitas}
+                                </p>
+                            )}
+                        </div>
+
+                        <Button
+                            type="submit"
+                            size="lg"
+                            className="w-full"
+                            disabled={processing}
+                        >
+                            {processing ? <Spinner /> : <Search />}
+                            Telusuri
+                        </Button>
+
+                        <div className="text-center">
+                            <p className="text-xs text-slate-500">
+                                Kesulitan menemukan data Anda? Hubungi admin
+                                penerbitan.
                             </p>
-                        ) : (
-                            <p className="text-xs text-muted-foreground">
-                                Pastikan nomor sesuai dengan yang tercatat saat pengajuan naskah.
-                            </p>
-                        )}
-                    </div>
-
-                    <Button type="submit" size="lg" className="w-full" disabled={processing}>
-                        {processing ? <Spinner /> : <Search />}
-                        Telusuri
-                    </Button>
-
-                    <p className="text-center text-xs text-muted-foreground">
-                        Kesulitan menemukan data Anda? Hubungi admin penerbitan.
-                    </p>
-                </form>
+                            <a
+                                href="tel:+62851xxxxxxxx"
+                                className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-800 hover:text-slate-950"
+                            >
+                                <Phone className="size-3.5" />
+                                0851-xxxx-xxxx
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </>
     );
 }
+
+// Opt this page out of any global default layout (some app.tsx setups
+// auto-wrap every page unless `.layout` is explicitly set).
+TrackingIndex.layout = (page: React.ReactNode) => page;
