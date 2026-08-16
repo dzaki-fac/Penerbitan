@@ -34,12 +34,23 @@ export default function TrackingIndex() {
         data.jenis_identitas === 'email'
             ? 'Contoh: penulis@email.com'
             : data.jenis_identitas === 'nip'
-              ? 'Contoh: 198501012010121001'
-              : 'Contoh: 21111000';
+              ? 'Contoh: 19860926xxxxxxxxxx'
+              : 'Contoh: 2406012412xxxx';
 
     return (
         <>
-            <Head title="Tracking Naskah" />
+            <Head title="Tracking Naskah">
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link
+                    rel="preconnect"
+                    href="https://fonts.gstatic.com"
+                    crossOrigin="anonymous"
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
+                    rel="stylesheet"
+                />
+            </Head>
 
             <div className="relative flex min-h-svh items-center justify-center px-4 py-14 sm:py-20">
                 <div
@@ -64,7 +75,10 @@ export default function TrackingIndex() {
                                 className="mb-6 justify-center transition-opacity hover:opacity-80"
                             />
                         </Link>
-                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                        <h1
+                            className="text-2xl font-semibold tracking-[0.016em] text-slate-900 sm:text-3xl"
+                            style={{ fontFamily: "'Source Serif 4', serif" }}
+                        >
                             Lacak Naskah Anda
                         </h1>
                     </div>
@@ -89,10 +103,10 @@ export default function TrackingIndex() {
                                             aria-pressed={active}
                                             className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
                                                 active
-                                                    ? 'bg-white text-slate-900 shadow-sm'
-                                                    : 'text-slate-500 hover:text-slate-800'
+                                                    ? 'bg-white text-[#1B3A6B] shadow-sm'
+                                                    : 'text-slate-500 hover:text-[#1B3A6B]'
                                             }`}
-                                        >
+                                                                                    >
                                             {label}
                                         </button>
                                     );
@@ -122,7 +136,7 @@ export default function TrackingIndex() {
                                 }
                                 placeholder={placeholder}
                                 autoFocus
-                                className="bg-white"
+                                className="bg-white focus-visible:ring-[#1B3A6B]/40"
                             />
                             {errors.nomor_identitas && (
                                 <p className="text-sm text-destructive">
@@ -134,21 +148,21 @@ export default function TrackingIndex() {
                         <Button
                             type="submit"
                             size="lg"
-                            className="w-full"
+                            className="w-full justify-center gap-2 border border-[#1B3A6B]/30 bg-white text-[#1B3A6B] shadow-none hover:border-[#1B3A6B] hover:bg-[#1B3A6B] hover:text-white active:border-[#1B3A6B] active:bg-[#1B3A6B] active:text-white"
                             disabled={processing}
                         >
-                            {processing ? <Spinner /> : <Search />}
+                            {processing ? <Spinner /> : <Search size={18} />}
                             Telusuri
                         </Button>
 
                         <div className="text-center">
                             <p className="text-xs text-slate-500">
-                                Kesulitan menemukan data Anda? Hubungi admin
-                                penerbitan.
+                                Kesulitan menemukan data Anda? 
+                                Silahkan hubungi admin penerbitan.
                             </p>
                             <a
                                 href="tel:+62851xxxxxxxx"
-                                className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-800 hover:text-slate-950"
+                                className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-[#1B3A6B] hover:text-[#0f2547]"
                             >
                                 <Phone className="size-3.5" />
                                 0851-xxxx-xxxx

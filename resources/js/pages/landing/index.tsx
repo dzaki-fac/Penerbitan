@@ -66,7 +66,7 @@ export default function Landing() {
                             asChild
                             size="lg"
                             variant="outline"
-                            className="w-full justify-center gap-2 border-[#B8862B]/30 bg-white text-[#8a661f] hover:border-[#B8862B] hover:bg-[#B8862B] hover:text-white active:border-[#B8862B] active:bg-[#B8862B] active:text-white"
+                            className="w-full justify-center gap-2 border-[#1B3A6B]/30 bg-white text-[#1B3A6B] hover:border-[#1B3A6B] hover:bg-[#1B3A6B] hover:text-white active:border-[#1B3A6B] active:bg-[#1B3A6B] active:text-white"
                         >
                             <a
                                 href={GFORM_URL}
@@ -80,7 +80,7 @@ export default function Landing() {
                         <Button
                             asChild
                             size="lg"
-                            className="w-full justify-center gap-2 border border-[#B8862B]/30 bg-white text-[#8a661f] shadow-none hover:border-[#B8862B] hover:bg-[#B8862B] hover:text-white active:border-[#B8862B] active:bg-[#B8862B] active:text-white"
+                            className="w-full justify-center gap-2 border border-[#1B3A6B]/30 bg-white text-[#1B3A6B] shadow-none hover:border-[#1B3A6B] hover:bg-[#1B3A6B] hover:text-white active:border-[#1B3A6B] active:bg-[#1B3A6B] active:text-white"
                         >
                             <Link href={tracking()}>
                                 <Search size={18} />
