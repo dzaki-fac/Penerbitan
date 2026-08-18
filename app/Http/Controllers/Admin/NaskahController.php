@@ -43,7 +43,14 @@ class NaskahController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->query('status'));
+            $status = $request->query('status');
+
+            if ($status === NaskahStatus::IsbnTerbit->value) {
+                $query->whereHas('histories', fn ($history) => $history
+                    ->where('ke_status', NaskahStatus::IsbnTerbit->value));
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if ($fakultas = $request->string('fakultas')->trim()->toString()) {
@@ -321,12 +328,18 @@ class NaskahController extends Controller
     /**
      * Menghapus naskah.
      */
-    public function destroy(Naskah $naskah): RedirectResponse
+    public function destroy(Request $request, Naskah $naskah): RedirectResponse
     {
         $naskah->delete();
 
         flashSuccess(__('Naskah berhasil dihapus.'));
 
-        return to_route('admin.naskah.index');
+        return to_route('admin.naskah.index', $request->only([
+            'fakultas',
+            'per_page',
+            'search',
+            'stage',
+            'status',
+        ]));
     }
 }

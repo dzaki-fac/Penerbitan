@@ -111,7 +111,11 @@ export default function NaskahIndex({
 
     function remove(id: number) {
         if (confirm('Hapus naskah ini?')) {
-            router.delete(destroy(id));
+            router.delete(destroy(id), {
+                data: { ...applied.current },
+                preserveState: true,
+                replace: true,
+            });
         }
     }
 
