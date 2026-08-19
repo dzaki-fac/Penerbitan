@@ -541,7 +541,7 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                 <DialogHeader>
                     <DialogTitle>Acc Proof Reading</DialogTitle>
                     <DialogDescription>
-                        Setujui hasil proof reading atas nama penulis. Status
+                        Setujui hasil final review atas nama penulis. Status
                         naskah dipindahkan ke "Acc Proof Reading".
                     </DialogDescription>
                 </DialogHeader>
@@ -587,7 +587,7 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Ajukan Revisi Proof Reading</DialogTitle>
+                    <DialogTitle>Ajukan Revisi Final Review</DialogTitle>
                     <DialogDescription>
                         Ajukan perbaikan atas nama penulis. Bagian yang perlu
                         diperbaiki dijelaskan pada catatan revisi.

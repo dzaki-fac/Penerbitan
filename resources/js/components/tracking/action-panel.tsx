@@ -306,7 +306,7 @@ export function ActionPanel({ naskah, action }: Props) {
                 <ApproveDialog
                     naskah={naskah}
                     title="Acc Proof Reading"
-                    description="Konfirmasi bahwa Anda menyetujui (Acc) hasil proof reading naskah."
+                    description="Konfirmasi bahwa Anda menyetujui (Acc) hasil final review naskah."
                     submit={approveProofReading.url(naskah.id)}
                     buttonLabel="Acc Proof Reading"
                     icon={<Check />}
@@ -314,8 +314,8 @@ export function ActionPanel({ naskah, action }: Props) {
                 />
                 <RejectDialog
                     naskah={naskah}
-                    title="Ajukan Revisi Proof Reading"
-                    description="Jelaskan bagian hasil proof reading yang perlu diperbaiki."
+                    title="Ajukan Revisi Final Review"
+                    description="Jelaskan bagian hasil final review yang perlu diperbaiki."
                     submit={rejectProofReading.url(naskah.id)}
                     buttonLabel="Ajukan Revisi"
                     placeholder="Tuliskan catatan revisi Anda"

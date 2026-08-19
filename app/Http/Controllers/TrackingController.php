@@ -194,10 +194,10 @@ class TrackingController extends Controller
                 $layout->save();
             }
 
-            WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Proof reading disetujui (Acc) oleh penulis'));
+            WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Final review disetujui (Acc) oleh penulis'));
         });
 
-        flashSuccess(__('Proof reading disetujui.'));
+        flashSuccess(__('Final review disetujui.'));
 
         return back();
     }
@@ -230,11 +230,11 @@ class TrackingController extends Controller
                 $naskah,
                 NaskahStatus::RevisiProofReading,
                 AktorType::Penulis,
-                note: __('Penulis mengajukan revisi proof reading: ').$request->validated('catatan'),
+                note: __('Penulis mengajukan revisi final review: ').$request->validated('catatan'),
             );
         });
 
-        flashSuccess(__('Revisi proof reading diajukan.'));
+        flashSuccess(__('Revisi final review diajukan.'));
 
         return back();
     }
