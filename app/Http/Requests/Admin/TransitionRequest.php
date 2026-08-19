@@ -17,7 +17,7 @@ class TransitionRequest extends FormRequest
     {
         return [
             'to_status' => ['required', 'in:'.implode(',', array_column(NaskahStatus::cases(), 'value'))],
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'catatan' => ['nullable', 'string'],
             'force' => ['sometimes', 'boolean'],
         ];
     }

@@ -75,7 +75,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'catatan' => ['nullable', 'string'],
         ]);
 
         DB::transaction(function () use ($naskah, $request, $validated) {
@@ -149,7 +149,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['required', 'string', 'max:255'],
+            'catatan' => ['required', 'string'],
         ]);
 
         DB::transaction(function () use ($naskah, $request, $validated) {
@@ -323,7 +323,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'catatan' => ['nullable', 'string'],
         ]);
 
         $history->update(['catatan' => $validated['catatan']]);
