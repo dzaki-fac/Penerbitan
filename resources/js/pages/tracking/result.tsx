@@ -36,7 +36,7 @@ function CoverThumbnail({ src, title }: { src: string; title: string }) {
             className="block border-b border-border"
         >
             {broken ? (
-                <div className="flex h-40 items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
+                <div className="flex aspect-[15.5/23] items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
                     <ImageIcon className="size-5" />
                     Buka Cover
                 </div>
@@ -45,7 +45,7 @@ function CoverThumbnail({ src, title }: { src: string; title: string }) {
                     src={src}
                     alt={title}
                     onError={() => setBroken(true)}
-                    className="h-40 w-full bg-muted object-cover"
+                    className="aspect-[15.5/23] w-full bg-muted object-cover"
                 />
             )}
         </a>
