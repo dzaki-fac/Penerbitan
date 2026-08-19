@@ -33,7 +33,7 @@ function CoverThumbnail({ src, title }: { src: string; title: string }) {
             href={src}
             target="_blank"
             rel="noreferrer"
-            className="block border-b border-border"
+            className="block w-40 border-b border-border"
         >
             {broken ? (
                 <div className="flex aspect-[15.5/23] items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
