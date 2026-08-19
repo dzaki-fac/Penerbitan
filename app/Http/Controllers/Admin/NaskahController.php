@@ -51,6 +51,28 @@ class NaskahController extends Controller
                 ->where('fakultas_sekolah', $fakultas));
         }
 
+        if ($dateFrom = $request->string('date_from')->trim()->toString()) {
+            $query->where('tanggal_pengajuan', '>=', $dateFrom);
+        }
+
+        if ($dateTo = $request->string('date_to')->trim()->toString()) {
+            $query->where('tanggal_pengajuan', '<=', $dateTo.' 23:59:59');
+        }
+
+        $sortable = [
+            'judul' => 'naskahs.judul',
+            'tanggal' => 'naskahs.tanggal_pengajuan',
+            'status' => 'naskahs.status',
+            'penulis' => 'authors.nama',
+        ];
+        $sortBy = $request->string('sort_by')->toString();
+        $sortDir = $request->string('sort_dir', 'desc')->toString() === 'asc' ? 'asc' : 'desc';
+        if (isset($sortable[$sortBy])) {
+            $query->orderBy($sortable[$sortBy], $sortDir);
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
         $perPage = $request->query('per_page', '10');
         $perPage = in_array($perPage, ['10', '20', 'all'], true) ? $perPage : '10';
 
@@ -82,7 +104,11 @@ class NaskahController extends Controller
                 'status' => $request->query('status', ''),
                 'stage' => $request->query('stage', ''),
                 'fakultas' => $request->query('fakultas', ''),
+                'date_from' => $request->query('date_from', ''),
+                'date_to' => $request->query('date_to', ''),
                 'per_page' => $request->query('per_page', '10'),
+                'sort_by' => $request->query('sort_by', ''),
+                'sort_dir' => $request->query('sort_dir', 'desc'),
             ],
             'fakultasOptions' => Author::query()
                 ->whereNotNull('fakultas_sekolah')
@@ -332,6 +358,187 @@ class NaskahController extends Controller
         $naskah->delete();
 
         flashSuccess(__('Naskah berhasil dihapus.'));
+
+        return to_route('admin.naskah.index');
+    }
+
+    /**
+     * Export naskah ke CSV.
+     */
+    public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $query = Naskah::query()->with(['author']);
+
+        if ($search = $request->string('search')->trim()->toString()) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                    ->orWhereHas('author', fn ($author) => $author
+                        ->where('nama', 'like', "%{$search}%")
+                        ->orWhere('nomor_identitas', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($stageStr = $request->query('stage')) {
+            $stage = (int) $stageStr;
+            $query->whereIn('status', NaskahStatus::forStage($stage));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        if ($fakultas = $request->string('fakultas')->trim()->toString()) {
+            $query->whereHas('author', fn ($author) => $author
+                ->where('fakultas_sekolah', $fakultas));
+        }
+
+        if ($dateFrom = $request->string('date_from')->trim()->toString()) {
+            $query->where('tanggal_pengajuan', '>=', $dateFrom);
+        }
+
+        if ($dateTo = $request->string('date_to')->trim()->toString()) {
+            $query->where('tanggal_pengajuan', '<=', $dateTo.' 23:59:59');
+        }
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment;filename="naskah_'.now()->format('Ymd_His').'.csv"',
+        ];
+
+        return response()->streamDownload(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Judul', 'Nama Penulis', 'Jenis Identitas', 'Nomor Identitas',
+                'Email Penulis', 'Status Penulis', 'Fakultas/Sekolah', 'NPWP',
+                'WhatsApp Penulis', 'Penulis Tambahan', 'Tanggal Pengajuan',
+                'Sumber Form', 'Kebijakan Akses', 'Biaya', 'Nama Narahubung',
+                'WhatsApp Narahubung', 'Email Narahubung', 'Link Cover',
+                'Link Dummy Upload', 'Link Dummy PDF', 'Link Dummy Word',
+                'Link Surat Keaslian', 'Link Surat Penerbitan', 'Status',
+            ]);
+
+            $query->orderByDesc('created_at')->chunk(500, function ($naskahs) use ($handle) {
+                foreach ($naskahs as $naskah) {
+                    fputcsv($handle, [
+                        $naskah->judul,
+                        $naskah->author->nama,
+                        $naskah->author->jenis_identitas->value,
+                        $naskah->author->nomor_identitas,
+                        $naskah->author->email,
+                        $naskah->author->status,
+                        $naskah->author->fakultas_sekolah,
+                        $naskah->author->nomor_npwp,
+                        $naskah->author->nomor_whatsapp,
+                        $naskah->author->penulis_tambahan,
+                        $naskah->tanggal_pengajuan->format('Y-m-d H:i:s'),
+                        $naskah->sumber_form,
+                        $naskah->kebijakan_akses,
+                        $naskah->biaya,
+                        $naskah->nama_narahubung,
+                        $naskah->nomor_whatsapp_narahubung,
+                        $naskah->email_narahubung,
+                        $naskah->link_cover,
+                        $naskah->link_dummy_upload,
+                        $naskah->link_dummy_pdf,
+                        $naskah->link_dummy_word,
+                        $naskah->link_surat_keaslian,
+                        $naskah->link_surat_penerbitan,
+                        $naskah->status->value,
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, 'naskah_'.now()->format('Ymd_His').'.csv', $headers);
+    }
+
+    /**
+     * Import naskah dari CSV.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getPathname(), 'r');
+
+        if ($handle === false) {
+            flashError(__('Gagal membaca file CSV.'));
+            return to_route('admin.naskah.index');
+        }
+
+        $header = fgetcsv($handle);
+        $imported = 0;
+        $skipped = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) < 4) {
+                $skipped++;
+                continue;
+            }
+
+            $jenisIdentitas = strtolower(trim($row[2] ?? ''));
+            $nomorIdentitas = trim($row[3] ?? '');
+            $judul = trim($row[0] ?? '');
+
+            if (!$judul || !$nomorIdentitas || !in_array($jenisIdentitas, ['nim', 'nip'])) {
+                $skipped++;
+                continue;
+            }
+
+            $author = Author::firstOrCreate(
+                [
+                    'jenis_identitas' => $jenisIdentitas,
+                    'nomor_identitas' => $nomorIdentitas,
+                ],
+                [
+                    'nama' => trim($row[1] ?? ''),
+                    'email' => trim($row[4] ?? '') ?: null,
+                    'status' => trim($row[5] ?? '') ?: null,
+                    'fakultas_sekolah' => normalizeFakultasSekolah(trim($row[6] ?? '') ?: null),
+                    'nomor_npwp' => trim($row[7] ?? '') ?: null,
+                    'nomor_whatsapp' => trim($row[8] ?? '') ?: null,
+                    'penulis_tambahan' => trim($row[9] ?? '') ?: null,
+                ],
+            );
+
+            $tanggalPengajuan = trim($row[10] ?? '') ?: now()->toDateTimeString();
+
+            $statusValue = trim($row[23] ?? '') ?: 'data_diterima';
+            $status = NaskahStatus::tryFrom($statusValue) ?? NaskahStatus::DataDiterima;
+
+            Naskah::create([
+                'author_id' => $author->id,
+                'judul' => $judul,
+                'link_cover' => trim($row[17] ?? '') ?: null,
+                'tanggal_pengajuan' => $tanggalPengajuan,
+                'sumber_form' => trim($row[11] ?? '') ?: null,
+                'kebijakan_akses' => trim($row[12] ?? '') ?: null,
+                'biaya' => trim($row[13] ?? '') ?: null,
+                'nama_narahubung' => trim($row[14] ?? '') ?: null,
+                'nomor_whatsapp_narahubung' => trim($row[15] ?? '') ?: null,
+                'email_narahubung' => trim($row[16] ?? '') ?: null,
+                'link_dummy_upload' => trim($row[18] ?? '') ?: null,
+                'link_dummy_pdf' => trim($row[19] ?? '') ?: null,
+                'link_dummy_word' => trim($row[20] ?? '') ?: null,
+                'link_surat_keaslian' => trim($row[21] ?? '') ?: null,
+                'link_surat_penerbitan' => trim($row[22] ?? '') ?: null,
+                'status' => $status,
+                'progress' => $status->progress(),
+            ]);
+
+            $imported++;
+        }
+
+        fclose($handle);
+
+        flashSuccess(__(':imported naskah berhasil diimport, :skipped dilewati.', [
+            'imported' => $imported,
+            'skipped' => $skipped,
+        ]));
 
         return to_route('admin.naskah.index');
     }

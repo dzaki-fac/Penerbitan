@@ -80,10 +80,13 @@ export default function AdminDashboard({
             <Head title="Dashboard Admin" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
-                <div className="grid gap-4 md:grid-cols-4">
-                    {summary.map((item) => (
-                        <Card key={item.label}>
-                            <CardContent className="flex items-center gap-4">
+                <Card className="py-0">
+                    <CardContent className="grid gap-6 py-6 pb-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {summary.map((item) => (
+                            <div
+                                key={item.label}
+                                className="flex items-center gap-4"
+                            >
                                 <item.icon className="size-8 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
@@ -93,22 +96,17 @@ export default function AdminDashboard({
                                         {item.label}
                                     </p>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                            </div>
+                        ))}
+                    </CardContent>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <BadgeCheck className="size-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2 px-6 py-2">
+                        <BadgeCheck className="size-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold">
                             ISBN per Status
-                        </CardTitle>
-                        <CardDescription>
-                            Distribusi data ISBN berdasarkan status.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                        </h3>
+                    </div>
+                    <CardContent className="pb-6 pt-2">
                         <div className="grid gap-4 sm:grid-cols-3">
                             {isbnStatuses.map((status) => {
                                 const Icon =
