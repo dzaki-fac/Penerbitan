@@ -56,7 +56,18 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
 
     return (
         <>
-            <Head title={naskah.judul} />
+            <Head title={naskah.judul}>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link
+                    rel="preconnect"
+                    href="https://fonts.gstatic.com"
+                    crossOrigin="anonymous"
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
+                    rel="stylesheet"
+                />
+            </Head>
 
             <div className="space-y-6">
                 <a
@@ -85,11 +96,14 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                     {naskah.status.label}
                                 </Badge>
                             </div>
-                            <h1 className="text-2xl font-semibold tracking-[0.008em]">
+                            <h1
+                                className="text-2xl font-semibold tracking-[0.008em]"
+                                style={{ fontFamily: "'Source Serif 4', serif" }}
+                            >
                                 {naskah.judul}
                             </h1>
                             {perluAksi && (
-                                <p className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800">
+                                <p className="flex items-center gap-1.5 rounded-md border border-[#1B3A6B]/25 bg-[#1B3A6B]/5 px-3 py-1.5 text-sm font-medium text-[#1B3A6B]">
                                     <AlertCircle className="size-4 shrink-0" />
                                     Naskah ini menunggu tindakan Anda — lihat
                                     bagian &quot;Aksi Penulis&quot; di bawah.
@@ -131,7 +145,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             href={naskah.link_cover}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                                            className="font-medium text-[#1B3A6B] underline underline-offset-4 hover:text-[#0f2547]"
                                         >
                                             Lihat Cover
                                         </a>
@@ -227,7 +241,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                 className={cn(
                                                     'text-sm font-medium',
                                                     active
-                                                        ? 'text-primary'
+                                                        ? 'text-[#1B3A6B]'
                                                         : done
                                                           ? 'text-foreground'
                                                           : 'text-muted-foreground',
@@ -342,7 +356,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                         href={naskah.layout.preview_pdf_link}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="text-primary underline underline-offset-4"
+                                        className="text-[#1B3A6B] underline underline-offset-4 hover:text-[#0f2547]"
                                     >
                                         Preview PDF (versi {naskah.layout.versi}
                                         )
@@ -428,7 +442,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                     <ol className="relative border-s border-border ps-6">
                         {naskah.histories.map((history) => (
                             <li key={history.id} className="mb-6 last:mb-0">
-                                <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-primary" />
+                                <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-[#1B3A6B]" />
                                 <div className="flex flex-wrap items-center gap-2 text-sm">
                                     <span className="font-medium">
                                         {history.ke_status.label}
