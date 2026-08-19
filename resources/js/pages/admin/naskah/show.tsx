@@ -536,16 +536,16 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                     className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
-                    <User />
-                    Acc Proof Reading
+                                        <User />
+                    Acc Cetak
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Acc Proof Reading</DialogTitle>
+                    <DialogTitle>Acc Cetak</DialogTitle>
                     <DialogDescription>
                         Setujui hasil final review atas nama penulis. Status
-                        naskah dipindahkan ke "Acc Proof Reading".
+                        naskah dipindahkan ke "Acc Cetak".
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">

@@ -305,10 +305,10 @@ export function ActionPanel({ naskah, action }: Props) {
             <div className="flex flex-wrap items-center gap-3">
                 <ApproveDialog
                     naskah={naskah}
-                    title="Acc Proof Reading"
+                    title="Acc Cetak"
                     description="Konfirmasi bahwa Anda menyetujui (Acc) hasil final review naskah."
                     submit={approveProofReading.url(naskah.id)}
-                    buttonLabel="Acc Proof Reading"
+                    buttonLabel="Acc Cetak"
                     icon={<Check />}
                     buttonClassName={ADVANCE_BUTTON_CLASS}
                 />

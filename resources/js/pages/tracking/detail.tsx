@@ -35,15 +35,9 @@ type Props = {
     naskah: NaskahDetail;
     steps: WorkflowStep[];
     action: TrackingAction;
-    catatan: Array<{
-        id: number;
-        author_name: string;
-        isi: string;
-        waktu: string;
-    }>;
 };
 
-export default function TrackingDetail({ naskah, steps, action, catatan }: Props) {
+export default function TrackingDetail({ naskah, steps, action }: Props) {
     const currentIndex = naskah.status.stage;
     const perluAksi = needsAuthorAction(naskah.status.value);
     const subBadge = statusSubBadge(naskah.status.value);
@@ -418,14 +412,14 @@ export default function TrackingDetail({ naskah, steps, action, catatan }: Props
                     </div>
                 </CollapsibleCard>
 
-                {catatan.length > 0 && (
+                {naskah.catatan.length > 0 && (
                     <CollapsibleCard
                         title="Catatan dari Admin"
                         icon={<MessageSquare className="size-4 text-muted-foreground" />}
                         defaultOpen={false}
                         contentClassName="space-y-2"
                     >
-                        {catatan.map((c) => (
+                        {naskah.catatan.map((c) => (
                             <div
                                 key={c.id}
                                 className="rounded-md border border-border bg-muted/70 px-3 py-2"

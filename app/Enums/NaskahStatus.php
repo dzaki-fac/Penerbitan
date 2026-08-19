@@ -33,7 +33,7 @@ enum NaskahStatus: string
             self::IsbnTerbit => 'ISBN Terbit',
             self::ProofReadingPenulis => 'Final Review Penulis',
             self::RevisiProofReading => 'Revisi Final Review',
-            self::AccProofReading => 'Acc Proof Reading',
+            self::AccProofReading => 'Acc Cetak',
             self::ProsesCetak => 'Proses Cetak',
             self::SiapDiambil => 'Siap Diambil',
             self::Selesai => 'Selesai',
