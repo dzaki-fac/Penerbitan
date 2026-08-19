@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\AktorType;
 use App\Enums\NaskahStatus;
+use App\Exceptions\WorkflowConflictException;
 use App\Models\Naskah;
 use App\Models\User;
 use App\Models\WorkflowHistory;
@@ -51,7 +52,7 @@ class WorkflowService
         'revisi_dokumen' => [],
         'dalam_proses_editing_layout' => [NaskahStatus::PengajuanIsbn, NaskahStatus::RevisiEditingLayout],
         'revisi_editing_layout' => [],
-        'pengajuan_isbn' => [NaskahStatus::RevisiIsbn, NaskahStatus::IsbnTerbit],
+        'pengajuan_isbn' => [NaskahStatus::IsbnTerbit, NaskahStatus::RevisiIsbn],
         'revisi_isbn' => [NaskahStatus::PengajuanIsbn, NaskahStatus::IsbnTerbit],
         'isbn_terbit' => [NaskahStatus::ProofReadingPenulis],
         'proof_reading_penulis' => [],
@@ -60,6 +61,39 @@ class WorkflowService
         'proses_cetak' => [NaskahStatus::SiapDiambil],
         'siap_diambil' => [],
     ];
+
+    /**
+     * Daftar tahapan utama untuk progress timeline.
+     *
+     * Status "Penulis Mundur" hanya disertakan apabila status naskah saat ini
+     * memang "Penulis Mundur", sehingga tidak tampil sebagai langkah default
+     * pada alur normal.
+     *
+     * @return array<int, array{value: string, label: string, progress: int, stage: int}>
+     */
+    public static function stepsFor(NaskahStatus $current): array
+    {
+        $steps = array_map(fn (NaskahStatus $status) => [
+            'value' => $status->value,
+            'label' => $status->label(),
+            'progress' => $status->progress(),
+            'stage' => $status->stage(),
+        ], array_filter(
+            NaskahStatus::ordered(),
+            fn (NaskahStatus $status) => $status !== NaskahStatus::PenulisMundur,
+        ));
+
+        if ($current === NaskahStatus::PenulisMundur) {
+            $steps[] = [
+                'value' => NaskahStatus::PenulisMundur->value,
+                'label' => NaskahStatus::PenulisMundur->label(),
+                'progress' => NaskahStatus::PenulisMundur->progress(),
+                'stage' => NaskahStatus::PenulisMundur->stage(),
+            ];
+        }
+
+        return $steps;
+    }
 
     /**
      * Daftar seluruh tahapan utama untuk progress bar publik.
@@ -78,6 +112,13 @@ class WorkflowService
 
     /**
      * Transisi status naskah dengan pencatatan histori.
+     *
+     * Baris naskah dikunci (lockForUpdate) dan statusnya dicek ulang di dalam
+     * transaksi agar dua admin yang submit bersamaan tidak saling menimpa
+     * atau menghasilkan status ganda yang tidak konsisten.
+     *
+     * @throws WorkflowConflictException
+     * @throws ModelNotFoundException
      */
     public static function transition(
         Naskah $naskah,
@@ -89,13 +130,15 @@ class WorkflowService
         $from = $naskah->status;
 
         DB::transaction(function () use ($naskah, $from, $to, $aktor, $admin, $note) {
+            self::assertFreshStatus($naskah, $from);
+
             $naskah->status = $to;
             $naskah->progress = $to->progress();
             $naskah->save();
 
             WorkflowHistory::create([
                 'naskah_id' => $naskah->id,
-                'dari_status' => $from?->value,
+                'dari_status' => $from->value,
                 'ke_status' => $to->value,
                 'aktor' => $aktor->value,
                 'admin_id' => $admin?->id,
@@ -105,7 +148,29 @@ class WorkflowService
     }
 
     /**
+     * Kunci baris naskah (harus dipanggil di dalam transaksi aktif) dan pastikan
+     * status di database masih sama dengan yang diharapkan. Melindungi aksi
+     * multi-tulis (upload revisi, layout, ISBN, dll.) dari race condition.
+     *
+     * @throws WorkflowConflictException
+     * @throws ModelNotFoundException
+     */
+    public static function assertFreshStatus(Naskah $naskah, NaskahStatus $expected): void
+    {
+        $fresh = Naskah::query()
+            ->whereKey($naskah->getKey())
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        if ($fresh->status !== $expected) {
+            throw new WorkflowConflictException;
+        }
+    }
+
+    /**
      * Cek apakah penulis dapat memicu aksi pada status tertentu.
+     *
+     * @return array{to: NaskahStatus, aksi: string, label: string}|null
      */
     public static function authorActionFor(string $status): ?array
     {

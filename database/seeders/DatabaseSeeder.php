@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $budi,
             'Penerapan Machine Learning untuk Prediksi Hasil Panen',
-            'https://drive.google.com/file/d/example-cover-1/view',
+            'https://leksikabookstore.com/uploads/63c1189894224_20230113153848-1.jpg',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -103,7 +103,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $budi,
             'Analisis Sentimen Media Sosial terhadap Program MBKM',
-            'https://drive.google.com/file/d/example-cover-2/view',
+            'https://leksikabookstore.com/uploads/63c1189894224_20230113153848-1.jpg',
         );
         $this->walk($naskah, $admin, [NaskahStatus::DataDiterima]);
 
@@ -111,7 +111,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $siti,
             'Manajemen Strategis Pendidikan Tinggi di Era Digital',
-            'https://drive.google.com/file/d/example-cover-3/view',
+            'https://leksikabookstore.com/uploads/63c1189894224_20230113153848-1.jpg',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -136,7 +136,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $siti,
             'Panduan Penulisan Artikel Ilmiah untuk Mahasiswa',
-            'https://drive.google.com/file/d/example-cover-4/view',
+            'https://leksikabookstore.com/uploads/63c1189894224_20230113153848-1.jpg',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -167,7 +167,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $andi,
             'Rancang Bangun Sistem IoT untuk Monitoring Kualitas Air',
-            'https://drive.google.com/file/d/example-cover-5/view',
+            'https://leksikabookstore.com/uploads/63c1189894224_20230113153848-1.jpg',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,
@@ -178,7 +178,7 @@ class DatabaseSeeder extends Seeder
         $naskah = $this->createNaskah(
             $andi,
             'Implementasi Blockchain pada Sistem Keuangan Mikro',
-            'https://drive.google.com/file/d/example-cover-6/view',
+            'https://leksikabookstore.com/uploads/63c1189894224_20230113153848-1.jpg',
         );
         $this->walk($naskah, $admin, [
             NaskahStatus::DataDiterima,

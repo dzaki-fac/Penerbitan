@@ -6,9 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { statusBadgeClass } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import { create, destroy, edit, show } from '@/routes/admin/naskah';
@@ -38,23 +36,36 @@ type Props = {
         search: string;
         status: string;
         stage: string;
+        fakultas: string;
         per_page: string;
     };
     statuses: Array<{ value: string; label: string }>;
+    fakultasOptions: string[];
 };
 
-export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
+export default function NaskahIndex({
+    naskahs,
+    filters,
+    statuses,
+    fakultasOptions,
+}: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
+    const [fakultas, setFakultas] = useState(filters.fakultas);
     const [perPage, setPerPage] = useState(filters.per_page);
     const applied = useRef({
         search: filters.search,
         status: filters.status,
         stage: filters.stage,
+        fakultas: filters.fakultas,
         per_page: filters.per_page,
     });
 
-    function apply(next: { search?: string; status?: string }) {
+    function apply(next: {
+        search?: string;
+        status?: string;
+        fakultas?: string;
+    }) {
         applied.current = { ...applied.current, ...next };
         router.get(admin.naskah.index(), applied.current, {
             preserveState: true,
@@ -75,10 +86,12 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
     function resetFilters() {
         setSearch('');
         setStatus('');
+        setFakultas('');
         applied.current = {
             search: '',
             status: '',
             stage: '',
+            fakultas: '',
             per_page: perPage,
         };
         router.get(admin.naskah.index(), applied.current, {
@@ -173,35 +186,59 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                     </Button>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filter</CardTitle>
-                        <CardDescription>
-                            {naskahs.total} naskah ditemukan.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap items-end gap-3">
-                            <div className="grid min-w-56 flex-1 gap-2">
-                                <Label htmlFor="search">Cari</Label>
+                <Card className="py-4">
+                    <CardContent className="px-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="search" className="shrink-0">
+                                    Cari
+                                </Label>
                                 <Input
                                     id="search"
                                     value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    onChange={(e) =>
+                                        setSearch(e.target.value)
+                                    }
                                     placeholder="Judul, nama penulis, atau nomor identitas"
+                                    className="w-72"
                                 />
                             </div>
                             <div className="grid min-w-40 gap-2">
-                                <Label>Status</Label>
+                                <Label>Fakultas / Sekolah</Label>
                                 <Select
-                                    value={status || undefined}
+                                    value={fakultas || 'all'}
+                                    onValueChange={(v) => {
+                                        const value = v === 'all' ? '' : v;
+                                        setFakultas(value);
+                                        apply({ fakultas: value });
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Semua fakultas/sekolah" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Semua fakultas/sekolah
+                                        </SelectItem>
+                                        {fakultasOptions.map((f) => (
+                                            <SelectItem key={f} value={f}>
+                                                {f}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Label className="shrink-0">Status</Label>
+                                <Select
+                                    value={status || 'all'}
                                     onValueChange={(v) => {
                                         const value = v === 'all' ? '' : v;
                                         setStatus(value);
                                         apply({ status: value });
                                     }}
                                 >
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className="w-44">
                                         <SelectValue placeholder="Semua status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -219,14 +256,21 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button variant="ghost" onClick={resetFilters}>
+                            <Button
+                                variant="ghost"
+                                onClick={resetFilters}
+                                className="h-9 px-3"
+                            >
                                 Reset
                             </Button>
+                            <p className="ml-auto text-sm text-muted-foreground">
+                                {naskahs.total} naskah ditemukan.
+                            </p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="pt-0">
                     <CardContent className="p-0">
                         {naskahs.data.length > 0 && paginationBar('border-b')}
                         <div className="overflow-x-auto">
@@ -290,7 +334,11 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
                                                 {naskah.tanggal_pengajuan}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <Badge variant="secondary">
+                                                <Badge
+                                                    className={statusBadgeClass(
+                                                        naskah.status.value,
+                                                    )}
+                                                >
                                                     {naskah.status.label}
                                                 </Badge>
                                             </td>

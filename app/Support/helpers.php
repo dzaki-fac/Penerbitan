@@ -27,3 +27,47 @@ if (! function_exists('flashError')) {
         ]);
     }
 }
+
+if (! function_exists('initialsOf')) {
+    /**
+     * Membentuk inisial nama: huruf pertama dari setiap kata.
+     *
+     * Contoh: "Nadia Azura Nurhaniya" -> "NAN", "Budi Santoso" -> "BS".
+     * Tahan terhadap spasi berlebih dan nama satu kata.
+     */
+    function initialsOf(string $name): string
+    {
+        $words = preg_split('/\s+/u', trim($name)) ?: [];
+
+        $initials = '';
+
+        foreach ($words as $word) {
+            $initials .= mb_strtoupper(mb_substr($word, 0, 1));
+        }
+
+        return $initials;
+    }
+}
+
+if (! function_exists('normalizeFakultasSekolah')) {
+    /**
+     * Merapikan nilai fakultas/sekolah agar konsisten saat disimpan.
+     *
+     * Menghapus spasi berlebih di awal/akhir dan antar kata, lalu menyamakan
+     * penulisan (title case). Contoh: "  fakultas   teknik  " -> "Fakultas Teknik".
+     */
+    function normalizeFakultasSekolah(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = mb_convert_case(
+            preg_replace('/\s+/u', ' ', trim($value)) ?: '',
+            MB_CASE_TITLE,
+            'UTF-8',
+        );
+
+        return $normalized === '' ? null : $normalized;
+    }
+}

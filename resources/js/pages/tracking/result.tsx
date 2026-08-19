@@ -164,7 +164,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`flex h-full flex-col gap-2 py-0 sm:gap-4 sm:py-6 ${statusBorderClass()}`}
+                                            className={`flex h-full flex-col gap-2 py-0 sm:gap-4 sm:py-6 ${statusBorderClass(naskah.status.value)}`}
                                         >
                                             <CoverThumbnail
                                                 src={naskah.link_cover}
@@ -176,7 +176,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                         {naskah.judul}
                                                     </CardTitle>
                                                     <Badge
-                                                        className={`hidden shrink-0 sm:inline-flex ${statusBadgeClass()}`}
+                                                        className={`hidden shrink-0 sm:inline-flex ${statusBadgeClass(naskah.status.value)}`}
                                                     >
                                                         {naskah.status.label}
                                                     </Badge>

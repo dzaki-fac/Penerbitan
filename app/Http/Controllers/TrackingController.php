@@ -15,6 +15,7 @@ use App\Models\Naskah;
 use App\Models\RevisiUpload;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -126,7 +127,7 @@ class TrackingController extends Controller
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
             ],
-            'steps' => WorkflowService::steps(),
+            'steps' => WorkflowService::stepsFor($naskah->status),
             'action' => $this->actionFor($naskah->status),
         ]);
     }
@@ -146,20 +147,24 @@ class TrackingController extends Controller
             ]);
         }
 
-        RevisiUpload::create([
-            'naskah_id' => $naskah->id,
-            'author_id' => $naskah->author_id,
-            'jenis' => $naskah->status === NaskahStatus::RevisiDokumen
-                ? RevisiJenis::Dokumen
-                : RevisiJenis::Naskah,
-            'catatan_penulis' => $request->validated('catatan_penulis'),
-        ]);
+        DB::transaction(function () use ($naskah, $request) {
+            WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-        $to = $naskah->status === NaskahStatus::RevisiDokumen
-            ? NaskahStatus::VerifikasiDokumen
-            : NaskahStatus::DalamProsesEditingLayout;
+            RevisiUpload::create([
+                'naskah_id' => $naskah->id,
+                'author_id' => $naskah->author_id,
+                'jenis' => $naskah->status === NaskahStatus::RevisiDokumen
+                    ? RevisiJenis::Dokumen
+                    : RevisiJenis::Naskah,
+                'catatan_penulis' => $request->validated('catatan_penulis'),
+            ]);
 
-        WorkflowService::transition($naskah, $to, AktorType::Penulis, note: __('Penulis mengonfirmasi revisi telah diunggah ke link Drive'));
+            $to = $naskah->status === NaskahStatus::RevisiDokumen
+                ? NaskahStatus::VerifikasiDokumen
+                : NaskahStatus::DalamProsesEditingLayout;
+
+            WorkflowService::transition($naskah, $to, AktorType::Penulis, note: __('Penulis mengonfirmasi revisi telah diunggah ke link Drive'));
+        });
 
         flashSuccess(__('Konfirmasi upload revisi berhasil.'));
 
@@ -181,12 +186,16 @@ class TrackingController extends Controller
             ]);
         }
 
-        if ($layout = $naskah->latestLayout) {
-            $layout->status = LayoutStatus::Disetujui;
-            $layout->save();
-        }
+        DB::transaction(function () use ($naskah) {
+            WorkflowService::assertFreshStatus($naskah, NaskahStatus::ProofReadingPenulis);
 
-        WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Proof reading disetujui (Acc) oleh penulis'));
+            if ($layout = $naskah->latestLayout) {
+                $layout->status = LayoutStatus::Disetujui;
+                $layout->save();
+            }
+
+            WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Proof reading disetujui (Acc) oleh penulis'));
+        });
 
         flashSuccess(__('Proof reading disetujui.'));
 
@@ -208,18 +217,22 @@ class TrackingController extends Controller
             ]);
         }
 
-        if ($layout = $naskah->latestLayout) {
-            $layout->status = LayoutStatus::Revisi;
-            $layout->catatan_revisi = $request->validated('catatan');
-            $layout->save();
-        }
+        DB::transaction(function () use ($naskah, $request) {
+            WorkflowService::assertFreshStatus($naskah, NaskahStatus::ProofReadingPenulis);
 
-        WorkflowService::transition(
-            $naskah,
-            NaskahStatus::RevisiProofReading,
-            AktorType::Penulis,
-            note: __('Penulis mengajukan revisi proof reading: ').$request->validated('catatan'),
-        );
+            if ($layout = $naskah->latestLayout) {
+                $layout->status = LayoutStatus::Revisi;
+                $layout->catatan_revisi = $request->validated('catatan');
+                $layout->save();
+            }
+
+            WorkflowService::transition(
+                $naskah,
+                NaskahStatus::RevisiProofReading,
+                AktorType::Penulis,
+                note: __('Penulis mengajukan revisi proof reading: ').$request->validated('catatan'),
+            );
+        });
 
         flashSuccess(__('Revisi proof reading diajukan.'));
 
