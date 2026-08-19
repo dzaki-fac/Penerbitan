@@ -79,6 +79,7 @@ class TrackingController extends Controller
             'isbn',
             'revisiUploads',
             'histories.admin',
+            'catatan',
         ]);
 
         $latestLayout = $naskah->layouts->first();
@@ -126,6 +127,16 @@ class TrackingController extends Controller
                     'catatan' => $h->catatan,
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
+                'catatan' => $naskah->catatan()
+                    ->where('target_type', 'general')
+                    ->orderBy('created_at', 'asc')
+                    ->get()
+                    ->map(fn ($c) => [
+                        'id' => $c->id,
+                        'author_name' => $c->author_name,
+                        'isi' => $c->isi,
+                        'waktu' => $c->created_at->format('d M Y H:i'),
+                    ]),
             ],
             'steps' => WorkflowService::stepsFor($naskah->status),
             'action' => $this->actionFor($naskah->status),

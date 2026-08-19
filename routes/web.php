@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AkunController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\NaskahCatatanController;
 use App\Http\Controllers\Admin\NaskahController;
 use App\Http\Controllers\Admin\WorkflowController;
 use App\Http\Controllers\HomeController;
@@ -50,5 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('naskah/{naskah}/layout', [WorkflowController::class, 'uploadLayout'])->name('naskah.layout.store');
         Route::post('naskah/{naskah}/isbn', [WorkflowController::class, 'updateIsbn'])->name('naskah.isbn.update');
         Route::patch('naskah/{naskah}/history/{history}', [WorkflowController::class, 'updateHistoryCatatan'])->name('naskah.history.update');
+
+        Route::get('naskah/{naskah}/catatan', [NaskahCatatanController::class, 'index'])->name('naskah.catatan.index');
+        Route::post('naskah/{naskah}/catatan', [NaskahCatatanController::class, 'store'])->name('naskah.catatan.store');
     });
 });

@@ -6,6 +6,7 @@ import {
     FileText,
     History,
     LayoutTemplate,
+    MessageSquarePlus,
     Pencil,
     Upload,
     User,
@@ -57,6 +58,7 @@ import {
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
+import CatatanSection from '@/components/catatan-section';
 import {
     approveProofReading,
     confirmRevisi,
@@ -84,6 +86,7 @@ type Props = {
     adminTransitions: string[];
     statusOptions: Array<{ value: string; label: string }>;
     authorAction: AuthorAction | null;
+    catatan: NaskahDetail['catatan'];
 };
 
 function TransitionDialog({
@@ -849,6 +852,7 @@ export default function NaskahShow({
     adminTransitions,
     statusOptions,
     authorAction,
+    catatan,
 }: Props) {
     const currentIndex = naskah.status.stage;
     const subBadge = statusSubBadge(naskah.status.value);
@@ -1271,6 +1275,18 @@ export default function NaskahShow({
                             </li>
                         ))}
                     </ol>
+                </CollapsibleCard>
+
+                <CollapsibleCard
+                    title="Catatan"
+                    icon={<MessageSquarePlus className="size-4 text-muted-foreground" />}
+                    contentClassName="space-y-3"
+                >
+                    <CatatanSection
+                        naskahId={naskah.id}
+                        catatan={catatan}
+                        stages={steps.map((s) => ({ value: s.value, label: s.label }))}
+                    />
                 </CollapsibleCard>
 
                 {naskah.revisi_uploads.length > 0 && (
