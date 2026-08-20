@@ -73,17 +73,20 @@ export default function AdminDashboard({
         revisi: RefreshCw,
     } as const;
 
-    const maxCount = Math.max(...statuses.map((s) => s.count), 1);
+    const totalNaskah = Math.max(stats.total, 1);
 
     return (
         <>
             <Head title="Dashboard Admin" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
-                <div className="grid gap-4 md:grid-cols-4">
-                    {summary.map((item) => (
-                        <Card key={item.label}>
-                            <CardContent className="flex items-center gap-4">
+                <Card className="py-0">
+                    <CardContent className="grid gap-6 py-6 pb-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {summary.map((item) => (
+                            <div
+                                key={item.label}
+                                className="flex items-center gap-4"
+                            >
                                 <item.icon className="size-8 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
@@ -93,22 +96,17 @@ export default function AdminDashboard({
                                         {item.label}
                                     </p>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                            </div>
+                        ))}
+                    </CardContent>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <BadgeCheck className="size-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2 px-6 py-2">
+                        <BadgeCheck className="size-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold">
                             ISBN per Status
-                        </CardTitle>
-                        <CardDescription>
-                            Distribusi data ISBN berdasarkan status.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                        </h3>
+                    </div>
+                    <CardContent className="pb-6 pt-2">
                         <div className="grid gap-4 sm:grid-cols-3">
                             {isbnStatuses.map((status) => {
                                 const Icon =
@@ -141,45 +139,54 @@ export default function AdminDashboard({
                     <CardHeader>
                         <CardTitle>Naskah per Status</CardTitle>
                         <CardDescription>
-                            Distribusi seluruh naskah berdasarkan tahapan
-                            workflow.
+                            Persentase naskah pada tiap status dari total{' '}
+                            {stats.total} naskah. Bar penuh berarti seluruh
+                            naskah berada pada status tersebut (100%).
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-1">
-                            {statuses.map((status) => (
-                                <Link
-                                    key={status.value}
-                                    href={naskahIndex({
-                                        query: { stage: status.stage },
-                                    })}
-                                    title={`Lihat naskah pada tahapan "${status.label}"`}
-                                    className="group flex items-center gap-3 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50"
-                                >
-                                    <span
-                                        title={status.label}
-                                        className="w-44 shrink-0 truncate text-xs font-medium text-muted-foreground group-hover:text-foreground"
+                            {statuses.map((status) => {
+                                const pct = stats.total
+                                    ? Math.round(
+                                          (status.count / stats.total) * 100,
+                                      )
+                                    : 0;
+
+                                return (
+                                    <Link
+                                        key={status.value}
+                                        href={naskahIndex({
+                                            query: { stage: status.stage },
+                                        })}
+                                        title={`${status.count} naskah (${pct}%) pada tahapan "${status.label}"`}
+                                        className="group flex items-center gap-3 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50"
                                     >
-                                        {status.label}
-                                    </span>
-                                    <div className="h-4 flex-1 overflow-hidden rounded-sm bg-muted">
-                                        <div
-                                            className="h-full rounded-sm bg-gradient-to-r from-primary/60 to-primary transition-all duration-500 group-hover:from-primary/80"
-                                            style={{
-                                                width: status.count
-                                                    ? `${Math.max((status.count / maxCount) * 100, 4)}%`
-                                                    : '0%',
-                                            }}
-                                        />
-                                    </div>
-                                    <Badge
-                                        variant="secondary"
-                                        className="w-9 shrink-0 justify-center"
-                                    >
-                                        {status.count}
-                                    </Badge>
-                                </Link>
-                            ))}
+                                        <span
+                                            title={status.label}
+                                            className="w-44 shrink-0 truncate text-xs font-medium text-muted-foreground group-hover:text-foreground"
+                                        >
+                                            {status.label}
+                                        </span>
+                                        <div className="h-4 flex-1 overflow-hidden rounded-sm bg-muted">
+                                            <div
+                                                className="h-full rounded-sm bg-gradient-to-r from-primary/60 to-primary transition-all duration-500 group-hover:from-primary/80"
+                                                style={{
+                                                    width: status.count
+                                                        ? `${Math.max((status.count / totalNaskah) * 100, 2)}%`
+                                                        : '0%',
+                                                }}
+                                            />
+                                        </div>
+                                        <Badge
+                                            variant="secondary"
+                                            className="w-14 shrink-0 justify-center tabular-nums"
+                                        >
+                                            {status.count} ({pct}%)
+                                        </Badge>
+                                    </Link>
+                                );
+                            })}
                         </div>
                         <p className="mt-3 text-xs text-muted-foreground">
                             Klik salah satu baris untuk melihat daftar naskah

@@ -49,7 +49,7 @@ class WorkflowController extends Controller
         DB::transaction(function () use ($naskah, $to, $request) {
             WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-            $this->syncIsbnStatus($naskah, $to);
+            $this->syncIsbnStatus($naskah->isbn, $to);
 
             WorkflowService::transition(
                 $naskah,
@@ -268,8 +268,10 @@ class WorkflowController extends Controller
         DB::transaction(function () use ($naskah, $request, $to) {
             WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
+            $isbn = $naskah->isbn;
+
             if ($to === NaskahStatus::IsbnTerbit) {
-                $isbn = $naskah->isbn ?? new Isbn(['naskah_id' => $naskah->id]);
+                $isbn ??= new Isbn(['naskah_id' => $naskah->id]);
 
                 $isbn->nomor_isbn = $request->validated('nomor_isbn');
                 $isbn->penerbit = $request->validated('penerbit');
@@ -278,7 +280,7 @@ class WorkflowController extends Controller
                 $isbn->save();
             }
 
-            $this->syncIsbnStatus($naskah, $to);
+            $this->syncIsbnStatus($isbn, $to);
 
             WorkflowService::transition(
                 $naskah,
@@ -299,9 +301,9 @@ class WorkflowController extends Controller
     /**
      * Menyelaraskan status record ISBN ketika admin mencatat hasil verifikasi Perpusnas.
      */
-    private function syncIsbnStatus(Naskah $naskah, NaskahStatus $to): void
+    private function syncIsbnStatus(?Isbn $isbn, NaskahStatus $to): void
     {
-        if (! $isbn = $naskah->isbn) {
+        if (! $isbn) {
             return;
         }
 

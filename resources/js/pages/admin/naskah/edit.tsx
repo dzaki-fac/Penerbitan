@@ -3,10 +3,13 @@ import { ArrowLeft } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Combobox } from '@/components/ui/combobox';
+import { DatetimeInput } from '@/components/ui/datetime-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { FAKULTAS_OPTIONS } from '@/lib/fakultas';
 import admin from '@/routes/admin';
 import { show, update } from '@/routes/admin/naskah';
 
@@ -144,15 +147,14 @@ export default function NaskahEdit({ naskah }: Props) {
                                 <Label htmlFor="fakultas_sekolah">
                                     Fakultas / Sekolah
                                 </Label>
-                                <Input
+                                <Combobox
                                     id="fakultas_sekolah"
                                     value={form.data.fakultas_sekolah}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'fakultas_sekolah',
-                                            e.target.value,
-                                        )
+                                    options={FAKULTAS_OPTIONS}
+                                    onValueChange={(value) =>
+                                        form.setData('fakultas_sekolah', value)
                                     }
+                                    placeholder="Pilih atau ketik fakultas/sekolah"
                                 />
                                 <InputError
                                     message={form.errors.fakultas_sekolah}
@@ -249,15 +251,11 @@ export default function NaskahEdit({ naskah }: Props) {
                                 <Label htmlFor="tanggal_pengajuan">
                                     Tanggal Pengajuan
                                 </Label>
-                                <Input
+                                <DatetimeInput
                                     id="tanggal_pengajuan"
-                                    type="datetime-local"
                                     value={form.data.tanggal_pengajuan}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'tanggal_pengajuan',
-                                            e.target.value,
-                                        )
+                                    onValueChange={(value) =>
+                                        form.setData('tanggal_pengajuan', value)
                                     }
                                 />
                                 <InputError

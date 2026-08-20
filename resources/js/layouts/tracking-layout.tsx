@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { WhatsAppButton } from '@/components/whatsapp-button';
@@ -36,8 +36,8 @@ export default function TrackingLayout({
                         {auth.user && (
                             <Button asChild variant="outline" size="sm">
                                 <Link href="/admin">
-                                    <ShieldCheck />
-                                    <span className="hidden xs:inline">Admin</span>
+                                    <LayoutDashboard />
+                                    <span>Dashboard</span>
                                 </Link>
                             </Button>
                         )}
