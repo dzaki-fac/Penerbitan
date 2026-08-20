@@ -1,11 +1,16 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, Eye, FilterIcon, Pencil, Plus, Trash2, Upload, XIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+} from '@/components/ui/card';
+import { DateRangePicker, dateToQueryString, queryStringToDate } from '@/components/ui/date-range-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -35,10 +40,275 @@ type Props = {
         status: string;
         stage: string;
         fakultas: string;
+        date_from: string;
+        date_to: string;
         per_page: string;
+        sort_by: string;
+        sort_dir: string;
     };
     statuses: Array<{ value: string; label: string }>;
 };
+
+const SORT_OPTIONS = [
+    { value: 'tanggal', label: 'Tanggal' },
+    { value: 'judul', label: 'Judul' },
+    { value: 'penulis', label: 'Penulis' },
+    { value: 'status', label: 'Status' },
+];
+
+type FilterPanelProps = {
+    fakultas: string;
+    onFakultasChange: (v: string) => void;
+    status: string;
+    onStatusChange: (v: string) => void;
+    sortBy: string;
+    onSortByChange: (v: string) => void;
+    sortDir: string;
+    onSortDirChange: (v: string) => void;
+    fakultasOptions: string[];
+    statuses: Array<{ value: string; label: string }>;
+};
+
+function FilterPanel({
+    fakultas,
+    onFakultasChange,
+    status,
+    onStatusChange,
+    sortBy,
+    onSortByChange,
+    sortDir,
+    onSortDirChange,
+    fakultasOptions,
+    statuses,
+}: FilterPanelProps) {
+    const [open, setOpen] = useState(false);
+    const [activeFilters, setActiveFilters] = useState<string[]>(() => {
+        const filters: string[] = [];
+        if (fakultas) filters.push('fakultas');
+        if (status) filters.push('status');
+        if (sortBy) filters.push('sort');
+        return filters;
+    });
+
+    const availableFilters = [
+        { key: 'fakultas', label: 'Fakultas / Sekolah' },
+        { key: 'status', label: 'Status' },
+        { key: 'sort', label: 'Urutkan' },
+    ].filter((f) => !activeFilters.includes(f.key));
+
+    function addFilter(key: string) {
+        setActiveFilters((prev) => [...prev, key]);
+    }
+
+    function removeFilter(key: string) {
+        setActiveFilters((prev) => prev.filter((f) => f !== key));
+        if (key === 'fakultas') onFakultasChange('');
+        if (key === 'status') onStatusChange('');
+        if (key === 'sort') {
+            onSortByChange('');
+            onSortDirChange('desc');
+        }
+    }
+
+    const activeCount = activeFilters.filter(
+        (f) =>
+            (f === 'fakultas' && fakultas) ||
+            (f === 'status' && status) ||
+            (f === 'sort' && sortBy),
+    ).length;
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    className={cn(
+                        'h-9 gap-2 text-sm font-normal',
+                        activeCount > 0 && 'border-primary/50 text-primary',
+                    )}
+                >
+                    <FilterIcon className="size-4" />
+                    Filter
+                    {activeCount > 0 && (
+                        <Badge
+                            variant="secondary"
+                            className="ml-0.5 size-5 rounded-full p-0 text-xs"
+                        >
+                            {activeCount}
+                        </Badge>
+                    )}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="start">
+                <div className="p-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                        Filter aktif
+                    </p>
+                    {activeFilters.length === 0 ? (
+                        <p className="py-4 text-center text-sm text-muted-foreground">
+                            Belum ada filter aktif.
+                        </p>
+                    ) : (
+                        <div className="space-y-3">
+                            {activeFilters.includes('fakultas') && (
+                                <FilterRow
+                                    label="Fakultas / Sekolah"
+                                    onRemove={() => removeFilter('fakultas')}
+                                >
+                                    <Select
+                                        value={fakultas || 'all'}
+                                        onValueChange={(v) => {
+                                            const val = v === 'all' ? '' : v;
+                                            onFakultasChange(val);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-full text-xs">
+                                            <SelectValue placeholder="Semua" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">
+                                                Semua
+                                            </SelectItem>
+                                            {fakultasOptions.map((f) => (
+                                                <SelectItem key={f} value={f}>
+                                                    {f}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FilterRow>
+                            )}
+                            {activeFilters.includes('status') && (
+                                <FilterRow
+                                    label="Status"
+                                    onRemove={() => removeFilter('status')}
+                                >
+                                    <Select
+                                        value={status || 'all'}
+                                        onValueChange={(v) => {
+                                            const val = v === 'all' ? '' : v;
+                                            onStatusChange(val);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-full text-xs">
+                                            <SelectValue placeholder="Semua" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">
+                                                Semua
+                                            </SelectItem>
+                                            {statuses.map((s) => (
+                                                <SelectItem
+                                                    key={s.value}
+                                                    value={s.value}
+                                                >
+                                                    {s.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FilterRow>
+                            )}
+                            {activeFilters.includes('sort') && (
+                                <FilterRow
+                                    label="Urutkan"
+                                    onRemove={() => removeFilter('sort')}
+                                >
+                                    <div className="flex gap-1.5">
+                                        <Select
+                                            value={sortBy || 'all'}
+                                            onValueChange={(v) => {
+                                                const val = v === 'all' ? '' : v;
+                                                onSortByChange(val);
+                                                if (val && !sortDir) onSortDirChange('asc');
+                                            }}
+                                        >
+                                            <SelectTrigger className="h-8 flex-1 text-xs">
+                                                <SelectValue placeholder="Pilih kolom" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">
+                                                    Default
+                                                </SelectItem>
+                                                {SORT_OPTIONS.map((o) => (
+                                                    <SelectItem
+                                                        key={o.value}
+                                                        value={o.value}
+                                                    >
+                                                        {o.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 w-8 shrink-0 px-0"
+                                            disabled={!sortBy}
+                                            onClick={() =>
+                                                onSortDirChange(
+                                                    sortDir === 'asc' ? 'desc' : 'asc',
+                                                )
+                                            }
+                                        >
+                                            {sortDir === 'asc' ? '↑' : '↓'}
+                                        </Button>
+                                    </div>
+                                </FilterRow>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {availableFilters.length > 0 && (
+                    <div className="border-t p-3">
+                        <Select
+                            value=""
+                            onValueChange={addFilter}
+                        >
+                            <SelectTrigger className="h-8 w-full border-dashed text-xs">
+                                <SelectValue placeholder="+ Tambah filter" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableFilters.map((f) => (
+                                    <SelectItem key={f.key} value={f.key}>
+                                        {f.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+function FilterRow({
+    label,
+    onRemove,
+    children,
+}: {
+    label: string;
+    onRemove: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-medium">{label}</span>
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
+                >
+                    <XIcon className="size-3" />
+                </button>
+            </div>
+            {children}
+        </div>
+    );
+}
 
 export default function NaskahIndex({
     naskahs,
@@ -48,19 +318,37 @@ export default function NaskahIndex({
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
     const [fakultas, setFakultas] = useState(filters.fakultas);
+    const [dateRange, setDateRange] = useState<{
+        start: Date | null;
+        end: Date | null;
+    }>({
+        start: queryStringToDate(filters.date_from),
+        end: queryStringToDate(filters.date_to),
+    });
     const [perPage, setPerPage] = useState(filters.per_page);
+    const [sortBy, setSortBy] = useState(filters.sort_by);
+    const [sortDir, setSortDir] = useState(filters.sort_dir);
+    const fakultasOptions = FAKULTAS_OPTIONS.map((f) => f.value);
     const applied = useRef({
         search: filters.search,
         status: filters.status,
         stage: filters.stage,
         fakultas: filters.fakultas,
+        date_from: filters.date_from,
+        date_to: filters.date_to,
         per_page: filters.per_page,
+        sort_by: filters.sort_by,
+        sort_dir: filters.sort_dir,
     });
 
     function apply(next: {
         search?: string;
         status?: string;
         fakultas?: string;
+        date_from?: string;
+        date_to?: string;
+        sort_by?: string;
+        sort_dir?: string;
     }) {
         applied.current = { ...applied.current, ...next };
         router.get(admin.naskah.index(), applied.current, {
@@ -83,12 +371,19 @@ export default function NaskahIndex({
         setSearch('');
         setStatus('');
         setFakultas('');
+        setSortBy('');
+        setSortDir('desc');
+        setDateRange({ start: null, end: null });
         applied.current = {
             search: '',
             status: '',
             stage: '',
             fakultas: '',
+            date_from: '',
+            date_to: '',
             per_page: perPage,
+            sort_by: '',
+            sort_dir: 'desc',
         };
         router.get(admin.naskah.index(), applied.current, {
             preserveState: true,
@@ -117,6 +412,30 @@ export default function NaskahIndex({
                 replace: true,
             });
         }
+    }
+
+    const importRef = useRef<HTMLInputElement>(null);
+
+    function exportCsv() {
+        const params = new URLSearchParams();
+        Object.entries(applied.current).forEach(([k, v]) => {
+            if (v && v !== 'all') params.set(k, String(v));
+        });
+        const qs = params.toString();
+        window.location.href = admin.naskah.export.url() + (qs ? `?${qs}` : '');
+    }
+
+    function importCsv(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        router.post(admin.naskah.import(), formData, {
+            preserveState: true,
+            onFinish: () => {
+                if (importRef.current) importRef.current.value = '';
+            },
+        });
     }
 
     const paginationBar = (border: string) => (
@@ -178,12 +497,31 @@ export default function NaskahIndex({
                             admin.
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={create()}>
-                            <Plus />
-                            Tambah Naskah
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={exportCsv}>
+                            <Download className="size-4" />
+                        </Button>
+                        <input
+                            ref={importRef}
+                            type="file"
+                            accept=".csv,.txt"
+                            className="hidden"
+                            onChange={importCsv}
+                        />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => importRef.current?.click()}
+                        >
+                            <Upload className="size-4" />
+                        </Button>
+                        <Button asChild size="sm">
+                            <Link href={create()}>
+                                <Plus />
+                                Tambah Naskah
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 <Card className="py-4">
@@ -201,72 +539,53 @@ export default function NaskahIndex({
                                     className="w-72"
                                 />
                             </div>
-                            <div className="grid min-w-40 gap-2">
-                                <Label>Fakultas / Sekolah</Label>
-                                <Select
-                                    value={fakultas || 'all'}
-                                    onValueChange={(v) => {
-                                        const value = v === 'all' ? '' : v;
-                                        setFakultas(value);
-                                        apply({ fakultas: value });
+                            <FilterPanel
+                                fakultas={fakultas}
+                                onFakultasChange={(v) => {
+                                    setFakultas(v);
+                                    apply({ fakultas: v });
+                                }}
+                                status={status}
+                                onStatusChange={(v) => {
+                                    setStatus(v);
+                                    apply({ status: v });
+                                }}
+                                sortBy={sortBy}
+                                onSortByChange={(v) => {
+                                    setSortBy(v);
+                                    apply({ sort_by: v, sort_dir: sortDir });
+                                }}
+                                sortDir={sortDir}
+                                onSortDirChange={(v) => {
+                                    setSortDir(v);
+                                    apply({ sort_by: sortBy, sort_dir: v });
+                                }}
+                                fakultasOptions={fakultasOptions}
+                                statuses={statuses}
+                            />
+                            <div className="flex items-center gap-2">
+                                <DateRangePicker
+                                    value={dateRange}
+                                    onChange={(range) => {
+                                        setDateRange(range);
+                                        apply({
+                                            date_from: range.start
+                                                ? dateToQueryString(range.start)
+                                                : '',
+                                            date_to: range.end
+                                                ? dateToQueryString(range.end)
+                                                : '',
+                                        });
                                     }}
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Semua fakultas/sekolah" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            Semua fakultas/sekolah
-                                        </SelectItem>
-                                        {FAKULTAS_OPTIONS.map((f) => (
-                                            <SelectItem
-                                                key={f.value}
-                                                value={f.value}
-                                            >
-                                                {f.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid min-w-40 gap-2">
-                                <Label>Status</Label>
-                                <Select
-                                    value={status || 'all'}
-                                    onValueChange={(v) => {
-                                        const value = v === 'all' ? '' : v;
-                                        setStatus(value);
-                                        apply({ status: value });
-                                    }}
-                                >
-                                    <SelectTrigger className="w-44">
-                                        <SelectValue placeholder="Semua status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            Semua status
-                                        </SelectItem>
-                                        {statuses.map((s) => (
-                                            <SelectItem
-                                                key={s.value}
-                                                value={s.value}
-                                            >
-                                                {s.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                />
                             </div>
                             <Button
                                 variant="ghost"
                                 onClick={resetFilters}
-                                className="h-9 px-3"
+                                className="ml-auto h-9 px-3"
                             >
                                 Reset
                             </Button>
-                            <p className="ml-auto text-sm text-muted-foreground">
-                                {naskahs.total} naskah ditemukan.
-                            </p>
                         </div>
                     </CardContent>
                 </Card>

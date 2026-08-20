@@ -34,6 +34,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('akun', AkunController::class)->except(['show', 'create', 'edit']);
 
+        Route::get('naskah/export', [NaskahController::class, 'export'])->name('naskah.export');
+        Route::post('naskah/import', [NaskahController::class, 'import'])->name('naskah.import');
+
         Route::resource('naskah', NaskahController::class)->names([
             'index' => 'naskah.index',
             'create' => 'naskah.create',
