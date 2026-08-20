@@ -853,6 +853,18 @@ export default function NaskahShow({
     const currentIndex = naskah.status.stage;
     const subBadge = statusSubBadge(naskah.status.value);
 
+    // Saat status "Penulis Mundur": cari dari riwayat penulis_mundur status
+    // terakhir yang dilalui (dari_status). Stage di atas titik tersebut dianggap
+    // belum dilalui dan ditandai "x" di timeline.
+    const withdrawnFromStage =
+        naskah.status.value === 'penulis_mundur'
+            ? naskah.histories.find(
+                  (h) =>
+                      h.ke_status.value === 'penulis_mundur' &&
+                      h.dari_status !== null,
+              )?.dari_status?.stage
+            : undefined;
+
     const historyByStep = new Map<number, NaskahDetail['histories'][number]>();
 
     for (const history of naskah.histories) {
@@ -896,7 +908,7 @@ export default function NaskahShow({
                             </h1>
                             <Badge
                                 variant="secondary"
-                                className={`h-auto max-w-full whitespace-normal text-left ${activeStatusClass(
+                                className={`h-auto max-w-full text-left whitespace-normal ${activeStatusClass(
                                     naskah.status.value,
                                 )}`}
                             >
@@ -965,8 +977,20 @@ export default function NaskahShow({
                         </div>
                         <ol className="space-y-0">
                             {steps.map((step, index) => {
-                                const done = index < currentIndex;
+                                const done =
+                                    withdrawnFromStage !== undefined
+                                        ? step.stage < withdrawnFromStage
+                                        : index < currentIndex;
                                 const active = index === currentIndex;
+                                const skipped =
+                                    withdrawnFromStage !== undefined &&
+                                    index < currentIndex &&
+                                    step.stage >= withdrawnFromStage;
+                                const nextSkipped =
+                                    withdrawnFromStage !== undefined &&
+                                    index + 1 < currentIndex &&
+                                    steps[index + 1].stage >=
+                                        withdrawnFromStage;
                                 const isLast = index === steps.length - 1;
                                 const history = historyByStep.get(step.stage);
 
@@ -980,12 +1004,22 @@ export default function NaskahShow({
                                                 <span
                                                     className={cn(
                                                         'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                        activeIndicatorClass(naskah.status.value),
+                                                        activeIndicatorClass(
+                                                            naskah.status.value,
+                                                        ),
                                                     )}
                                                 >
                                                     <span className="text-xs font-semibold">
                                                         {index + 1}
                                                     </span>
+                                                </span>
+                                            ) : skipped ? (
+                                                <span
+                                                    className={
+                                                        'flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-red-300 bg-red-50 text-red-500 transition-colors'
+                                                    }
+                                                >
+                                                    <X className="size-4" />
                                                 </span>
                                             ) : done ? (
                                                 <span
@@ -1011,9 +1045,11 @@ export default function NaskahShow({
                                                 <span
                                                     className={cn(
                                                         'my-1 w-0.5 flex-1 rounded-full',
-                                                        done
-                                                            ? DONE_STEP_CONNECTOR_CLASS
-                                                            : 'bg-border',
+                                                        skipped || nextSkipped
+                                                            ? 'bg-red-400/60'
+                                                            : done
+                                                              ? DONE_STEP_CONNECTOR_CLASS
+                                                              : 'bg-border',
                                                     )}
                                                 />
                                             )}
@@ -1038,9 +1074,11 @@ export default function NaskahShow({
                                                         'text-sm font-medium',
                                                         active
                                                             ? 'text-primary'
-                                                            : done
-                                                              ? 'text-foreground'
-                                                              : 'text-muted-foreground',
+                                                            : skipped
+                                                              ? 'text-muted-foreground'
+                                                              : done
+                                                                ? 'text-foreground'
+                                                                : 'text-muted-foreground',
                                                     )}
                                                 >
                                                     {step.label}
@@ -1066,40 +1104,44 @@ export default function NaskahShow({
                                                         {subBadge.label}
                                                     </Badge>
                                                 )}
-                                                {(done || active) && history && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {history.waktu}
-                                                    </span>
-                                                )}
+                                                {(done || active) &&
+                                                    history && (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {history.waktu}
+                                                        </span>
+                                                    )}
                                             </div>
-                                            {(done || active) && history?.catatan && (
-                                                <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
-                                                    <p className="text-sm text-muted-foreground">
-                                                        <span className="font-medium text-foreground">
-                                                            Catatan admin
-                                                            {history.admin
-                                                                ? ` (${history.admin})`
-                                                                : ''}
-                                                            :
-                                                        </span>{' '}
-                                                        <NoteText
-                                                            text={history.catatan}
-                                                        />
-                                                    </p>
-                                                    {history.can_edit_catatan && (
-                                                        <div className="mt-1">
-                                                            <HistoryCatatanDialog
-                                                                naskahId={
-                                                                    naskah.id
-                                                                }
-                                                                history={
-                                                                    history
+                                            {(done || active) &&
+                                                history?.catatan && (
+                                                    <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
+                                                        <p className="text-sm text-muted-foreground">
+                                                            <span className="font-medium text-foreground">
+                                                                Catatan admin
+                                                                {history.admin
+                                                                    ? ` (${history.admin})`
+                                                                    : ''}
+                                                                :
+                                                            </span>{' '}
+                                                            <NoteText
+                                                                text={
+                                                                    history.catatan
                                                                 }
                                                             />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
+                                                        </p>
+                                                        {history.can_edit_catatan && (
+                                                            <div className="mt-1">
+                                                                <HistoryCatatanDialog
+                                                                    naskahId={
+                                                                        naskah.id
+                                                                    }
+                                                                    history={
+                                                                        history
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             {(done || active) &&
                                                 history &&
                                                 history.can_edit_catatan &&
