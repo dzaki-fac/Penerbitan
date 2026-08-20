@@ -3,10 +3,7 @@ import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -188,25 +185,17 @@ export default function NaskahIndex({
 
                 <Card className="py-4">
                     <CardContent className="px-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <Label htmlFor="search" className="shrink-0">
-                                    Cari
-                                </Label>
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="grid min-w-40 gap-2">
+                                <Label htmlFor="search">Cari</Label>
                                 <Input
                                     id="search"
                                     value={search}
-                                    onChange={(e) =>
-                                        setSearch(e.target.value)
-                                    }
+                                    onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Judul, nama penulis, atau nomor identitas"
                                     className="w-72"
                                 />
                             </div>
-<<<<<<< HEAD
-                            <div className="flex items-center gap-2">
-                                <Label className="shrink-0">Status</Label>
-=======
                             <div className="grid min-w-40 gap-2">
                                 <Label>Fakultas / Sekolah</Label>
                                 <Select
@@ -217,7 +206,7 @@ export default function NaskahIndex({
                                         apply({ fakultas: value });
                                     }}
                                 >
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className="w-56">
                                         <SelectValue placeholder="Semua fakultas/sekolah" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -234,7 +223,6 @@ export default function NaskahIndex({
                             </div>
                             <div className="grid min-w-40 gap-2">
                                 <Label>Status</Label>
->>>>>>> 0971fbd3ea75b1a6008669fef33249355e5eeea3
                                 <Select
                                     value={status || 'all'}
                                     onValueChange={(v) => {
