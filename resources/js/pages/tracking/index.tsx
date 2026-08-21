@@ -161,7 +161,9 @@ export default function TrackingIndex() {
                                 Silahkan hubungi admin penerbitan.
                             </p>
                             <a
-                                href="tel:+6281326627285"
+                                href="https://wa.me/6281326627285?text=Halo%2C%20saya%20ingin%20bertanya"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-[#1B3A6B] hover:text-[#0f2547]"
                             >
                                 <Phone className="size-3.5" />
