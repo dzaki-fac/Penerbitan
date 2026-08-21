@@ -533,12 +533,12 @@ export default function RekapFakultas({
                                 return (
                                     <div
                                         key={row.fakultas}
-                                        className="grid grid-cols-1 items-center gap-1 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50 sm:grid-cols-[180px_1fr_auto] sm:gap-3"
+                                        className="grid grid-cols-1 items-center gap-1 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50 sm:grid-cols-[minmax(180px,220px)_1fr_auto] sm:items-start sm:gap-3"
                                     >
                                         <div className="flex items-baseline justify-between gap-2 sm:block">
                                             <span
                                                 title={row.fakultas}
-                                                className="truncate text-xs font-medium text-muted-foreground"
+                                                className="block break-words text-xs font-medium leading-snug text-muted-foreground"
                                             >
                                                 {row.fakultas}
                                             </span>
