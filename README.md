@@ -4,6 +4,30 @@ Aplikasi manajemen penerbitan naskah untuk **Universitas Diponegoro** — mengel
 
 ---
 
+## 📸 Tangkapan Layar
+
+### Publik
+
+**Landing Page**
+
+![Landing Page](Screenshots/Landing%20Page.png)
+
+**Tracking Naskah**
+
+![Tracking Naskah](Screenshots/Tracking.png)
+
+**Detail Tracking**
+
+![Detail Tracking](Screenshots/Tracking%20details.png)
+
+### Admin
+
+**Dashboard Admin**
+
+![Dashboard Admin](Screenshots/Dashboard.png)
+
+---
+
 ## ✨ Fitur
 
 ### 🌐 Publik (tanpa login)
