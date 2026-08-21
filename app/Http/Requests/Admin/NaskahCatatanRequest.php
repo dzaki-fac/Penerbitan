@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\NaskahStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class TransitionRequest extends FormRequest
+class NaskahCatatanRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -16,9 +15,9 @@ class TransitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'to_status' => ['required', 'in:'.implode(',', array_column(NaskahStatus::cases(), 'value'))],
-            'catatan' => ['nullable', 'string'],
-            'force' => ['sometimes', 'boolean'],
+            'isi' => ['required', 'string'],
+            'target_type' => ['required', 'in:general,stage'],
+            'target_value' => ['nullable', 'string'],
         ];
     }
 }

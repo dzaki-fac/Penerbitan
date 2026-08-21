@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    BarChart3,
     FileStack,
     LayoutGrid,
     Menu,
@@ -51,6 +52,11 @@ const mainNavItems: NavItem[] = [
         title: 'Data Naskah',
         href: naskahIndex(),
         icon: FileStack,
+    },
+    {
+        title: 'Rekap Fakultas',
+        href: admin.rekapFakultas(),
+        icon: BarChart3,
     },
     {
         title: 'Tracking Publik',

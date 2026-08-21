@@ -7,6 +7,7 @@ import {
     ExternalLink,
     History,
     LayoutTemplate,
+    MessageSquare,
     User,
 } from 'lucide-react';
 import CollapsibleCard from '@/components/collapsible-card';
@@ -91,7 +92,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    className={`h-auto max-w-full whitespace-normal text-left ${statusBadgeClass(naskah.status.value)}`}
+                                    className={`h-auto max-w-full text-left whitespace-normal ${statusBadgeClass(naskah.status.value)}`}
                                 >
                                     {naskah.status.label}
                                 </Badge>
@@ -188,6 +189,14 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                             const active = index === currentIndex;
                             const isLast = index === steps.length - 1;
                             const history = historyByStep.get(step.stage);
+                            const stepCatatan =
+                                done || active
+                                    ? naskah.catatan.filter(
+                                          (c) =>
+                                              c.target_type === 'stage' &&
+                                              c.target_value === step.value,
+                                      )
+                                    : [];
 
                             return (
                                 <li
@@ -199,7 +208,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             className={cn(
                                                 'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                                                 active
-                                                    ? activeIndicatorClass(naskah.status.value)
+                                                    ? activeIndicatorClass(
+                                                          naskah.status.value,
+                                                      )
                                                     : done
                                                       ? DONE_STEP_INDICATOR_CLASS
                                                       : 'border-border bg-background text-muted-foreground',
@@ -231,7 +242,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             active &&
                                                 cn(
                                                     'rounded-lg p-3',
-                                                    activeContentClass(naskah.status.value),
+                                                    activeContentClass(
+                                                        naskah.status.value,
+                                                    ),
                                                 ),
                                             !isLast && 'pb-6',
                                         )}
@@ -252,9 +265,13 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             {active && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className={activeStatusClass(naskah.status.value)}
+                                                    className={activeStatusClass(
+                                                        naskah.status.value,
+                                                    )}
                                                 >
-                                                    {activeStatusLabel(naskah.status.value)}
+                                                    {activeStatusLabel(
+                                                        naskah.status.value,
+                                                    )}
                                                 </Badge>
                                             )}
                                             {active && subBadge && (
@@ -272,22 +289,25 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                 </span>
                                             )}
                                         </div>
-                                        {(done || active) && history?.catatan && (
-                                            <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
-                                                <p className="text-sm text-muted-foreground">
-                                                    <span className="font-medium text-foreground">
-                                                        Catatan admin
-                                                        {history.admin
-                                                            ? ` (${history.admin})`
-                                                            : ''}
-                                                        :
-                                                    </span>{' '}
-                                                    <NoteText
-                                                        text={history.catatan}
-                                                    />
-                                                </p>
-                                            </div>
-                                        )}
+                                        {(done || active) &&
+                                            stepCatatan.map((c) => (
+                                                <div
+                                                    key={c.id}
+                                                    className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2"
+                                                >
+                                                    <p className="text-xs text-muted-foreground">
+                                                        <span className="font-medium text-foreground">
+                                                            {c.author_name}
+                                                        </span>{' '}
+                                                        · {c.waktu}
+                                                    </p>
+                                                    <p className="mt-1 text-sm">
+                                                        <NoteText
+                                                            text={c.isi}
+                                                        />
+                                                    </p>
+                                                </div>
+                                            ))}
                                         {isbnHistory &&
                                             index ===
                                                 isbnHistory.ke_status.stage &&
@@ -413,7 +433,8 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 )}
                                 {naskah.isbn.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Catatan: <NoteText text={naskah.isbn.catatan} />
+                                        Catatan:{' '}
+                                        <NoteText text={naskah.isbn.catatan} />
                                     </p>
                                 )}
                             </div>
@@ -424,6 +445,37 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         )}
                     </div>
                 </CollapsibleCard>
+
+                {naskah.catatan.filter((c) => c.target_type === 'general')
+                    .length > 0 && (
+                    <CollapsibleCard
+                        title="Catatan dari Admin"
+                        icon={
+                            <MessageSquare className="size-4 text-muted-foreground" />
+                        }
+                        defaultOpen={false}
+                        contentClassName="space-y-2"
+                    >
+                        {naskah.catatan
+                            .filter((c) => c.target_type === 'general')
+                            .map((c) => (
+                                <div
+                                    key={c.id}
+                                    className="rounded-md border border-border bg-muted/70 px-3 py-2"
+                                >
+                                    <p className="text-xs text-muted-foreground">
+                                        <span className="font-medium text-foreground">
+                                            {c.author_name}
+                                        </span>{' '}
+                                        · {c.waktu}
+                                    </p>
+                                    <p className="mt-1 text-sm">
+                                        <NoteText text={c.isi} />
+                                    </p>
+                                </div>
+                            ))}
+                    </CollapsibleCard>
+                )}
 
                 {/*
                   Riwayat Aktivitas sengaja di-collapse (defaultOpen={false}) karena

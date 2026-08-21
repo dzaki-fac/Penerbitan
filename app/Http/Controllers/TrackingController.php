@@ -79,6 +79,7 @@ class TrackingController extends Controller
             'isbn',
             'revisiUploads',
             'histories.admin',
+            'catatan',
         ]);
 
         $latestLayout = $naskah->layouts->first();
@@ -126,6 +127,17 @@ class TrackingController extends Controller
                     'catatan' => $h->catatan,
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
+                'catatan' => $naskah->catatan()
+                    ->orderBy('created_at', 'asc')
+                    ->get()
+                    ->map(fn ($c) => [
+                        'id' => $c->id,
+                        'author_name' => $c->author_name,
+                        'isi' => $c->isi,
+                        'target_type' => $c->target_type,
+                        'target_value' => $c->target_value,
+                        'waktu' => $c->created_at->format('d M Y H:i'),
+                    ]),
             ],
             'steps' => WorkflowService::stepsFor($naskah->status),
             'action' => $this->actionFor($naskah->status),
@@ -194,10 +206,10 @@ class TrackingController extends Controller
                 $layout->save();
             }
 
-            WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Proof reading disetujui (Acc) oleh penulis'));
+            WorkflowService::transition($naskah, NaskahStatus::AccProofReading, AktorType::Penulis, note: __('Final review disetujui (Acc) oleh penulis'));
         });
 
-        flashSuccess(__('Proof reading disetujui.'));
+        flashSuccess(__('Final review disetujui.'));
 
         return back();
     }
@@ -230,11 +242,11 @@ class TrackingController extends Controller
                 $naskah,
                 NaskahStatus::RevisiProofReading,
                 AktorType::Penulis,
-                note: __('Penulis mengajukan revisi proof reading: ').$request->validated('catatan'),
+                note: __('Penulis mengajukan revisi final review: ').$request->validated('catatan'),
             );
         });
 
-        flashSuccess(__('Revisi proof reading diajukan.'));
+        flashSuccess(__('Revisi final review diajukan.'));
 
         return back();
     }

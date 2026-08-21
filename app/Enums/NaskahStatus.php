@@ -31,9 +31,9 @@ enum NaskahStatus: string
             self::PengajuanIsbn => 'Pengajuan ISBN & Verifikasi Perpusnas RI',
             self::RevisiIsbn => 'Revisi ISBN',
             self::IsbnTerbit => 'ISBN Terbit',
-            self::ProofReadingPenulis => 'Proof Reading Penulis',
-            self::RevisiProofReading => 'Revisi Proof Reading',
-            self::AccProofReading => 'Acc Proof Reading',
+            self::ProofReadingPenulis => 'Final Review Penulis',
+            self::RevisiProofReading => 'Revisi Final Review',
+            self::AccProofReading => 'Acc Cetak',
             self::ProsesCetak => 'Proses Cetak',
             self::SiapDiambil => 'Siap Diambil',
             self::Selesai => 'Selesai',
@@ -79,6 +79,23 @@ enum NaskahStatus: string
             self::SiapDiambil => 6,
             self::Selesai => 7,
             self::PenulisMundur => 8,
+        };
+    }
+
+    /**
+     * Status utama yang mewakili tahapan ini pada timeline.
+     *
+     * Status revisi dipetakan ke status tahapan asalnya agar komentar
+     * transisi tetap tampil pada step timeline yang sesuai.
+     */
+    public function timelineStatus(): self
+    {
+        return match ($this) {
+            self::RevisiDokumen => self::VerifikasiDokumen,
+            self::RevisiEditingLayout => self::DalamProsesEditingLayout,
+            self::RevisiIsbn => self::PengajuanIsbn,
+            self::RevisiProofReading => self::ProofReadingPenulis,
+            default => $this,
         };
     }
 
