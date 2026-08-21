@@ -17,7 +17,7 @@ class TrackingRejectRequest extends FormRequest
         return [
             'jenis_identitas' => ['required', 'in:nim,nip'],
             'nomor_identitas' => ['required', 'string', 'max:50'],
-            'catatan' => ['required', 'string', 'max:255'],
+            'catatan' => ['required', 'string'],
         ];
     }
 }

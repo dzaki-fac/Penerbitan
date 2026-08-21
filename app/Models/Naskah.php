@@ -98,4 +98,12 @@ class Naskah extends Model
     {
         return $this->hasMany(RevisiUpload::class)->latest();
     }
+
+    /**
+     * @return HasMany<NaskahCatatan, $this>
+     */
+    public function catatan(): HasMany
+    {
+        return $this->hasMany(NaskahCatatan::class)->latest();
+    }
 }

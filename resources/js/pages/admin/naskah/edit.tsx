@@ -243,7 +243,7 @@ export default function NaskahEdit({ naskah }: Props) {
                                             e.target.value,
                                         )
                                     }
-                                    placeholder="URL sampul/cover buku (mis. Google Drive)"
+                                                                        placeholder="URL sampul/cover buku (mis. Google Drive)"
                                 />
                                 <InputError message={form.errors.link_cover} />
                             </div>

@@ -6,6 +6,7 @@ import {
     FileText,
     History,
     LayoutTemplate,
+    MessageSquarePlus,
     Pencil,
     Upload,
     User,
@@ -57,6 +58,7 @@ import {
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
+import CatatanSection from '@/components/catatan-section';
 import {
     approveProofReading,
     confirmRevisi,
@@ -84,6 +86,7 @@ type Props = {
     adminTransitions: string[];
     statusOptions: Array<{ value: string; label: string }>;
     authorAction: AuthorAction | null;
+    catatan: NaskahDetail['catatan'];
 };
 
 function TransitionDialog({
@@ -533,16 +536,16 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                     className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
-                    <User />
-                    Acc Proof Reading
+                                        <User />
+                    Acc Cetak
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Acc Proof Reading</DialogTitle>
+                    <DialogTitle>Acc Cetak</DialogTitle>
                     <DialogDescription>
-                        Setujui hasil proof reading atas nama penulis. Status
-                        naskah dipindahkan ke "Acc Proof Reading".
+                        Setujui hasil final review atas nama penulis. Status
+                        naskah dipindahkan ke "Acc Cetak".
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
@@ -587,7 +590,7 @@ function AdminRejectProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Ajukan Revisi Proof Reading</DialogTitle>
+                    <DialogTitle>Ajukan Revisi Final Review</DialogTitle>
                     <DialogDescription>
                         Ajukan perbaikan atas nama penulis. Bagian yang perlu
                         diperbaiki dijelaskan pada catatan revisi.
@@ -849,6 +852,7 @@ export default function NaskahShow({
     adminTransitions,
     statusOptions,
     authorAction,
+    catatan,
 }: Props) {
     const currentIndex = naskah.status.stage;
     const subBadge = statusSubBadge(naskah.status.value);
@@ -1306,6 +1310,18 @@ export default function NaskahShow({
                             </li>
                         ))}
                     </ol>
+                </CollapsibleCard>
+
+                <CollapsibleCard
+                    title="Catatan"
+                    icon={<MessageSquarePlus className="size-4 text-muted-foreground" />}
+                    contentClassName="space-y-3"
+                >
+                    <CatatanSection
+                        naskahId={naskah.id}
+                        catatan={catatan}
+                        stages={steps.map((s) => ({ value: s.value, label: s.label }))}
+                    />
                 </CollapsibleCard>
 
                 {naskah.revisi_uploads.length > 0 && (

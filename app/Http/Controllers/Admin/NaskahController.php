@@ -274,6 +274,7 @@ class NaskahController extends Controller
             'isbn',
             'revisiUploads',
             'histories.admin',
+            'catatan',
         ]);
 
         return Inertia::render('admin/naskah/show', [
@@ -339,6 +340,14 @@ class NaskahController extends Controller
                     'catatan' => $h->catatan,
                     'can_edit_catatan' => $h->admin_id !== null,
                     'waktu' => $h->created_at->format('d M Y H:i'),
+                ]),
+                'catatan' => $naskah->catatan->map(fn ($c) => [
+                    'id' => $c->id,
+                    'author_name' => $c->author_name,
+                    'isi' => $c->isi,
+                    'target_type' => $c->target_type,
+                    'target_value' => $c->target_value,
+                    'waktu' => $c->created_at->format('d M Y H:i'),
                 ]),
             ],
             'steps' => WorkflowService::stepsFor($naskah->status),
