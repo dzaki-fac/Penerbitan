@@ -14,6 +14,7 @@ use App\Models\Naskah;
 use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Factories\NaskahFactory;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -31,6 +32,7 @@ class DatabaseSeeder extends Seeder
             [
                 'nama_lengkap' => 'Admin Penerbitan',
                 'nickname' => 'Admin',
+                'password' => Hash::make('password'),
             ],
         );
 
