@@ -52,6 +52,13 @@ class DashboardController extends Controller
             'value' => $status->value,
             'label' => $status->label(),
             'count' => Isbn::where('status', $status->value)->count(),
+        ])->push([
+            'value' => 'terbit_mundur',
+            'label' => 'Terbit (Penulis Mundur)',
+            'count' => Isbn::where('status', IsbnStatus::Terbit->value)
+                ->whereHas('naskah', fn ($query) => $query
+                    ->where('status', NaskahStatus::PenulisMundur->value))
+                ->count(),
         ]);
 
         return Inertia::render('admin/dashboard', [
