@@ -49,7 +49,7 @@ class WorkflowController extends Controller
         DB::transaction(function () use ($naskah, $to, $request) {
             WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
-            $this->syncIsbnStatus($naskah, $to);
+            $this->syncIsbnStatus($naskah->isbn, $to);
 
             WorkflowService::transition(
                 $naskah,
@@ -75,7 +75,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'catatan' => ['nullable', 'string'],
         ]);
 
         DB::transaction(function () use ($naskah, $request, $validated) {
@@ -130,11 +130,11 @@ class WorkflowController extends Controller
                 NaskahStatus::AccProofReading,
                 AktorType::Admin,
                 admin: $request->user(),
-                note: __('Proof reading disetujui (Acc) oleh admin'),
+                note: __('Final review disetujui (Acc) oleh admin'),
             );
         });
 
-        flashSuccess(__('Proof reading disetujui.'));
+        flashSuccess(__('Final review disetujui.'));
 
         return back();
     }
@@ -149,7 +149,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['required', 'string', 'max:255'],
+            'catatan' => ['required', 'string'],
         ]);
 
         DB::transaction(function () use ($naskah, $request, $validated) {
@@ -166,11 +166,11 @@ class WorkflowController extends Controller
                 NaskahStatus::RevisiProofReading,
                 AktorType::Admin,
                 admin: $request->user(),
-                note: __('Revisi proof reading diajukan oleh admin: ').$validated['catatan'],
+                note: __('Revisi final review diajukan oleh admin: ').$validated['catatan'],
             );
         });
 
-        flashSuccess(__('Revisi proof reading diajukan.'));
+        flashSuccess(__('Revisi final review diajukan.'));
 
         return back();
     }
@@ -210,7 +210,7 @@ class WorkflowController extends Controller
 
         if (! in_array($naskah->status, $validStatuses, true)) {
             return back()->withErrors([
-                'preview_pdf_link' => __('Layout hanya dapat dikirim pada tahap editing & layout atau revisi proof reading.'),
+                'preview_pdf_link' => __('Layout hanya dapat dikirim pada tahap editing & layout atau revisi final review.'),
             ]);
         }
 
@@ -234,7 +234,7 @@ class WorkflowController extends Controller
                     NaskahStatus::ProofReadingPenulis,
                     AktorType::Admin,
                     admin: $request->user(),
-                    note: __('Layout versi :versi dikirim untuk proof reading ulang.', ['versi' => $versi]),
+                    note: __('Layout versi :versi dikirim untuk final review ulang.', ['versi' => $versi]),
                 );
             }
         });
@@ -268,8 +268,10 @@ class WorkflowController extends Controller
         DB::transaction(function () use ($naskah, $request, $to) {
             WorkflowService::assertFreshStatus($naskah, $naskah->status);
 
+            $isbn = $naskah->isbn;
+
             if ($to === NaskahStatus::IsbnTerbit) {
-                $isbn = $naskah->isbn ?? new Isbn(['naskah_id' => $naskah->id]);
+                $isbn ??= new Isbn(['naskah_id' => $naskah->id]);
 
                 $isbn->nomor_isbn = $request->validated('nomor_isbn');
                 $isbn->penerbit = $request->validated('penerbit');
@@ -278,7 +280,7 @@ class WorkflowController extends Controller
                 $isbn->save();
             }
 
-            $this->syncIsbnStatus($naskah, $to);
+            $this->syncIsbnStatus($isbn, $to);
 
             WorkflowService::transition(
                 $naskah,
@@ -299,9 +301,9 @@ class WorkflowController extends Controller
     /**
      * Menyelaraskan status record ISBN ketika admin mencatat hasil verifikasi Perpusnas.
      */
-    private function syncIsbnStatus(Naskah $naskah, NaskahStatus $to): void
+    private function syncIsbnStatus(?Isbn $isbn, NaskahStatus $to): void
     {
-        if (! $isbn = $naskah->isbn) {
+        if (! $isbn) {
             return;
         }
 
@@ -323,7 +325,7 @@ class WorkflowController extends Controller
         }
 
         $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'catatan' => ['nullable', 'string'],
         ]);
 
         $history->update(['catatan' => $validated['catatan']]);

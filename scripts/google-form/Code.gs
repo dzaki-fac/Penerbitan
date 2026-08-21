@@ -18,10 +18,17 @@
  *    dan izinkan otorisasi saat diminta.
  * 7. Untuk mengimpor respons yang sudah masuk SEBELUM trigger aktif,
  *    jalankan syncAllRows() (lihat keterangan fungsinya).
+ *
+ * Catatan WEBHOOK_URL:
+ * - WAJIB diakhiri "/api/form-submissions". Bila tidak, Laravel merespons
+ *   405 (Method Not Allowed) dengan halaman HTML "Sistem Penerbitan".
+ * - URL tunnel trycloudflare BERUBAH setiap cloudflared dimulai ulang;
+ *   salin URL terbaru dari output terminal setelah tunnel berjalan.
  */
 
 const CONFIG = {
   // URL tunnel saat ini — BERUBAH setiap cloudflared dimulai ulang!
+  // Wajib diakhiri "/api/form-submissions" (lihat catatan di atas).
   WEBHOOK_URL: 'https://snap-bikini-tent-marina.trycloudflare.com/api/form-submissions',
 
   // Salin dari .env -> FORM_SUBMISSION_TOKEN
@@ -152,9 +159,17 @@ function sendPayload(payload) {
     var response = UrlFetchApp.fetch(CONFIG.WEBHOOK_URL, options);
     var code = response.getResponseCode();
     Logger.log('HTTP ' + code + ' -> ' + response.getContentText());
+
+    if (code === 405) {
+      Logger.log(
+        'KESALAHAN UMUM: HTTP 405 berarti URL tidak diakhiri ' +
+        '"/api/form-submissions" (POST kena rute GET saja). ' +
+        'Cek CONFIG.WEBHOOK_URL, lalu jalankan testWebhook() lagi.'
+      );
+    }
     return code;
   } catch (err) {
-    Logger.log('GAGAL mengirim payload: ' + err);
+    Logger.log('GAGAL mengirim payload: ' + err + ' (tunnel tidak aktif?)');
     return 0;
   }
 }

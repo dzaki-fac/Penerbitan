@@ -102,6 +102,14 @@ export type NaskahDetail = {
         can_edit_catatan: boolean;
         waktu: string;
     }>;
+    catatan: Array<{
+        id: number;
+        author_name: string;
+        isi: string;
+        target_type: string;
+        target_value: string | null;
+        waktu: string;
+    }>;
 };
 
 export type TrackingAction =

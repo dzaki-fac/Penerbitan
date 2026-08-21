@@ -6,6 +6,7 @@ use App\Enums\AktorType;
 use App\Enums\NaskahStatus;
 use App\Exceptions\WorkflowConflictException;
 use App\Models\Naskah;
+use App\Models\NaskahCatatan;
 use App\Models\User;
 use App\Models\WorkflowHistory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -144,7 +145,33 @@ class WorkflowService
                 'admin_id' => $admin?->id,
                 'catatan' => $note,
             ]);
+
+            // Catatan transisi ditampilkan sebagai komentar tambahan
+            // pada tahap tujuan agar seluruh pesan terpusat di satu sistem.
+            // Status revisi dipetakan ke status tahapan utamanya agar
+            // cocok dengan daftar step pada timeline.
+            if ($note !== null && $note !== '') {
+                NaskahCatatan::create([
+                    'naskah_id' => $naskah->id,
+                    'author_name' => self::resolveActorName($aktor, $admin, $naskah),
+                    'isi' => $note,
+                    'target_type' => 'stage',
+                    'target_value' => $to->timelineStatus()->value,
+                ]);
+            }
         });
+    }
+
+    /**
+     * Menentukan nama penampil untuk komentar hasil transisi status.
+     */
+    private static function resolveActorName(AktorType $aktor, ?User $admin, Naskah $naskah): string
+    {
+        return match ($aktor) {
+            AktorType::Admin => $admin->nickname ?? $admin->nama_lengkap ?? 'Admin',
+            AktorType::Penulis => $naskah->author->nama,
+            AktorType::Sistem => 'Sistem',
+        };
     }
 
     /**

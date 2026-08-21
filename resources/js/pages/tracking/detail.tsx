@@ -7,6 +7,7 @@ import {
     ExternalLink,
     History,
     LayoutTemplate,
+    MessageSquare,
     User,
 } from 'lucide-react';
 import CollapsibleCard from '@/components/collapsible-card';
@@ -56,7 +57,18 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
 
     return (
         <>
-            <Head title={naskah.judul} />
+            <Head title={naskah.judul}>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link
+                    rel="preconnect"
+                    href="https://fonts.gstatic.com"
+                    crossOrigin="anonymous"
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
+                    rel="stylesheet"
+                />
+            </Head>
 
             <div className="space-y-6">
                 <a
@@ -80,16 +92,19 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    className={`h-auto max-w-full whitespace-normal text-left ${statusBadgeClass(naskah.status.value)}`}
+                                    className={`h-auto max-w-full text-left whitespace-normal ${statusBadgeClass(naskah.status.value)}`}
                                 >
                                     {naskah.status.label}
                                 </Badge>
                             </div>
-                            <h1 className="text-2xl font-semibold tracking-[0.008em]">
+                            <h1
+                                className="text-2xl font-semibold tracking-[0.008em]"
+                                style={{ fontFamily: "'Source Serif 4', serif" }}
+                            >
                                 {naskah.judul}
                             </h1>
                             {perluAksi && (
-                                <p className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800">
+                                <p className="flex items-center gap-1.5 rounded-md border border-[#1B3A6B]/25 bg-[#1B3A6B]/5 px-3 py-1.5 text-sm font-medium text-[#1B3A6B]">
                                     <AlertCircle className="size-4 shrink-0" />
                                     Naskah ini menunggu tindakan Anda — lihat
                                     bagian &quot;Aksi Penulis&quot; di bawah.
@@ -131,7 +146,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             href={naskah.link_cover}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                                            className="font-medium text-[#1B3A6B] underline underline-offset-4 hover:text-[#0f2547]"
                                         >
                                             Lihat Cover
                                         </a>
@@ -174,6 +189,14 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                             const active = index === currentIndex;
                             const isLast = index === steps.length - 1;
                             const history = historyByStep.get(step.stage);
+                            const stepCatatan =
+                                done || active
+                                    ? naskah.catatan.filter(
+                                          (c) =>
+                                              c.target_type === 'stage' &&
+                                              c.target_value === step.value,
+                                      )
+                                    : [];
 
                             return (
                                 <li
@@ -185,7 +208,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             className={cn(
                                                 'flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                                                 active
-                                                    ? activeIndicatorClass(naskah.status.value)
+                                                    ? activeIndicatorClass(
+                                                          naskah.status.value,
+                                                      )
                                                     : done
                                                       ? DONE_STEP_INDICATOR_CLASS
                                                       : 'border-border bg-background text-muted-foreground',
@@ -217,7 +242,9 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             active &&
                                                 cn(
                                                     'rounded-lg p-3',
-                                                    activeContentClass(naskah.status.value),
+                                                    activeContentClass(
+                                                        naskah.status.value,
+                                                    ),
                                                 ),
                                             !isLast && 'pb-6',
                                         )}
@@ -227,7 +254,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                 className={cn(
                                                     'text-sm font-medium',
                                                     active
-                                                        ? 'text-primary'
+                                                        ? 'text-[#1B3A6B]'
                                                         : done
                                                           ? 'text-foreground'
                                                           : 'text-muted-foreground',
@@ -238,9 +265,13 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                             {active && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className={activeStatusClass(naskah.status.value)}
+                                                    className={activeStatusClass(
+                                                        naskah.status.value,
+                                                    )}
                                                 >
-                                                    {activeStatusLabel(naskah.status.value)}
+                                                    {activeStatusLabel(
+                                                        naskah.status.value,
+                                                    )}
                                                 </Badge>
                                             )}
                                             {active && subBadge && (
@@ -258,22 +289,25 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                                 </span>
                                             )}
                                         </div>
-                                        {(done || active) && history?.catatan && (
-                                            <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
-                                                <p className="text-sm text-muted-foreground">
-                                                    <span className="font-medium text-foreground">
-                                                        Catatan admin
-                                                        {history.admin
-                                                            ? ` (${history.admin})`
-                                                            : ''}
-                                                        :
-                                                    </span>{' '}
-                                                    <NoteText
-                                                        text={history.catatan}
-                                                    />
-                                                </p>
-                                            </div>
-                                        )}
+                                        {(done || active) &&
+                                            stepCatatan.map((c) => (
+                                                <div
+                                                    key={c.id}
+                                                    className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2"
+                                                >
+                                                    <p className="text-xs text-muted-foreground">
+                                                        <span className="font-medium text-foreground">
+                                                            {c.author_name}
+                                                        </span>{' '}
+                                                        · {c.waktu}
+                                                    </p>
+                                                    <p className="mt-1 text-sm">
+                                                        <NoteText
+                                                            text={c.isi}
+                                                        />
+                                                    </p>
+                                                </div>
+                                            ))}
                                         {isbnHistory &&
                                             index ===
                                                 isbnHistory.ke_status.stage &&
@@ -342,7 +376,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                         href={naskah.layout.preview_pdf_link}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="text-primary underline underline-offset-4"
+                                        className="text-[#1B3A6B] underline underline-offset-4 hover:text-[#0f2547]"
                                     >
                                         Preview PDF (versi {naskah.layout.versi}
                                         )
@@ -399,7 +433,8 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                                 )}
                                 {naskah.isbn.catatan && (
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Catatan: <NoteText text={naskah.isbn.catatan} />
+                                        Catatan:{' '}
+                                        <NoteText text={naskah.isbn.catatan} />
                                     </p>
                                 )}
                             </div>
@@ -410,6 +445,37 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                         )}
                     </div>
                 </CollapsibleCard>
+
+                {naskah.catatan.filter((c) => c.target_type === 'general')
+                    .length > 0 && (
+                    <CollapsibleCard
+                        title="Catatan dari Admin"
+                        icon={
+                            <MessageSquare className="size-4 text-muted-foreground" />
+                        }
+                        defaultOpen={false}
+                        contentClassName="space-y-2"
+                    >
+                        {naskah.catatan
+                            .filter((c) => c.target_type === 'general')
+                            .map((c) => (
+                                <div
+                                    key={c.id}
+                                    className="rounded-md border border-border bg-muted/70 px-3 py-2"
+                                >
+                                    <p className="text-xs text-muted-foreground">
+                                        <span className="font-medium text-foreground">
+                                            {c.author_name}
+                                        </span>{' '}
+                                        · {c.waktu}
+                                    </p>
+                                    <p className="mt-1 text-sm">
+                                        <NoteText text={c.isi} />
+                                    </p>
+                                </div>
+                            ))}
+                    </CollapsibleCard>
+                )}
 
                 {/*
                   Riwayat Aktivitas sengaja di-collapse (defaultOpen={false}) karena
@@ -428,7 +494,7 @@ export default function TrackingDetail({ naskah, steps, action }: Props) {
                     <ol className="relative border-s border-border ps-6">
                         {naskah.histories.map((history) => (
                             <li key={history.id} className="mb-6 last:mb-0">
-                                <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-primary" />
+                                <span className="absolute -start-[7px] mt-1 size-3 rounded-full border-2 border-background bg-[#1B3A6B]" />
                                 <div className="flex flex-wrap items-center gap-2 text-sm">
                                     <span className="font-medium">
                                         {history.ke_status.label}
