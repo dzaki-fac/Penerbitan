@@ -9,6 +9,7 @@ import {
     RefreshCw,
     UserMinus,
 } from 'lucide-react';
+import { DonutStatCard } from '@/components/donut-stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +19,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import type { ChartConfig } from '@/components/ui/chart';
 import { DateRangePicker, dateToQueryString, queryStringToDate } from '@/components/ui/date-range-picker';
 import {
     Select,
@@ -35,6 +37,8 @@ type FacultyRow = {
     total: number;
     aktif: number;
     mundur: number;
+    sedang_proses: number;
+    selesai: number;
     isbn_terbit: number;
     isbn_terbit_aktif: number;
     isbn_terbit_mundur: number;
@@ -53,15 +57,69 @@ type Props = {
 };
 
 const BAR_COLORS = {
-    aktif: 'bg-gradient-to-r from-emerald-500/60 to-emerald-500',
-    mundur: 'bg-gradient-to-r from-rose-500/60 to-rose-500',
+    aktif: 'bg-emerald-500',
+    mundur: 'bg-rose-500',
+} as const;
+
+const STATUS_COLORS = {
+    proses: '#127ee3',
+    selesai: '#10b981',
+    mundur: '#f43f5e',
+} as const;
+
+const ISBN_COLORS = {
+    proses: '#f59e0b',
+    terbit: '#10b981',
+    revisi: '#8b5cf6',
+    terbit_mundur: '#f43f5e',
 } as const;
 
 const ISBN_ICONS = {
     proses: Hourglass,
     terbit: BadgeCheck,
     revisi: RefreshCw,
+    terbit_mundur: UserMinus,
 } as const;
+
+const naskahChartConfig = {
+    naskah: {
+        label: 'Naskah',
+    },
+    proses: {
+        label: 'Sedang Diproses',
+        color: STATUS_COLORS.proses,
+    },
+    selesai: {
+        label: 'Selesai',
+        color: STATUS_COLORS.selesai,
+    },
+    mundur: {
+        label: 'Penulis Mundur',
+        color: STATUS_COLORS.mundur,
+    },
+} satisfies ChartConfig;
+
+const isbnChartConfig = {
+    isbn: {
+        label: 'ISBN',
+    },
+    proses: {
+        label: 'Proses',
+        color: ISBN_COLORS.proses,
+    },
+    terbit: {
+        label: 'Terbit',
+        color: ISBN_COLORS.terbit,
+    },
+    revisi: {
+        label: 'Revisi',
+        color: ISBN_COLORS.revisi,
+    },
+    terbit_mundur: {
+        label: 'Terbit (Penulis Mundur)',
+        color: ISBN_COLORS.terbit_mundur,
+    },
+} satisfies ChartConfig;
 
 const PERIOD_OPTIONS = [
     { key: 'all', label: 'Semua Data' },
@@ -139,38 +197,102 @@ export default function RekapFakultas({
     isbnStatuses,
     filters,
 }: Props) {
-    const summary = [
+    const naskahChartData = [
         {
-            label: 'Total Keseluruhan',
-            value: overall.total,
-            icon: BookOpenCheck,
+            key: 'proses',
+            value: overall.sedang_proses,
+            fill: 'var(--color-proses)',
         },
         {
-            label: 'Aktif',
-            value: overall.aktif,
+            key: 'selesai',
+            value: overall.selesai,
+            fill: 'var(--color-selesai)',
+        },
+        {
+            key: 'mundur',
+            value: overall.mundur,
+            fill: 'var(--color-mundur)',
+        },
+    ];
+
+    const naskahLegend = [
+        {
+            label: 'Total Naskah',
+            value: overall.total,
+            icon: BookOpenCheck,
+            dot: 'var(--color-muted-foreground)',
+        },
+        {
+            label: 'Sedang Diproses',
+            value: overall.sedang_proses,
+            icon: ListChecks,
+            dot: STATUS_COLORS.proses,
+        },
+        {
+            label: 'Selesai',
+            value: overall.selesai,
             icon: CircleCheck,
+            dot: STATUS_COLORS.selesai,
         },
         {
             label: 'Penulis Mundur',
             value: overall.mundur,
             icon: UserMinus,
-        },
-        {
-            label: 'ISBN Terbit',
-            value: overall.isbn_terbit,
-            icon: BadgeCheck,
+            dot: STATUS_COLORS.mundur,
         },
     ];
+
+    const terbitMundur =
+        isbnStatuses.find((status) => status.value === 'terbit_mundur')
+            ?.count ?? 0;
+
+    const isbnTotal = isbnStatuses
+        .filter((status) => status.value !== 'terbit_mundur')
+        .reduce((acc, s) => acc + s.count, 0);
+
+    const isbnChartData = [
+        ...isbnStatuses
+            .filter((status) => status.value !== 'terbit_mundur')
+            .map((status) => ({
+                key: status.value,
+                value:
+                    status.value === 'terbit'
+                        ? Math.max(status.count - terbitMundur, 0)
+                        : status.count,
+                fill: `var(--color-${status.value})`,
+            })),
+        {
+            key: 'terbit_mundur',
+            value: terbitMundur,
+            fill: 'var(--color-terbit_mundur)',
+        },
+    ];
+
+    const isbnLegend = isbnStatuses.map((status) => ({
+        label: status.label,
+        value:
+            status.value === 'terbit'
+                ? Math.max(status.count - terbitMundur, 0)
+                : status.count,
+        dot: ISBN_COLORS[status.value as keyof typeof ISBN_COLORS] ?? '#94a3b8',
+        icon:
+            ISBN_ICONS[status.value as keyof typeof ISBN_ICONS] ?? Hourglass,
+    }));
 
     const metrics: Array<{
         key: keyof Pick<
             FacultyRow,
-            'total' | 'aktif' | 'mundur' | 'isbn_terbit'
+            | 'total'
+            | 'sedang_proses'
+            | 'selesai'
+            | 'mundur'
+            | 'isbn_terbit'
         >;
         label: string;
     }> = [
         { key: 'total', label: 'Total' },
-        { key: 'aktif', label: 'Aktif' },
+        { key: 'sedang_proses', label: 'Sedang Diproses' },
+        { key: 'selesai', label: 'Selesai' },
         { key: 'mundur', label: 'Penulis Mundur' },
         { key: 'isbn_terbit', label: 'ISBN Terbit' },
     ];
@@ -325,75 +447,26 @@ export default function RekapFakultas({
                     </CardContent>
                 </Card>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                    {summary.map((item) => (
-                        <Card key={item.label}>
-                            <CardContent className="flex items-center gap-4">
-                                <item.icon className="size-8 text-muted-foreground" />
-                                <div>
-                                    {item.label === 'ISBN Terbit' ? (
-                                        <SegmentedCount
-                                            aktif={
-                                                overall.isbn_terbit_aktif
-                                            }
-                                            mundur={
-                                                overall.isbn_terbit_mundur
-                                            }
-                                            size="lg"
-                                            title="Hijau = ISBN terbit pada naskah yang masih aktif; merah = ISBN terbit pada naskah yang kemudian penulis mundur."
-                                        />
-                                    ) : (
-                                        <p className="text-2xl font-bold">
-                                            {item.value}
-                                        </p>
-                                    )}
-                                    <p className="text-sm text-muted-foreground">
-                                        {item.label}
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                <div className="grid gap-4 xl:grid-cols-2">
+                    <DonutStatCard
+                        title="Statistik Naskah"
+                        description="Distribusi seluruh naskah berdasarkan statusnya."
+                        config={naskahChartConfig}
+                        data={naskahChartData}
+                        centerValue={overall.total}
+                        centerLabel="Total Naskah"
+                        legend={naskahLegend}
+                    />
+                    <DonutStatCard
+                        title="ISBN per Status"
+                        description="Distribusi data ISBN berdasarkan statusnya."
+                        config={isbnChartConfig}
+                        data={isbnChartData}
+                        centerValue={isbnTotal}
+                        centerLabel="Total ISBN"
+                        legend={isbnLegend}
+                    />
                 </div>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <BadgeCheck className="size-4 text-muted-foreground" />
-                            ISBN per Status
-                        </CardTitle>
-                        <CardDescription>
-                            Distribusi data ISBN berdasarkan status.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4 sm:grid-cols-3">
-                            {isbnStatuses.map((status) => {
-                                const Icon =
-                                    ISBN_ICONS[
-                                        status.value as keyof typeof ISBN_ICONS
-                                    ] ?? Hourglass;
-
-                                return (
-                                    <div
-                                        key={status.value}
-                                        className="flex items-center gap-4 rounded-md border p-3"
-                                    >
-                                        <Icon className="size-7 text-muted-foreground" />
-                                        <div>
-                                            <p className="text-xl font-bold">
-                                                {status.count}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {status.label}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
 
                 <Card>
                     <CardHeader>
@@ -436,7 +509,7 @@ export default function RekapFakultas({
                                                         },
                                                     })}
                                                     title={`Lihat naskah ${row.fakultas}`}
-                                                    className="w-fit max-w-xs truncate font-medium hover:underline"
+                                                    className="block w-fit max-w-xs truncate font-medium hover:underline"
                                                 >
                                                     {row.fakultas}
                                                 </Link>
@@ -472,7 +545,7 @@ export default function RekapFakultas({
                                     {faculties.length === 0 && (
                                         <tr>
                                             <td
-                                                colSpan={5}
+                                                colSpan={6}
                                                 className="px-3 py-10 text-center text-muted-foreground"
                                             >
                                                 Belum ada data naskah.
@@ -486,7 +559,8 @@ export default function RekapFakultas({
                             Klik nama fakultas untuk melihat daftar naskahnya.
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Total = Aktif + Penulis Mundur. Badge ISBN Terbit
+                            Sedang Diproses + Selesai + Penulis Mundur = Total.
+                            Badge ISBN Terbit
                             dipecah jadi{' '}
                             <span className="inline-flex h-3.5 items-center rounded-sm bg-emerald-500 px-1 text-[10px] font-semibold text-white">
                                 hijau
@@ -533,12 +607,12 @@ export default function RekapFakultas({
                                 return (
                                     <div
                                         key={row.fakultas}
-                                        className="grid grid-cols-1 items-center gap-1 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50 sm:grid-cols-[180px_1fr_auto] sm:gap-3"
+                                        className="grid grid-cols-1 items-center gap-1 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent/50 sm:grid-cols-[220px_1fr_auto] sm:gap-3"
                                     >
                                         <div className="flex items-baseline justify-between gap-2 sm:block">
                                             <span
                                                 title={row.fakultas}
-                                                className="truncate text-xs font-medium text-muted-foreground"
+                                                className="block min-w-0 truncate text-xs font-medium text-muted-foreground"
                                             >
                                                 {row.fakultas}
                                             </span>

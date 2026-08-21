@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RekapFakultasController extends Controller
 {
@@ -30,6 +31,8 @@ class RekapFakultasController extends Controller
             'total' => (int) $row->total,
             'aktif' => (int) $row->aktif,
             'mundur' => (int) $row->mundur,
+            'sedang_proses' => (int) $row->sedang_proses,
+            'selesai' => (int) $row->selesai,
             'isbn_terbit' => (int) $row->isbn_terbit,
             'isbn_terbit_aktif' => (int) $row->isbn_terbit_aktif,
             'isbn_terbit_mundur' => (int) $row->isbn_terbit_mundur,
@@ -55,6 +58,27 @@ class RekapFakultasController extends Controller
                 'label' => $status->label(),
                 'count' => $query->count(),
             ];
+        })->push(function () use ($from, $to) {
+            $query = Isbn::query()
+                ->where('status', IsbnStatus::Terbit->value)
+                ->whereHas('naskah', fn ($naskah) => $naskah
+                    ->where('status', NaskahStatus::PenulisMundur->value));
+
+            if ($from) {
+                $query->whereHas('naskah', fn ($naskah) => $naskah
+                    ->where('tanggal_pengajuan', '>=', $from));
+            }
+
+            if ($to) {
+                $query->whereHas('naskah', fn ($naskah) => $naskah
+                    ->where('tanggal_pengajuan', '<=', $to));
+            }
+
+            return [
+                'value' => 'terbit_mundur',
+                'label' => 'Terbit (Penulis Mundur)',
+                'count' => $query->count(),
+            ];
         });
 
         return Inertia::render('admin/rekap-fakultas', [
@@ -71,7 +95,7 @@ class RekapFakultasController extends Controller
     /**
      * Export rekap fakultas ke CSV (mengikuti filter from/to aktif).
      */
-    public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function export(Request $request): StreamedResponse
     {
         $from = $this->parseDate($request->query('from'));
         $to = $this->parseDate($request->query('to'));
@@ -88,15 +112,17 @@ class RekapFakultasController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'Fakultas/Sekolah', 'Total', 'Aktif', 'Penulis Mundur',
-                'ISBN Terbit (Aktif)', 'ISBN Terbit (Mundur)', 'ISBN Terbit',
+                'Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Selesai',
+                'Penulis Mundur', 'ISBN Terbit (Aktif)',
+                'ISBN Terbit (Mundur)', 'ISBN Terbit',
             ]);
 
             foreach ($rows as $row) {
                 fputcsv($handle, [
                     $row->fakultas_sekolah ?? 'Belum terisi',
                     (int) $row->total,
-                    (int) $row->aktif,
+                    (int) $row->sedang_proses,
+                    (int) $row->selesai,
                     (int) $row->mundur,
                     (int) $row->isbn_terbit_aktif,
                     (int) $row->isbn_terbit_mundur,
@@ -107,7 +133,8 @@ class RekapFakultasController extends Controller
             fputcsv($handle, [
                 'TOTAL',
                 $overall['total'],
-                $overall['aktif'],
+                $overall['sedang_proses'],
+                $overall['selesai'],
                 $overall['mundur'],
                 $overall['isbn_terbit_aktif'],
                 $overall['isbn_terbit_mundur'],
@@ -152,6 +179,8 @@ class RekapFakultasController extends Controller
                 DB::raw('COUNT(naskahs.id) as total'),
                 DB::raw("COUNT(CASE WHEN naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as aktif"),
                 DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as mundur"),
+                DB::raw("COUNT(CASE WHEN naskahs.status NOT IN ('".NaskahStatus::Selesai->value."', '".NaskahStatus::PenulisMundur->value."') THEN 1 END) as sedang_proses"),
+                DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::Selesai->value."' THEN 1 END) as selesai"),
                 DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_aktif"),
                 DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_mundur"),
                 DB::raw('COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL THEN 1 END) as isbn_terbit'),
@@ -162,7 +191,7 @@ class RekapFakultasController extends Controller
     }
 
     /**
-     * @return array{total: int, aktif: int, mundur: int, isbn_terbit: int, isbn_terbit_aktif: int, isbn_terbit_mundur: int}
+     * @return array{total: int, aktif: int, mundur: int, sedang_proses: int, selesai: int, isbn_terbit: int, isbn_terbit_aktif: int, isbn_terbit_mundur: int}
      */
     private function summarize(Collection $rows): array
     {
@@ -170,6 +199,8 @@ class RekapFakultasController extends Controller
             'total' => (int) $rows->sum('total'),
             'aktif' => (int) $rows->sum('aktif'),
             'mundur' => (int) $rows->sum('mundur'),
+            'sedang_proses' => (int) $rows->sum('sedang_proses'),
+            'selesai' => (int) $rows->sum('selesai'),
             'isbn_terbit' => (int) $rows->sum('isbn_terbit'),
             'isbn_terbit_aktif' => (int) $rows->sum('isbn_terbit_aktif'),
             'isbn_terbit_mundur' => (int) $rows->sum('isbn_terbit_mundur'),

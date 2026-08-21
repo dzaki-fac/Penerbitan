@@ -9,6 +9,7 @@ import {
     RefreshCw,
     UserMinus,
 } from 'lucide-react';
+import { DonutStatCard } from '@/components/donut-stat-card';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -17,6 +18,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import type { ChartConfig } from '@/components/ui/chart';
 import admin from '@/routes/admin';
 import { index as naskahIndex } from '@/routes/admin/naskah';
 
@@ -46,24 +48,107 @@ type Props = {
     }>;
 };
 
+const STATUS_COLORS = {
+    proses: '#127ee3',
+    selesai: '#10b981',
+    mundur: '#f43f5e',
+} as const;
+
+const ISBN_COLORS = {
+    proses: '#f59e0b',
+    terbit: '#10b981',
+    revisi: '#8b5cf6',
+    terbit_mundur: '#f43f5e',
+} as const;
+
+const chartConfig = {
+    naskah: {
+        label: 'Naskah',
+    },
+    proses: {
+        label: 'Sedang Diproses',
+        color: STATUS_COLORS.proses,
+    },
+    selesai: {
+        label: 'Selesai',
+        color: STATUS_COLORS.selesai,
+    },
+    mundur: {
+        label: 'Penulis Mundur',
+        color: STATUS_COLORS.mundur,
+    },
+} satisfies ChartConfig;
+
+const isbnChartConfig = {
+    isbn: {
+        label: 'ISBN',
+    },
+    proses: {
+        label: 'Proses',
+        color: ISBN_COLORS.proses,
+    },
+    terbit: {
+        label: 'Terbit',
+        color: ISBN_COLORS.terbit,
+    },
+    revisi: {
+        label: 'Revisi',
+        color: ISBN_COLORS.revisi,
+    },
+    terbit_mundur: {
+        label: 'Terbit (Penulis Mundur)',
+        color: ISBN_COLORS.terbit_mundur,
+    },
+} satisfies ChartConfig;
+
 export default function AdminDashboard({
     stats,
     statuses,
     isbnStatuses,
     recentHistories,
 }: Props) {
+    const chartData = [
+        {
+            key: 'proses',
+            value: stats.sedang_proses,
+            fill: 'var(--color-proses)',
+        },
+        {
+            key: 'selesai',
+            value: stats.selesai,
+            fill: 'var(--color-selesai)',
+        },
+        {
+            key: 'mundur',
+            value: stats.penulis_mundur,
+            fill: 'var(--color-mundur)',
+        },
+    ];
+
     const summary = [
-        { label: 'Total Naskah', value: stats.total, icon: BookOpenCheck },
+        {
+            label: 'Total Naskah',
+            value: stats.total,
+            icon: BookOpenCheck,
+            dot: 'var(--color-muted-foreground)',
+        },
         {
             label: 'Sedang Diproses',
             value: stats.sedang_proses,
             icon: ListChecks,
+            dot: STATUS_COLORS.proses,
         },
-        { label: 'Selesai', value: stats.selesai, icon: CircleCheck },
+        {
+            label: 'Selesai',
+            value: stats.selesai,
+            icon: CircleCheck,
+            dot: STATUS_COLORS.selesai,
+        },
         {
             label: 'Penulis Mundur',
             value: stats.penulis_mundur,
             icon: UserMinus,
+            dot: STATUS_COLORS.mundur,
         },
     ];
 
@@ -71,69 +156,73 @@ export default function AdminDashboard({
         proses: Hourglass,
         terbit: BadgeCheck,
         revisi: RefreshCw,
+        terbit_mundur: UserMinus,
     } as const;
 
     const totalNaskah = Math.max(stats.total, 1);
+
+    const terbitMundur =
+        isbnStatuses.find((status) => status.value === 'terbit_mundur')
+            ?.count ?? 0;
+
+    const isbnTotal = isbnStatuses
+        .filter((status) => status.value !== 'terbit_mundur')
+        .reduce((acc, s) => acc + s.count, 0);
+
+    const isbnChartData = [
+        ...isbnStatuses
+            .filter((status) => status.value !== 'terbit_mundur')
+            .map((status) => ({
+                key: status.value,
+                value:
+                    status.value === 'terbit'
+                        ? Math.max(status.count - terbitMundur, 0)
+                        : status.count,
+                fill: `var(--color-${status.value})`,
+            })),
+        {
+            key: 'terbit_mundur',
+            value: terbitMundur,
+            fill: 'var(--color-terbit_mundur)',
+        },
+    ];
+
+    const isbnSummary = isbnStatuses.map((status) => ({
+        label: status.label,
+        value:
+            status.value === 'terbit'
+                ? Math.max(status.count - terbitMundur, 0)
+                : status.count,
+        dot: ISBN_COLORS[status.value as keyof typeof ISBN_COLORS] ?? '#94a3b8',
+        icon:
+            isbnIcons[status.value as keyof typeof isbnIcons] ?? Hourglass,
+    }));
 
     return (
         <>
             <Head title="Dashboard Admin" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
-                <Card className="py-0">
-                    <CardContent className="grid gap-6 py-6 pb-2 sm:grid-cols-2 lg:grid-cols-4">
-                        {summary.map((item) => (
-                            <div
-                                key={item.label}
-                                className="flex items-center gap-4"
-                            >
-                                <item.icon className="size-8 text-muted-foreground" />
-                                <div>
-                                    <p className="text-2xl font-bold">
-                                        {item.value}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {item.label}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </CardContent>
-
-                    <div className="flex items-center gap-2 px-6 py-2">
-                        <BadgeCheck className="size-4 text-muted-foreground" />
-                        <h3 className="text-sm font-semibold">
-                            ISBN per Status
-                        </h3>
-                    </div>
-                    <CardContent className="pb-6 pt-2">
-                        <div className="grid gap-4 sm:grid-cols-3">
-                            {isbnStatuses.map((status) => {
-                                const Icon =
-                                    isbnIcons[
-                                        status.value as keyof typeof isbnIcons
-                                    ] ?? Hourglass;
-
-                                return (
-                                    <div
-                                        key={status.value}
-                                        className="flex items-center gap-4 rounded-md border p-3"
-                                    >
-                                        <Icon className="size-7 text-muted-foreground" />
-                                        <div>
-                                            <p className="text-xl font-bold">
-                                                {status.count}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {status.label}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="grid gap-4 xl:grid-cols-2">
+                    <DonutStatCard
+                        title="Statistik Naskah"
+                        description="Distribusi seluruh naskah berdasarkan statusnya."
+                        config={chartConfig}
+                        data={chartData}
+                        centerValue={stats.total}
+                        centerLabel="Total Naskah"
+                        legend={summary}
+                    />
+                    <DonutStatCard
+                        title="ISBN per Status"
+                        description="Distribusi data ISBN berdasarkan statusnya."
+                        config={isbnChartConfig}
+                        data={isbnChartData}
+                        centerValue={isbnTotal}
+                        centerLabel="Total ISBN"
+                        legend={isbnSummary}
+                    />
+                </div>
 
                 <Card>
                     <CardHeader>
