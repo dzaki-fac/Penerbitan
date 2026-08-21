@@ -25,18 +25,33 @@ type Props = {
     naskahs: NaskahCard[];
 };
 
-function CoverThumbnail({ src, title }: { src: string; title: string }) {
+function CoverThumbnail({
+    src,
+    title,
+}: {
+    src?: string | null;
+    title: string;
+}) {
     const [broken, setBroken] = useState(false);
+
+    if (!src) {
+        return (
+            <div className="flex aspect-[15.5/23] w-full shrink-0 flex-col items-center justify-center gap-2 rounded-lg border border-border bg-muted px-3 text-center text-sm text-muted-foreground sm:w-40">
+                <BookOpen className="size-6" />
+                Belum ada cover
+            </div>
+        );
+    }
 
     return (
         <a
             href={src}
             target="_blank"
             rel="noreferrer"
-            className="block w-full shrink-0 overflow-hidden border-b border-border sm:w-40 sm:border-r sm:border-b-0"
+            className="block w-full shrink-0 overflow-hidden rounded-lg border border-border sm:w-40"
         >
             {broken ? (
-                <div className="flex aspect-[15.5/23] w-full items-center justify-center gap-2 bg-muted text-sm text-muted-foreground sm:aspect-auto sm:h-full">
+                <div className="flex aspect-[15.5/23] w-full items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
                     <ImageIcon className="size-5" />
                     Buka Cover
                 </div>
@@ -45,7 +60,7 @@ function CoverThumbnail({ src, title }: { src: string; title: string }) {
                     src={src}
                     alt={title}
                     onError={() => setBroken(true)}
-                    className="aspect-[15.5/23] w-full bg-muted object-cover sm:aspect-auto sm:h-full"
+                    className="aspect-[15.5/23] w-full bg-muted object-cover"
                 />
             )}
         </a>
@@ -125,16 +140,14 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`gap-0 overflow-hidden py-0 sm:flex-row ${statusBorderClass(naskah.status.value)}`}
+                                            className={`gap-4 p-4 sm:flex-row sm:items-center ${statusBorderClass(naskah.status.value)}`}
                                         >
-                                            {naskah.link_cover && (
-                                                <CoverThumbnail
-                                                    src={naskah.link_cover}
-                                                    title={naskah.judul}
-                                                />
-                                            )}
-                                            <div className="flex min-w-0 flex-1 flex-col gap-6 py-6">
-                                                <CardHeader className="gap-2">
+                                            <CoverThumbnail
+                                                src={naskah.link_cover}
+                                                title={naskah.judul}
+                                            />
+                                            <div className="flex min-w-0 flex-1 flex-col gap-4">
+                                                <CardHeader className="gap-2 px-0">
                                                     <CardTitle className="text-base leading-snug">
                                                         {naskah.judul}
                                                     </CardTitle>
@@ -150,7 +163,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                         </p>
                                                     )}
                                                 </CardHeader>
-                                                <CardContent className="flex flex-col gap-4">
+                                                <CardContent className="flex flex-col gap-4 px-0">
                                                     <div className="space-y-2">
                                                         <div className="flex items-center justify-between text-sm">
                                                             <span className="text-muted-foreground">

@@ -128,13 +128,14 @@ class TrackingController extends Controller
                     'waktu' => $h->created_at->format('d M Y H:i'),
                 ]),
                 'catatan' => $naskah->catatan()
-                    ->where('target_type', 'general')
                     ->orderBy('created_at', 'asc')
                     ->get()
                     ->map(fn ($c) => [
                         'id' => $c->id,
                         'author_name' => $c->author_name,
                         'isi' => $c->isi,
+                        'target_type' => $c->target_type,
+                        'target_value' => $c->target_value,
                         'waktu' => $c->created_at->format('d M Y H:i'),
                     ]),
             ],
