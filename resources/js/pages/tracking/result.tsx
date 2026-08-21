@@ -131,7 +131,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="grid gap-4">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:gap-4">
                                 {naskahs.map((naskah) => {
                                     const perluAksi = needsAuthorAction(
                                         naskah.status.value,
@@ -140,32 +140,34 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`gap-4 p-4 sm:flex-row sm:items-center ${statusBorderClass(naskah.status.value)}`}
+                                            className={`flex h-full flex-col gap-2 p-3 sm:gap-4 sm:p-4 sm:flex-row sm:items-center ${statusBorderClass(naskah.status.value)}`}
                                         >
                                             <CoverThumbnail
                                                 src={naskah.link_cover}
                                                 title={naskah.judul}
                                             />
-                                            <div className="flex min-w-0 flex-1 flex-col gap-4">
-                                                <CardHeader className="gap-2 px-0">
-                                                    <CardTitle className="text-base leading-snug">
+                                            <div className="flex min-w-0 flex-1 flex-col justify-between gap-2.5 sm:gap-4">
+                                                <CardHeader className="gap-1.5 px-0 sm:gap-2">
+                                                    <CardTitle className="text-xs leading-snug sm:text-base">
                                                         {naskah.judul}
                                                     </CardTitle>
                                                     <Badge
-                                                        className={`h-auto w-fit max-w-full text-left whitespace-normal ${statusBadgeClass(naskah.status.value)}`}
+                                                        className={`h-auto w-fit max-w-full text-left whitespace-normal text-[10px] sm:text-xs ${statusBadgeClass(naskah.status.value)}`}
                                                     >
                                                         {naskah.status.label}
                                                     </Badge>
-                                                    {perluAksi && (
-                                                        <p className="flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
-                                                            <AlertCircle className="size-3.5 shrink-0" />
-                                                            Perlu tindakan Anda
-                                                        </p>
-                                                    )}
+                                                    <div className="min-h-[26px] sm:min-h-[30px]">
+                                                        {perluAksi && (
+                                                            <p className="flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-800 sm:text-xs">
+                                                                <AlertCircle className="size-3.5 shrink-0" />
+                                                                Perlu tindakan Anda
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </CardHeader>
-                                                <CardContent className="flex flex-col gap-4 px-0">
+                                                <CardContent className="flex flex-1 flex-col justify-between gap-2.5 px-0 sm:gap-4">
                                                     <div className="space-y-2">
-                                                        <div className="flex items-center justify-between text-sm">
+                                                        <div className="flex items-center justify-between text-[11px] sm:text-sm">
                                                             <span className="text-muted-foreground">
                                                                 Progress
                                                             </span>
@@ -185,7 +187,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground sm:gap-2 sm:text-sm">
                                                         <CalendarDays className="size-4" />
                                                         Pengajuan:{' '}
                                                         {
@@ -194,7 +196,8 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                     </div>
                                                     <Button
                                                         asChild
-                                                        className="w-full sm:w-fit sm:self-end"
+                                                        size="sm"
+                                                        className="w-full gap-1 whitespace-nowrap text-xs sm:w-fit sm:self-end sm:text-sm"
                                                     >
                                                         <Link
                                                             href={detail(
@@ -202,7 +205,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                             )}
                                                         >
                                                             Lihat Detail
-                                                            <ChevronRight />
+                                                            <ChevronRight className="size-3.5 shrink-0" />
                                                         </Link>
                                                     </Button>
                                                 </CardContent>

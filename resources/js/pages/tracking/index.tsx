@@ -106,7 +106,7 @@ export default function TrackingIndex() {
                                                     ? 'bg-white text-[#1B3A6B] shadow-sm'
                                                     : 'text-slate-500 hover:text-[#1B3A6B]'
                                             }`}
-                                                                                    >
+                                        >
                                             {label}
                                         </button>
                                     );
@@ -157,7 +157,7 @@ export default function TrackingIndex() {
 
                         <div className="text-center">
                             <p className="text-xs text-slate-500">
-                                Kesulitan menemukan data Anda? 
+                                Kesulitan menemukan data Anda?
                                 Silahkan hubungi admin penerbitan.
                             </p>
                             <a
@@ -177,6 +177,7 @@ export default function TrackingIndex() {
     );
 }
 
-// Opt this page out of any global default layout (some app.tsx setups
-// auto-wrap every page unless `.layout` is explicitly set).
+// Opt this page out of any global default layout — page ini render
+// background foto + card sendiri, jangan dibungkus TrackingLayout
+// (yang punya header bar terpisah) supaya nggak dobel.
 TrackingIndex.layout = (page: React.ReactNode) => page;
