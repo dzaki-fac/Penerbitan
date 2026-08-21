@@ -26,45 +26,53 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::factory()->create([
-            'nama_lengkap' => 'Admin Penerbitan',
-            'nickname' => 'Admin',
-            'email' => 'admin@example.com',
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'nama_lengkap' => 'Admin Penerbitan',
+                'nickname' => 'Admin',
+            ],
+        );
 
-        $budi = Author::create([
-            'nama' => 'Budi Santoso',
-            'jenis_identitas' => IdentitasType::NIM,
-            'nomor_identitas' => '2112345001',
-            'email' => 'budi@example.com',
-            'status' => 'Mahasiswa Universitas Diponegoro',
-            'fakultas_sekolah' => 'Fakultas Teknik',
-            'nomor_npwp' => '12.345.678.9-012.345',
-            'nomor_whatsapp' => '081234567890',
-        ]);
+        $budi = Author::firstOrCreate(
+            ['nomor_identitas' => '2112345001'],
+            [
+                'nama' => 'Budi Santoso',
+                'jenis_identitas' => IdentitasType::NIM,
+                'email' => 'budi@example.com',
+                'status' => 'Mahasiswa Universitas Diponegoro',
+                'fakultas_sekolah' => 'Fakultas Teknik',
+                'nomor_npwp' => '12.345.678.9-012.345',
+                'nomor_whatsapp' => '081234567890',
+            ],
+        );
 
-        $siti = Author::create([
-            'nama' => 'Dr. Siti Rahayu',
-            'jenis_identitas' => IdentitasType::NIP,
-            'nomor_identitas' => '198501012010012001',
-            'email' => 'siti@example.com',
-            'status' => 'Dosen Universitas Diponegoro',
-            'fakultas_sekolah' => 'Fakultas Ekonomika dan Bisnis',
-            'nomor_npwp' => '98.765.432.1-098.765',
-            'nomor_whatsapp' => '081298765432',
-            'penulis_tambahan' => 'Dr. Ahmad Fauzi',
-        ]);
+        $siti = Author::firstOrCreate(
+            ['nomor_identitas' => '198501012010012001'],
+            [
+                'nama' => 'Dr. Siti Rahayu',
+                'jenis_identitas' => IdentitasType::NIP,
+                'email' => 'siti@example.com',
+                'status' => 'Dosen Universitas Diponegoro',
+                'fakultas_sekolah' => 'Fakultas Ekonomika dan Bisnis',
+                'nomor_npwp' => '98.765.432.1-098.765',
+                'nomor_whatsapp' => '081298765432',
+                'penulis_tambahan' => 'Dr. Ahmad Fauzi',
+            ],
+        );
 
-        $andi = Author::create([
-            'nama' => 'Andi Pratama',
-            'jenis_identitas' => IdentitasType::NIM,
-            'nomor_identitas' => '2112345002',
-            'email' => 'andi@example.com',
-            'status' => 'Mahasiswa Universitas Diponegoro',
-            'fakultas_sekolah' => 'Fakultas Teknik',
-            'nomor_npwp' => '11.111.111.1-111.111',
-            'nomor_whatsapp' => '085712345678',
-        ]);
+        $andi = Author::firstOrCreate(
+            ['nomor_identitas' => '2112345002'],
+            [
+                'nama' => 'Andi Pratama',
+                'jenis_identitas' => IdentitasType::NIM,
+                'email' => 'andi@example.com',
+                'status' => 'Mahasiswa Universitas Diponegoro',
+                'fakultas_sekolah' => 'Fakultas Teknik',
+                'nomor_npwp' => '11.111.111.1-111.111',
+                'nomor_whatsapp' => '085712345678',
+            ],
+        );
 
         // 1. Budi - naskah menunggu proof reading (acc/revisi oleh penulis)
         $naskah = $this->createNaskah(
@@ -185,6 +193,9 @@ class DatabaseSeeder extends Seeder
             NaskahStatus::VerifikasiDokumen,
             NaskahStatus::RevisiDokumen,
         ]);
+
+        // Naskah tambahan dari 10 fakultas berbeda untuk rekap fakultas.
+        $this->call(RekapFakultasSeeder::class);
     }
 
     /**

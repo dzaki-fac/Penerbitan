@@ -1,5 +1,17 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Download, Eye, FilterIcon, Pencil, Plus, Trash2, Upload, XIcon } from 'lucide-react';
+import {
+    ArrowDown,
+    ArrowUp,
+    ChevronsUpDown,
+    Download,
+    Eye,
+    FilterIcon,
+    Pencil,
+    Plus,
+    Trash2,
+    Upload,
+    XIcon,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,6 +67,49 @@ const SORT_OPTIONS = [
     { value: 'penulis', label: 'Penulis' },
     { value: 'status', label: 'Status' },
 ];
+
+type SortField = 'judul' | 'penulis' | 'tanggal' | 'status';
+
+function SortableTh({
+    label,
+    field,
+    sortBy,
+    sortDir,
+    onSort,
+}: {
+    label: string;
+    field: SortField;
+    sortBy: string;
+    sortDir: string;
+    onSort: (field: SortField) => void;
+}) {
+    const active = sortBy === field;
+    const Icon = active
+        ? sortDir === 'asc'
+            ? ArrowUp
+            : ArrowDown
+        : ChevronsUpDown;
+
+    return (
+        <th className="px-4 py-3 font-medium">
+            <button
+                type="button"
+                onClick={() => onSort(field)}
+                title={`Urutkan berdasarkan ${label.toLowerCase()}`}
+                className={cn(
+                    'inline-flex items-center gap-1 transition-colors hover:text-foreground',
+                    active && 'text-foreground',
+                )}
+            >
+                {label}
+                <Icon
+                    className={cn('size-3', !active && 'opacity-50')}
+                    aria-hidden
+                />
+            </button>
+        </th>
+    );
+}
 
 type FilterPanelProps = {
     fakultas: string;
@@ -415,6 +470,21 @@ export default function NaskahIndex({
         router.get(url, {}, { preserveState: true });
     }
 
+    function toggleSort(field: SortField) {
+        const nextDir =
+            sortBy === field
+                ? sortDir === 'asc'
+                    ? 'desc'
+                    : 'asc'
+                : field === 'tanggal'
+                  ? 'desc'
+                  : 'asc';
+
+        setSortBy(field);
+        setSortDir(nextDir);
+        apply({ sort_by: field, sort_dir: nextDir });
+    }
+
     function changePerPage(value: string) {
         setPerPage(value);
         applied.current = { ...applied.current, per_page: value };
@@ -625,18 +695,34 @@ importRef.current.value = '';
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-muted/50 text-left text-xs text-muted-foreground">
-                                        <th className="px-4 py-3 font-medium">
-                                            Judul
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Penulis
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Tanggal
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Status
-                                        </th>
+                                        <SortableTh
+                                            label="Judul"
+                                            field="judul"
+                                            sortBy={sortBy}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                        />
+                                        <SortableTh
+                                            label="Penulis"
+                                            field="penulis"
+                                            sortBy={sortBy}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                        />
+                                        <SortableTh
+                                            label="Tanggal"
+                                            field="tanggal"
+                                            sortBy={sortBy}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                        />
+                                        <SortableTh
+                                            label="Status"
+                                            field="status"
+                                            sortBy={sortBy}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                        />
                                         <th className="px-4 py-3 font-medium">
                                             Progress
                                         </th>

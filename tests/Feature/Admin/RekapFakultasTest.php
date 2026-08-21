@@ -195,3 +195,43 @@ test('rekap fakultas can be filtered by tanggal pengajuan range', function () {
             ->where('filters.from', null)
             ->where('filters.to', null));
 });
+
+test('rekap fakultas export downloads csv respecting tanggal filter', function () {
+    $admin = User::factory()->create();
+    $teknik = Author::factory()->create(['fakultas_sekolah' => 'Fakultas Teknik']);
+    $hukum = Author::factory()->create(['fakultas_sekolah' => 'Fakultas Hukum']);
+
+    Naskah::factory()->create([
+        'author_id' => $teknik->id,
+        'tanggal_pengajuan' => '2026-08-15 09:00:00',
+        'status' => NaskahStatus::Selesai,
+    ]);
+    Naskah::factory()->create([
+        'author_id' => $teknik->id,
+        'tanggal_pengajuan' => '2026-01-10 09:00:00',
+        'status' => NaskahStatus::PenulisMundur,
+    ]);
+    Naskah::factory()->create([
+        'author_id' => $hukum->id,
+        'status' => NaskahStatus::DataDiterima,
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->get(route('admin.rekap-fakultas.export', ['from' => '2026-08-15', 'to' => '2026-08-15']));
+
+    $response->assertOk();
+    $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+
+    $content = trim($response->streamedContent());
+    $lines = explode("\n", $content);
+
+    expect(count($lines))->toBe(3)
+        ->and($lines[0])->toContain('Fakultas/Sekolah', 'Total', 'Aktif', 'Penulis Mundur', 'ISBN Terbit')
+        ->and($lines[1])->toContain('Fakultas Teknik')
+        ->and($lines[1])->toContain(',1,1,0,0,0,0')
+        ->and($lines[2])->toStartWith('TOTAL,1,1,0');
+});
+
+test('guests cannot access rekap fakultas export', function () {
+    $this->get(route('admin.rekap-fakultas.export'))->assertRedirect(route('login'));
+});

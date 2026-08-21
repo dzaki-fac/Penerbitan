@@ -3,12 +3,14 @@ import {
     BadgeCheck,
     BookOpenCheck,
     CircleCheck,
+    Download,
     Hourglass,
     ListChecks,
     RefreshCw,
     UserMinus,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -16,8 +18,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { DateRangePicker, dateToQueryString, queryStringToDate } from '@/components/ui/date-range-picker';
 import {
     Select,
     SelectContent,
@@ -250,64 +251,75 @@ export default function RekapFakultas({
             ? `Periode: ${prettyDate(filters.from)} – ${prettyDate(filters.to)}`
             : 'Periode: Semua data';
 
+    function exportCsv() {
+        const params = new URLSearchParams();
+
+        if (filters.from) {
+            params.set('from', filters.from);
+        }
+
+        if (filters.to) {
+            params.set('to', filters.to);
+        }
+
+        const qs = params.toString();
+        window.location.href =
+            admin.rekapFakultas.export.url() + (qs ? `?${qs}` : '');
+    }
+
     return (
         <>
             <Head title="Rekap Fakultas" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
-                <div>
-                    <h1 className="text-lg font-semibold">Rekap Fakultas</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Distribusi naskah penerbitan per fakultas/sekolah.
-                    </p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h1 className="text-lg font-semibold">Rekap Fakultas</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Distribusi naskah penerbitan per fakultas/sekolah.
+                        </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={exportCsv}>
+                        <Download className="size-4" />
+                        Export
+                    </Button>
                 </div>
 
-                <Card>
-                    <CardContent className="flex flex-col gap-4 py-4 lg:flex-row lg:items-end">
-                        <div className="grid gap-2">
-                            <Label>Periode</Label>
-                            <Select
-                                value={activePeriodKey}
-                                onValueChange={applyPeriod}
-                            >
-                                <SelectTrigger className="w-48">
-                                    <SelectValue placeholder="Pilih periode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PERIOD_OPTIONS.map((option) => (
-                                        <SelectItem
-                                            key={option.key}
-                                            value={option.key}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="rekap-from">Dari</Label>
-                            <Input
-                                id="rekap-from"
-                                type="date"
-                                className="w-40"
-                                value={filters.from ?? ''}
-                                onChange={(e) => go(e.target.value, filters.to)}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="rekap-to">Sampai</Label>
-                            <Input
-                                id="rekap-to"
-                                type="date"
-                                className="w-40"
-                                value={filters.to ?? ''}
-                                onChange={(e) =>
-                                    go(filters.from, e.target.value)
-                                }
-                            />
-                        </div>
-                        <p className="text-sm text-muted-foreground lg:ml-auto">
+                <Card className="py-4">
+                    <CardContent className="flex flex-wrap items-center gap-3 px-4">
+                        <Select
+                            value={activePeriodKey}
+                            onValueChange={applyPeriod}
+                        >
+                            <SelectTrigger className="w-44">
+                                <SelectValue placeholder="Pilih periode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {PERIOD_OPTIONS.map((option) => (
+                                    <SelectItem key={option.key} value={option.key}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <DateRangePicker
+                            key={`${filters.from ?? ''}-${filters.to ?? ''}`}
+                            value={{
+                                start: queryStringToDate(filters.from ?? ''),
+                                end: queryStringToDate(filters.to ?? ''),
+                            }}
+                            onChange={(range) =>
+                                go(
+                                    range.start
+                                        ? dateToQueryString(range.start)
+                                        : null,
+                                    range.end
+                                        ? dateToQueryString(range.end)
+                                        : null,
+                                )
+                            }
+                        />
+                        <p className="ml-auto text-sm text-muted-foreground">
                             {periodText}
                         </p>
                     </CardContent>

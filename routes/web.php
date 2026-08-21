@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('rekap-fakultas', [RekapFakultasController::class, 'index'])->name('rekap-fakultas');
+        Route::get('rekap-fakultas/export', [RekapFakultasController::class, 'export'])->name('rekap-fakultas.export');
 
         Route::resource('akun', AkunController::class)->except(['show', 'create', 'edit']);
 

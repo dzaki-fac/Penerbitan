@@ -69,8 +69,12 @@ class NaskahController extends Controller
         $sortable = [
             'judul' => 'naskahs.judul',
             'tanggal' => 'naskahs.tanggal_pengajuan',
-            'status' => 'naskahs.status',
-            'penulis' => 'authors.nama',
+            // Urutkan berdasarkan progres workflow, bukan abjad label status.
+            'status' => 'naskahs.progress',
+            // Subquery karena tabel authors tidak di-join pada query utama.
+            'penulis' => Author::query()
+                ->select('nama')
+                ->whereColumn('authors.id', 'naskahs.author_id'),
         ];
         $sortBy = $request->string('sort_by')->toString();
         $sortDir = $request->string('sort_dir', 'desc')->toString() === 'asc' ? 'asc' : 'desc';

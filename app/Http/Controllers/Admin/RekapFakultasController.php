@@ -20,43 +20,10 @@ class RekapFakultasController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = DB::table('naskahs')
-            ->leftJoin('authors', 'authors.id', '=', 'naskahs.author_id')
-            ->leftJoinSub(
-                DB::table('workflow_histories')
-                    ->select('naskah_id')
-                    ->where('ke_status', NaskahStatus::IsbnTerbit->value)
-                    ->distinct(),
-                'terbit_histories',
-                'terbit_histories.naskah_id',
-                '=',
-                'naskahs.id',
-            );
-
         $from = $this->parseDate($request->query('from'));
         $to = $this->parseDate($request->query('to'));
 
-        if ($from) {
-            $query->where('naskahs.tanggal_pengajuan', '>=', $from->startOfDay());
-        }
-
-        if ($to) {
-            $query->where('naskahs.tanggal_pengajuan', '<=', $to->endOfDay());
-        }
-
-        $rows = $query
-            ->select(
-                'authors.fakultas_sekolah',
-                DB::raw('COUNT(naskahs.id) as total'),
-                DB::raw("COUNT(CASE WHEN naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as aktif"),
-                DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as mundur"),
-                DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_aktif"),
-                DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_mundur"),
-                DB::raw('COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL THEN 1 END) as isbn_terbit'),
-            )
-            ->groupBy('authors.fakultas_sekolah')
-            ->orderByDesc('total')
-            ->get();
+        $rows = $this->fetchRows($from, $to);
 
         $mapped = $rows->map(fn ($row) => [
             'fakultas' => $row->fakultas_sekolah ?? 'Belum terisi',
@@ -99,6 +66,99 @@ class RekapFakultasController extends Controller
                 'to' => $to?->toDateString() ?? null,
             ],
         ]);
+    }
+
+    /**
+     * Export rekap fakultas ke CSV (mengikuti filter from/to aktif).
+     */
+    public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $from = $this->parseDate($request->query('from'));
+        $to = $this->parseDate($request->query('to'));
+
+        $rows = $this->fetchRows($from, $to);
+        $overall = $this->summarize($rows);
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment;filename="rekap_fakultas_'.now()->format('Ymd_His').'.csv"',
+        ];
+
+        return response()->streamDownload(function () use ($rows, $overall) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Fakultas/Sekolah', 'Total', 'Aktif', 'Penulis Mundur',
+                'ISBN Terbit (Aktif)', 'ISBN Terbit (Mundur)', 'ISBN Terbit',
+            ]);
+
+            foreach ($rows as $row) {
+                fputcsv($handle, [
+                    $row->fakultas_sekolah ?? 'Belum terisi',
+                    (int) $row->total,
+                    (int) $row->aktif,
+                    (int) $row->mundur,
+                    (int) $row->isbn_terbit_aktif,
+                    (int) $row->isbn_terbit_mundur,
+                    (int) $row->isbn_terbit,
+                ]);
+            }
+
+            fputcsv($handle, [
+                'TOTAL',
+                $overall['total'],
+                $overall['aktif'],
+                $overall['mundur'],
+                $overall['isbn_terbit_aktif'],
+                $overall['isbn_terbit_mundur'],
+                $overall['isbn_terbit'],
+            ]);
+
+            fclose($handle);
+        }, 'rekap_fakultas.csv', $headers);
+    }
+
+    /**
+     * Menjalankan query rekap per fakultas dengan filter tanggal.
+     *
+     * @return Collection<int, object>
+     */
+    private function fetchRows(?Carbon $from, ?Carbon $to): Collection
+    {
+        $query = DB::table('naskahs')
+            ->leftJoin('authors', 'authors.id', '=', 'naskahs.author_id')
+            ->leftJoinSub(
+                DB::table('workflow_histories')
+                    ->select('naskah_id')
+                    ->where('ke_status', NaskahStatus::IsbnTerbit->value)
+                    ->distinct(),
+                'terbit_histories',
+                'terbit_histories.naskah_id',
+                '=',
+                'naskahs.id',
+            );
+
+        if ($from) {
+            $query->where('naskahs.tanggal_pengajuan', '>=', $from->startOfDay());
+        }
+
+        if ($to) {
+            $query->where('naskahs.tanggal_pengajuan', '<=', $to->endOfDay());
+        }
+
+        return $query
+            ->select(
+                'authors.fakultas_sekolah',
+                DB::raw('COUNT(naskahs.id) as total'),
+                DB::raw("COUNT(CASE WHEN naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as aktif"),
+                DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as mundur"),
+                DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_aktif"),
+                DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_mundur"),
+                DB::raw('COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL THEN 1 END) as isbn_terbit'),
+            )
+            ->groupBy('authors.fakultas_sekolah')
+            ->orderByDesc('total')
+            ->get();
     }
 
     /**
