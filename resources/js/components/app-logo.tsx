@@ -11,12 +11,15 @@ type AppLogoProps = {
     size?: keyof typeof logoSize;
     className?: string;
     showName?: boolean;
+    /** Adds a thin vertical rule between the UNDIP seal and the DPUPK/Press mark. */
+    showDivider?: boolean;
 };
 
 export default function AppLogo({
     size = 'sm',
     className,
     showName = true,
+    showDivider = false,
 }: AppLogoProps) {
     const { name } = usePage().props;
     const { img: imgClass, gap: gapClass } = logoSize[size];
@@ -29,9 +32,12 @@ export default function AppLogo({
                     alt="Logo UNDIP"
                     className={cn(imgClass, 'w-auto shrink-0')}
                 />
+                {showDivider && (
+                    <span className="h-2/3 w-px shrink-0 bg-border" aria-hidden />
+                )}
                 <img
-                    src="/assets/logo-upt.png"
-                    alt="Logo UPT Penerbitan"
+                    src="/assets/logo-dpupk.png"
+                    alt="Logo DPUPK"
                     className={cn(imgClass, 'w-auto shrink-0')}
                 />
                 <img

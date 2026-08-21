@@ -47,8 +47,8 @@ class TrackingController extends Controller
         if (! $author) {
             return back()->withErrors([
                 'nomor_identitas' => $jenis === 'email'
-                    ? __('Data penulis dengan email tersebut tidak ditemukan.')
-                    : __('Data penulis dengan identitas tersebut tidak ditemukan.'),
+                    ? __('Data penulis tidak ditemukan.')
+                    : __('Data penulis tidak ditemukan.'),
             ]);
         }
 

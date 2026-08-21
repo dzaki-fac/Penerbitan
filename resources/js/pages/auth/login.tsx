@@ -36,6 +36,7 @@ export default function Login({ status }: Props) {
                                     tabIndex={1}
                                     autoComplete="email"
                                     placeholder="email@example.com"
+                                    className="focus-visible:ring-[#1B3A6B]/40"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -49,6 +50,7 @@ export default function Login({ status }: Props) {
                                     tabIndex={2}
                                     autoComplete="current-password"
                                     placeholder="Password"
+                                    className="focus-visible:ring-[#1B3A6B]/40"
                                 />
                                 <InputError message={errors.password} />
                             </div>
@@ -64,7 +66,7 @@ export default function Login({ status }: Props) {
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-4 w-full bg-[#1B3A6B] text-white hover:bg-[#0f2547]"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"

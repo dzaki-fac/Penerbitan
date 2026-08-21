@@ -84,9 +84,19 @@ function FilterPanel({
     const [open, setOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState<string[]>(() => {
         const filters: string[] = [];
-        if (fakultas) filters.push('fakultas');
-        if (status) filters.push('status');
-        if (sortBy) filters.push('sort');
+
+        if (fakultas) {
+filters.push('fakultas');
+}
+
+        if (status) {
+filters.push('status');
+}
+
+        if (sortBy) {
+filters.push('sort');
+}
+
         return filters;
     });
 
@@ -102,8 +112,15 @@ function FilterPanel({
 
     function removeFilter(key: string) {
         setActiveFilters((prev) => prev.filter((f) => f !== key));
-        if (key === 'fakultas') onFakultasChange('');
-        if (key === 'status') onStatusChange('');
+
+        if (key === 'fakultas') {
+onFakultasChange('');
+}
+
+        if (key === 'status') {
+onStatusChange('');
+}
+
         if (key === 'sort') {
             onSortByChange('');
             onSortDirChange('desc');
@@ -220,7 +237,10 @@ function FilterPanel({
                                             onValueChange={(v) => {
                                                 const val = v === 'all' ? '' : v;
                                                 onSortByChange(val);
-                                                if (val && !sortDir) onSortDirChange('asc');
+
+                                                if (val && !sortDir) {
+onSortDirChange('asc');
+}
                                             }}
                                         >
                                             <SelectTrigger className="h-8 flex-1 text-xs">
@@ -419,7 +439,9 @@ export default function NaskahIndex({
     function exportCsv() {
         const params = new URLSearchParams();
         Object.entries(applied.current).forEach(([k, v]) => {
-            if (v && v !== 'all') params.set(k, String(v));
+            if (v && v !== 'all') {
+params.set(k, String(v));
+}
         });
         const qs = params.toString();
         window.location.href = admin.naskah.export.url() + (qs ? `?${qs}` : '');
@@ -427,13 +449,19 @@ export default function NaskahIndex({
 
     function importCsv(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
-        if (!file) return;
+
+        if (!file) {
+return;
+}
+
         const formData = new FormData();
         formData.append('file', file);
         router.post(admin.naskah.import(), formData, {
             preserveState: true,
             onFinish: () => {
-                if (importRef.current) importRef.current.value = '';
+                if (importRef.current) {
+importRef.current.value = '';
+}
             },
         });
     }
