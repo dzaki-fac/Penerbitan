@@ -4,13 +4,16 @@ import {
     BadgeCheck,
     BookOpenCheck,
     CircleCheck,
+    Download,
     Hourglass,
     ListChecks,
     RefreshCw,
     UserMinus,
 } from 'lucide-react';
 import { DonutStatCard } from '@/components/donut-stat-card';
+import { PeriodFilterCard } from '@/components/period-filter-card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -46,6 +49,10 @@ type Props = {
         admin: string | null;
         waktu: string;
     }>;
+    filters: {
+        from: string | null;
+        to: string | null;
+    };
 };
 
 const STATUS_COLORS = {
@@ -106,6 +113,7 @@ export default function AdminDashboard({
     statuses,
     isbnStatuses,
     recentHistories,
+    filters,
 }: Props) {
     const chartData = [
         {
@@ -198,11 +206,46 @@ export default function AdminDashboard({
             isbnIcons[status.value as keyof typeof isbnIcons] ?? Hourglass,
     }));
 
+    function exportCsv() {
+        const params = new URLSearchParams();
+
+        if (filters.from) {
+            params.set('from', filters.from);
+        }
+
+        if (filters.to) {
+            params.set('to', filters.to);
+        }
+
+        const qs = params.toString();
+        window.location.href =
+            admin.dashboard.export.url() + (qs ? `?${qs}` : '');
+    }
+
     return (
         <>
             <Head title="Dashboard Admin" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h1 className="text-lg font-semibold">Dashboard</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Ringkasan naskah dan ISBN penerbitan.
+                        </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={exportCsv}>
+                        <Download className="size-4" />
+                        Export
+                    </Button>
+                </div>
+
+                <PeriodFilterCard
+                    route={admin.dashboard().url}
+                    from={filters.from}
+                    to={filters.to}
+                />
+
                 <div className="grid gap-4 xl:grid-cols-2">
                     <DonutStatCard
                         title="Statistik Naskah"

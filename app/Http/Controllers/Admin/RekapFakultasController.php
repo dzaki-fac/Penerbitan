@@ -102,14 +102,23 @@ class RekapFakultasController extends Controller
 
         $rows = $this->fetchRows($from, $to);
         $overall = $this->summarize($rows);
+        $periode = ! $from && ! $to
+            ? 'Semua Data'
+            : sprintf(
+                '%s – %s',
+                $from?->translatedFormat('d M Y') ?? '…',
+                $to?->translatedFormat('d M Y') ?? '…',
+            );
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment;filename="rekap_fakultas_'.now()->format('Ymd_His').'.csv"',
         ];
 
-        return response()->streamDownload(function () use ($rows, $overall) {
+        return response()->streamDownload(function () use ($rows, $overall, $periode) {
             $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Periode', $periode]);
 
             fputcsv($handle, [
                 'Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Selesai',

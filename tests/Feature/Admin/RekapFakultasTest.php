@@ -236,11 +236,12 @@ test('rekap fakultas export downloads csv respecting tanggal filter', function (
     $content = trim($response->streamedContent());
     $lines = explode("\n", $content);
 
-    expect(count($lines))->toBe(3)
-        ->and($lines[0])->toContain('Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Selesai', 'Penulis Mundur', 'ISBN Terbit')
-        ->and($lines[1])->toContain('Fakultas Teknik')
-        ->and($lines[1])->toContain(',1,0,1,0,0,0,0')
-        ->and($lines[2])->toStartWith('TOTAL,1,0,1');
+    expect(count($lines))->toBe(4)
+        ->and($lines[0])->toStartWith('Periode,')
+        ->and($lines[1])->toContain('Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Selesai', 'Penulis Mundur', 'ISBN Terbit')
+        ->and($lines[2])->toContain('Fakultas Teknik')
+        ->and($lines[2])->toContain(',1,0,1,0,0,0,0')
+        ->and($lines[3])->toStartWith('TOTAL,1,0,1');
 });
 
 test('guests cannot access rekap fakultas export', function () {
