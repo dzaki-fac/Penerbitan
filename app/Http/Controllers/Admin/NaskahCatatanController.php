@@ -51,4 +51,40 @@ class NaskahCatatanController extends Controller
 
         return back();
     }
+
+    /**
+     * Memperbarui isi catatan pada naskah (admin only).
+     */
+    public function update(Naskah $naskah, NaskahCatatan $catatan, Request $request): RedirectResponse
+    {
+        if ($catatan->naskah_id !== $naskah->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'isi' => ['required', 'string'],
+        ]);
+
+        $catatan->update(['isi' => $validated['isi']]);
+
+        flashSuccess(__('Catatan berhasil diperbarui.'));
+
+        return back();
+    }
+
+    /**
+     * Menghapus catatan pada naskah (admin only).
+     */
+    public function destroy(Naskah $naskah, NaskahCatatan $catatan): RedirectResponse
+    {
+        if ($catatan->naskah_id !== $naskah->id) {
+            abort(404);
+        }
+
+        $catatan->delete();
+
+        flashSuccess(__('Komentar berhasil dihapus.'));
+
+        return back();
+    }
 }

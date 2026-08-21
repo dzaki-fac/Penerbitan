@@ -59,5 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('naskah/{naskah}/catatan', [NaskahCatatanController::class, 'index'])->name('naskah.catatan.index');
         Route::post('naskah/{naskah}/catatan', [NaskahCatatanController::class, 'store'])->name('naskah.catatan.store');
+        Route::patch('naskah/{naskah}/catatan/{catatan}', [NaskahCatatanController::class, 'update'])->name('naskah.catatan.update');
+        Route::delete('naskah/{naskah}/catatan/{catatan}', [NaskahCatatanController::class, 'destroy'])->name('naskah.catatan.destroy');
     });
 });

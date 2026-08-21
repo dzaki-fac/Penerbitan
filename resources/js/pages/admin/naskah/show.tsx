@@ -8,6 +8,7 @@ import {
     LayoutTemplate,
     MessageSquarePlus,
     Pencil,
+    Trash2,
     Upload,
     User,
     X,
@@ -58,7 +59,6 @@ import {
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
-import CatatanSection from '@/components/catatan-section';
 import {
     approveProofReading,
     confirmRevisi,
@@ -69,7 +69,11 @@ import {
     rejectProofReading,
     transition,
 } from '@/routes/admin/naskah';
-import { update as historyUpdate } from '@/routes/admin/naskah/history';
+import {
+    destroy as catatanDestroy,
+    store as storeCatatan,
+    update as catatanUpdate,
+} from '@/routes/admin/naskah/catatan';
 import { update as isbnUpdate } from '@/routes/admin/naskah/isbn';
 import { store as layoutStore } from '@/routes/admin/naskah/layout';
 import type { NaskahDetail, WorkflowStep } from '@/types';
@@ -86,7 +90,6 @@ type Props = {
     adminTransitions: string[];
     statusOptions: Array<{ value: string; label: string }>;
     authorAction: AuthorAction | null;
-    catatan: NaskahDetail['catatan'];
 };
 
 function TransitionDialog({
@@ -536,7 +539,7 @@ function AdminApproveProofReadingDialog({ naskah }: { naskah: NaskahDetail }) {
                     className={`justify-center ${AUTHOR_ADVANCE_BUTTON_CLASS}`}
                     size="sm"
                 >
-                                        <User />
+                    <User />
                     Acc Cetak
                 </Button>
             </DialogTrigger>
@@ -766,22 +769,62 @@ function LayoutPanel({ naskah }: { naskah: NaskahDetail }) {
     );
 }
 
-function HistoryCatatanDialog({
+function CatatanCard({
     naskahId,
-    history,
+    catatan,
 }: {
     naskahId: number;
-    history: NaskahDetail['histories'][number];
+    catatan: NaskahDetail['catatan'][number];
+}) {
+    function remove() {
+        if (confirm('Hapus komentar ini?')) {
+            router.delete(
+                catatanDestroy.url({ naskah: naskahId, catatan: catatan.id }),
+                { preserveScroll: true },
+            );
+        }
+    }
+
+    return (
+        <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                    {catatan.author_name}
+                </span>{' '}
+                &middot; {catatan.waktu}
+            </p>
+            <p className="mt-1 text-sm">
+                <NoteText text={catatan.isi} />
+            </p>
+            <div className="mt-1 flex items-center gap-3">
+                <CatatanEditDialog naskahId={naskahId} catatan={catatan} />
+                <button
+                    type="button"
+                    onClick={remove}
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                >
+                    <Trash2 className="size-3" />
+                    Hapus
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function CatatanEditDialog({
+    naskahId,
+    catatan,
+}: {
+    naskahId: number;
+    catatan: NaskahDetail['catatan'][number];
 }) {
     const [open, setOpen] = useState(false);
-    const form = useForm({
-        catatan: history.catatan ?? '',
-    });
+    const form = useForm({ isi: catatan.isi });
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         form.patch(
-            historyUpdate.url({ naskah: naskahId, history: history.id }),
+            catatanUpdate.url({ naskah: naskahId, catatan: catatan.id }),
             {
                 preserveScroll: true,
                 onSuccess: () => setOpen(false),
@@ -791,53 +834,120 @@ function HistoryCatatanDialog({
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            {history.catatan ? (
-                <button
-                    type="button"
-                    onClick={() => setOpen(true)}
-                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                >
-                    <Pencil className="size-3" />
-                    Edit
-                </button>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => setOpen(true)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                    Tambah catatan
-                </button>
-            )}
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+                <Pencil className="size-3" />
+                Edit
+            </button>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Catatan</DialogTitle>
+                    <DialogTitle>Edit Komentar</DialogTitle>
                     <DialogDescription>
-                        Ubah catatan admin pada transisi status ini.
+                        Ubah isi komentar ini.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="history_catatan">Catatan</Label>
+                        <Label htmlFor={`catatan_edit_${catatan.id}`}>
+                            Komentar
+                        </Label>
                         <Textarea
-                            id="history_catatan"
-                            value={form.data.catatan}
+                            id={`catatan_edit_${catatan.id}`}
+                            value={form.data.isi}
                             onChange={(e) =>
-                                form.setData('catatan', e.target.value)
+                                form.setData('isi', e.target.value)
                             }
                             rows={3}
-                            placeholder="Catatan untuk penulis, termasuk link upload revisi jika perlu"
+                            className="max-h-40 resize-none overflow-y-auto"
                         />
-                        <InputError message={form.errors.catatan} />
+                        <InputError message={form.errors.isi} />
                     </div>
                     <DialogFooter>
-                        <Button
-                            type="submit"
-                            disabled={form.processing}
-                            size="sm"
-                        >
+                        <Button type="submit" disabled={form.processing}>
                             {form.processing && <Spinner />}
-                            Simpan
+                            Simpan Perubahan
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function StepCatatanDialog({
+    naskahId,
+    stepValue,
+}: {
+    naskahId: number;
+    stepValue: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({
+        isi: '',
+        target_type: 'stage',
+        target_value: stepValue,
+    });
+
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post(storeCatatan.url(naskahId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setOpen(false);
+                form.reset();
+            },
+        });
+    }
+
+    return (
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                setOpen(o);
+
+                if (o) {
+                    form.reset();
+                }
+            }}
+        >
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+                <MessageSquarePlus className="size-3" />
+                Tambah Komentar
+            </button>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Tambah Komentar</DialogTitle>
+                    <DialogDescription>
+                        Komentar tambahan untuk tahap ini. Dapat ditambahkan
+                        lebih dari satu kali.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="step_catatan_isi">Komentar</Label>
+                        <Textarea
+                            id="step_catatan_isi"
+                            value={form.data.isi}
+                            onChange={(e) =>
+                                form.setData('isi', e.target.value)
+                            }
+                            placeholder="Tuliskan komentar untuk tahap ini"
+                            rows={3}
+                            className="max-h-40 resize-none overflow-y-auto"
+                        />
+                        <InputError message={form.errors.isi} />
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Spinner />}
+                            Kirim Komentar
                         </Button>
                     </DialogFooter>
                 </form>
@@ -852,7 +962,6 @@ export default function NaskahShow({
     adminTransitions,
     statusOptions,
     authorAction,
-    catatan,
 }: Props) {
     const currentIndex = naskah.status.stage;
     const subBadge = statusSubBadge(naskah.status.value);
@@ -1002,6 +1111,14 @@ export default function NaskahShow({
                                 const active = index === currentIndex;
                                 const isLast = index === steps.length - 1;
                                 const history = historyByStep.get(step.stage);
+                                const stepCatatan =
+                                    done || active
+                                        ? naskah.catatan.filter(
+                                              (c) =>
+                                                  c.target_type === 'stage' &&
+                                                  c.target_value === step.value,
+                                          )
+                                        : [];
 
                                 return (
                                     <li
@@ -1109,47 +1226,21 @@ export default function NaskahShow({
                                                     )}
                                             </div>
                                             {(done || active) &&
-                                                history?.catatan && (
-                                                    <div className="mt-2 rounded-md border border-border bg-muted/70 px-3 py-2">
-                                                        <p className="text-sm text-muted-foreground">
-                                                            <span className="font-medium text-foreground">
-                                                                Catatan admin
-                                                                {history.admin
-                                                                    ? ` (${history.admin})`
-                                                                    : ''}
-                                                                :
-                                                            </span>{' '}
-                                                            <NoteText
-                                                                text={
-                                                                    history.catatan
-                                                                }
-                                                            />
-                                                        </p>
-                                                        {history.can_edit_catatan && (
-                                                            <div className="mt-1">
-                                                                <HistoryCatatanDialog
-                                                                    naskahId={
-                                                                        naskah.id
-                                                                    }
-                                                                    history={
-                                                                        history
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            {(done || active) &&
-                                                history &&
-                                                history.can_edit_catatan &&
-                                                !history.catatan && (
-                                                    <div className="mt-2">
-                                                        <HistoryCatatanDialog
-                                                            naskahId={naskah.id}
-                                                            history={history}
-                                                        />
-                                                    </div>
-                                                )}
+                                                stepCatatan.map((c) => (
+                                                    <CatatanCard
+                                                        key={c.id}
+                                                        naskahId={naskah.id}
+                                                        catatan={c}
+                                                    />
+                                                ))}
+                                            {(done || active) && (
+                                                <div className="mt-2">
+                                                    <StepCatatanDialog
+                                                        naskahId={naskah.id}
+                                                        stepValue={step.value}
+                                                    />
+                                                </div>
+                                            )}
                                             {isbnHistory &&
                                                 index ===
                                                     isbnHistory.ke_status
@@ -1310,18 +1401,6 @@ export default function NaskahShow({
                             </li>
                         ))}
                     </ol>
-                </CollapsibleCard>
-
-                <CollapsibleCard
-                    title="Catatan"
-                    icon={<MessageSquarePlus className="size-4 text-muted-foreground" />}
-                    contentClassName="space-y-3"
-                >
-                    <CatatanSection
-                        naskahId={naskah.id}
-                        catatan={catatan}
-                        stages={steps.map((s) => ({ value: s.value, label: s.label }))}
-                    />
                 </CollapsibleCard>
 
                 {naskah.revisi_uploads.length > 0 && (

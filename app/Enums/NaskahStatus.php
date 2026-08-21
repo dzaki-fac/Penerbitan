@@ -83,6 +83,23 @@ enum NaskahStatus: string
     }
 
     /**
+     * Status utama yang mewakili tahapan ini pada timeline.
+     *
+     * Status revisi dipetakan ke status tahapan asalnya agar komentar
+     * transisi tetap tampil pada step timeline yang sesuai.
+     */
+    public function timelineStatus(): self
+    {
+        return match ($this) {
+            self::RevisiDokumen => self::VerifikasiDokumen,
+            self::RevisiEditingLayout => self::DalamProsesEditingLayout,
+            self::RevisiIsbn => self::PengajuanIsbn,
+            self::RevisiProofReading => self::ProofReadingPenulis,
+            default => $this,
+        };
+    }
+
+    /**
      * Daftar tahapan utama untuk progress timeline.
      *
      * @return array<int, self>

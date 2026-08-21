@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\NaskahStatus;
 use Database\Factories\NaskahFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
-use App\Enums\NaskahStatus;
 
 /**
  * @property int $id
@@ -104,6 +104,6 @@ class Naskah extends Model
      */
     public function catatan(): HasMany
     {
-        return $this->hasMany(NaskahCatatan::class)->latest();
+        return $this->hasMany(NaskahCatatan::class)->oldest();
     }
 }

@@ -33,10 +33,10 @@ function CoverThumbnail({ src, title }: { src: string; title: string }) {
             href={src}
             target="_blank"
             rel="noreferrer"
-            className="block border-b border-border"
+            className="block w-full shrink-0 overflow-hidden border-b border-border sm:w-40 sm:border-r sm:border-b-0"
         >
             {broken ? (
-                <div className="flex aspect-[15.5/23] items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
+                <div className="flex aspect-[15.5/23] w-full items-center justify-center gap-2 bg-muted text-sm text-muted-foreground sm:aspect-auto sm:h-full">
                     <ImageIcon className="size-5" />
                     Buka Cover
                 </div>
@@ -45,7 +45,7 @@ function CoverThumbnail({ src, title }: { src: string; title: string }) {
                     src={src}
                     alt={title}
                     onError={() => setBroken(true)}
-                    className="aspect-[15.5/23] w-full bg-muted object-cover"
+                    className="aspect-[15.5/23] w-full bg-muted object-cover sm:aspect-auto sm:h-full"
                 />
             )}
         </a>
@@ -116,7 +116,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="grid gap-4">
                                 {naskahs.map((naskah) => {
                                     const perluAksi = needsAuthorAction(
                                         naskah.status.value,
@@ -125,7 +125,7 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                     return (
                                         <Card
                                             key={naskah.id}
-                                            className={`gap-4 ${statusBorderClass(naskah.status.value)}`}
+                                            className={`gap-0 overflow-hidden py-0 sm:flex-row ${statusBorderClass(naskah.status.value)}`}
                                         >
                                             {naskah.link_cover && (
                                                 <CoverThumbnail
@@ -133,58 +133,67 @@ export default function TrackingResult({ author, naskahs }: Props) {
                                                     title={naskah.judul}
                                                 />
                                             )}
-                                            <CardHeader className="gap-2">
-                                                <CardTitle className="text-base leading-snug">
-                                                    {naskah.judul}
-                                                </CardTitle>
-                                                <Badge
-                                                    className={`h-auto w-fit max-w-full whitespace-normal text-left ${statusBadgeClass(naskah.status.value)}`}
-                                                >
-                                                    {naskah.status.label}
-                                                </Badge>
-                                                {perluAksi && (
-                                                    <p className="flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
-                                                        <AlertCircle className="size-3.5 shrink-0" />
-                                                        Perlu tindakan Anda
-                                                    </p>
-                                                )}
-                                            </CardHeader>
-                                            <CardContent className="flex flex-col gap-4">
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground">
-                                                            Progress
-                                                        </span>
-                                                        <span className="font-medium">
-                                                            {naskah.progress}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-border/60">
-                                                        <div
-                                                            className={`h-full rounded-full transition-all ${progressBarClass(naskah.progress)}`}
-                                                            style={{
-                                                                width: `${naskah.progress}%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <CalendarDays className="size-4" />
-                                                    Pengajuan:{' '}
-                                                    {naskah.tanggal_pengajuan}
-                                                </div>
-                                                <Button
-                                                    asChild
-                                                    className="w-full"
-                                                >
-                                                    <Link
-                                                        href={detail(naskah.id)}
+                                            <div className="flex min-w-0 flex-1 flex-col gap-6 py-6">
+                                                <CardHeader className="gap-2">
+                                                    <CardTitle className="text-base leading-snug">
+                                                        {naskah.judul}
+                                                    </CardTitle>
+                                                    <Badge
+                                                        className={`h-auto w-fit max-w-full text-left whitespace-normal ${statusBadgeClass(naskah.status.value)}`}
                                                     >
-                                                        Lihat Detail
-                                                        <ChevronRight />
-                                                    </Link>
-                                                </Button>
-                                            </CardContent>
+                                                        {naskah.status.label}
+                                                    </Badge>
+                                                    {perluAksi && (
+                                                        <p className="flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+                                                            <AlertCircle className="size-3.5 shrink-0" />
+                                                            Perlu tindakan Anda
+                                                        </p>
+                                                    )}
+                                                </CardHeader>
+                                                <CardContent className="flex flex-col gap-4">
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Progress
+                                                            </span>
+                                                            <span className="font-medium">
+                                                                {
+                                                                    naskah.progress
+                                                                }
+                                                                %
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-border/60">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all ${progressBarClass(naskah.progress)}`}
+                                                                style={{
+                                                                    width: `${naskah.progress}%`,
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <CalendarDays className="size-4" />
+                                                        Pengajuan:{' '}
+                                                        {
+                                                            naskah.tanggal_pengajuan
+                                                        }
+                                                    </div>
+                                                    <Button
+                                                        asChild
+                                                        className="w-full sm:w-fit sm:self-end"
+                                                    >
+                                                        <Link
+                                                            href={detail(
+                                                                naskah.id,
+                                                            )}
+                                                        >
+                                                            Lihat Detail
+                                                            <ChevronRight />
+                                                        </Link>
+                                                    </Button>
+                                                </CardContent>
+                                            </div>
                                         </Card>
                                     );
                                 })}
