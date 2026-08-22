@@ -3,7 +3,6 @@ import {
     Activity,
     BadgeCheck,
     BookOpenCheck,
-    CircleCheck,
     Download,
     Hourglass,
     ListChecks,
@@ -28,7 +27,7 @@ import { index as naskahIndex } from '@/routes/admin/naskah';
 type Props = {
     stats: {
         total: number;
-        selesai: number;
+        terbit: number;
         sedang_proses: number;
         penulis_mundur: number;
     };
@@ -57,7 +56,7 @@ type Props = {
 
 const STATUS_COLORS = {
     proses: '#127ee3',
-    selesai: '#10b981',
+    terbit: '#10b981',
     mundur: '#f43f5e',
 } as const;
 
@@ -65,7 +64,6 @@ const ISBN_COLORS = {
     proses: '#f59e0b',
     terbit: '#10b981',
     revisi: '#8b5cf6',
-    terbit_mundur: '#f43f5e',
 } as const;
 
 const chartConfig = {
@@ -76,9 +74,9 @@ const chartConfig = {
         label: 'Sedang Diproses',
         color: STATUS_COLORS.proses,
     },
-    selesai: {
-        label: 'Selesai',
-        color: STATUS_COLORS.selesai,
+    terbit: {
+        label: 'Terbit',
+        color: STATUS_COLORS.terbit,
     },
     mundur: {
         label: 'Penulis Mundur',
@@ -102,10 +100,6 @@ const isbnChartConfig = {
         label: 'Revisi',
         color: ISBN_COLORS.revisi,
     },
-    terbit_mundur: {
-        label: 'Terbit (Penulis Mundur)',
-        color: ISBN_COLORS.terbit_mundur,
-    },
 } satisfies ChartConfig;
 
 export default function AdminDashboard({
@@ -122,9 +116,9 @@ export default function AdminDashboard({
             fill: 'var(--color-proses)',
         },
         {
-            key: 'selesai',
-            value: stats.selesai,
-            fill: 'var(--color-selesai)',
+            key: 'terbit',
+            value: stats.terbit,
+            fill: 'var(--color-terbit)',
         },
         {
             key: 'mundur',
@@ -135,7 +129,7 @@ export default function AdminDashboard({
 
     const summary = [
         {
-            label: 'Total Naskah',
+            label: 'Total Pengajuan',
             value: stats.total,
             icon: BookOpenCheck,
             dot: 'var(--color-muted-foreground)',
@@ -147,10 +141,10 @@ export default function AdminDashboard({
             dot: STATUS_COLORS.proses,
         },
         {
-            label: 'Selesai',
-            value: stats.selesai,
-            icon: CircleCheck,
-            dot: STATUS_COLORS.selesai,
+            label: 'Terbit',
+            value: stats.terbit,
+            icon: BadgeCheck,
+            dot: STATUS_COLORS.terbit,
         },
         {
             label: 'Penulis Mundur',
@@ -164,43 +158,21 @@ export default function AdminDashboard({
         proses: Hourglass,
         terbit: BadgeCheck,
         revisi: RefreshCw,
-        terbit_mundur: UserMinus,
     } as const;
 
     const totalNaskah = Math.max(stats.total, 1);
 
-    const terbitMundur =
-        isbnStatuses.find((status) => status.value === 'terbit_mundur')
-            ?.count ?? 0;
+    const isbnTotal = isbnStatuses.reduce((acc, s) => acc + s.count, 0);
 
-    const isbnTotal = isbnStatuses
-        .filter((status) => status.value !== 'terbit_mundur')
-        .reduce((acc, s) => acc + s.count, 0);
-
-    const isbnChartData = [
-        ...isbnStatuses
-            .filter((status) => status.value !== 'terbit_mundur')
-            .map((status) => ({
-                key: status.value,
-                value:
-                    status.value === 'terbit'
-                        ? Math.max(status.count - terbitMundur, 0)
-                        : status.count,
-                fill: `var(--color-${status.value})`,
-            })),
-        {
-            key: 'terbit_mundur',
-            value: terbitMundur,
-            fill: 'var(--color-terbit_mundur)',
-        },
-    ];
+    const isbnChartData = isbnStatuses.map((status) => ({
+        key: status.value,
+        value: status.count,
+        fill: `var(--color-${status.value})`,
+    }));
 
     const isbnSummary = isbnStatuses.map((status) => ({
         label: status.label,
-        value:
-            status.value === 'terbit'
-                ? Math.max(status.count - terbitMundur, 0)
-                : status.count,
+        value: status.count,
         dot: ISBN_COLORS[status.value as keyof typeof ISBN_COLORS] ?? '#94a3b8',
         icon:
             isbnIcons[status.value as keyof typeof isbnIcons] ?? Hourglass,
@@ -253,7 +225,7 @@ export default function AdminDashboard({
                         config={chartConfig}
                         data={chartData}
                         centerValue={stats.total}
-                        centerLabel="Total Naskah"
+                        centerLabel="Total Pengajuan"
                         legend={summary}
                     />
                     <DonutStatCard

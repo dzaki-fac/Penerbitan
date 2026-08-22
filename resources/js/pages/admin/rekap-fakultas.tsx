@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 import {
     BadgeCheck,
     BookOpenCheck,
-    CircleCheck,
     Download,
     Hourglass,
     ListChecks,
@@ -21,20 +20,15 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import type { ChartConfig } from '@/components/ui/chart';
-import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import { index as naskahIndex } from '@/routes/admin/naskah';
 
 type FacultyRow = {
     fakultas: string;
     total: number;
-    aktif: number;
-    mundur: number;
     sedang_proses: number;
-    selesai: number;
-    isbn_terbit: number;
-    isbn_terbit_aktif: number;
-    isbn_terbit_mundur: number;
+    mundur: number;
+    terbit: number;
 };
 
 type Filters = {
@@ -49,29 +43,28 @@ type Props = {
     filters: Filters;
 };
 
-const BAR_COLORS = {
-    aktif: 'bg-emerald-500',
-    mundur: 'bg-rose-500',
-} as const;
-
 const STATUS_COLORS = {
     proses: '#127ee3',
-    selesai: '#10b981',
+    terbit: '#10b981',
     mundur: '#f43f5e',
+} as const;
+
+const BAR_COLORS = {
+    proses: STATUS_COLORS.proses,
+    terbit: STATUS_COLORS.terbit,
+    mundur: STATUS_COLORS.mundur,
 } as const;
 
 const ISBN_COLORS = {
     proses: '#f59e0b',
     terbit: '#10b981',
     revisi: '#8b5cf6',
-    terbit_mundur: '#f43f5e',
 } as const;
 
 const ISBN_ICONS = {
     proses: Hourglass,
     terbit: BadgeCheck,
     revisi: RefreshCw,
-    terbit_mundur: UserMinus,
 } as const;
 
 const naskahChartConfig = {
@@ -82,9 +75,9 @@ const naskahChartConfig = {
         label: 'Sedang Diproses',
         color: STATUS_COLORS.proses,
     },
-    selesai: {
-        label: 'Selesai',
-        color: STATUS_COLORS.selesai,
+    terbit: {
+        label: 'Terbit',
+        color: STATUS_COLORS.terbit,
     },
     mundur: {
         label: 'Penulis Mundur',
@@ -108,52 +101,7 @@ const isbnChartConfig = {
         label: 'Revisi',
         color: ISBN_COLORS.revisi,
     },
-    terbit_mundur: {
-        label: 'Terbit (Penulis Mundur)',
-        color: ISBN_COLORS.terbit_mundur,
-    },
 } satisfies ChartConfig;
-
-function SegmentedCount({
-    aktif,
-    mundur,
-    title,
-    size = 'sm',
-}: {
-    aktif: number;
-    mundur: number;
-    title: string;
-    size?: 'sm' | 'lg';
-}) {
-    if (aktif + mundur === 0) {
-        return <Badge variant="secondary">0</Badge>;
-    }
-
-    const segment =
-        size === 'lg'
-            ? 'px-3 py-1 text-2xl'
-            : 'px-1.5 py-0.5 text-xs';
-
-    return (
-        <span
-            title={title}
-            className="inline-flex items-stretch overflow-hidden rounded-md border font-semibold tabular-nums"
-        >
-            {aktif > 0 && (
-                <span
-                    className={`bg-emerald-500 ${segment} text-white`}
-                >
-                    {aktif}
-                </span>
-            )}
-            {mundur > 0 && (
-                <span className={`bg-rose-500 ${segment} text-white`}>
-                    {mundur}
-                </span>
-            )}
-        </span>
-    );
-}
 
 export default function RekapFakultas({
     overall,
@@ -168,9 +116,9 @@ export default function RekapFakultas({
             fill: 'var(--color-proses)',
         },
         {
-            key: 'selesai',
-            value: overall.selesai,
-            fill: 'var(--color-selesai)',
+            key: 'terbit',
+            value: overall.terbit,
+            fill: 'var(--color-terbit)',
         },
         {
             key: 'mundur',
@@ -181,7 +129,7 @@ export default function RekapFakultas({
 
     const naskahLegend = [
         {
-            label: 'Total Naskah',
+            label: 'Total Pengajuan',
             value: overall.total,
             icon: BookOpenCheck,
             dot: 'var(--color-muted-foreground)',
@@ -193,10 +141,10 @@ export default function RekapFakultas({
             dot: STATUS_COLORS.proses,
         },
         {
-            label: 'Selesai',
-            value: overall.selesai,
-            icon: CircleCheck,
-            dot: STATUS_COLORS.selesai,
+            label: 'Terbit',
+            value: overall.terbit,
+            icon: BadgeCheck,
+            dot: STATUS_COLORS.terbit,
         },
         {
             label: 'Penulis Mundur',
@@ -206,38 +154,17 @@ export default function RekapFakultas({
         },
     ];
 
-    const terbitMundur =
-        isbnStatuses.find((status) => status.value === 'terbit_mundur')
-            ?.count ?? 0;
+    const isbnTotal = isbnStatuses.reduce((acc, s) => acc + s.count, 0);
 
-    const isbnTotal = isbnStatuses
-        .filter((status) => status.value !== 'terbit_mundur')
-        .reduce((acc, s) => acc + s.count, 0);
-
-    const isbnChartData = [
-        ...isbnStatuses
-            .filter((status) => status.value !== 'terbit_mundur')
-            .map((status) => ({
-                key: status.value,
-                value:
-                    status.value === 'terbit'
-                        ? Math.max(status.count - terbitMundur, 0)
-                        : status.count,
-                fill: `var(--color-${status.value})`,
-            })),
-        {
-            key: 'terbit_mundur',
-            value: terbitMundur,
-            fill: 'var(--color-terbit_mundur)',
-        },
-    ];
+    const isbnChartData = isbnStatuses.map((status) => ({
+        key: status.value,
+        value: status.count,
+        fill: `var(--color-${status.value})`,
+    }));
 
     const isbnLegend = isbnStatuses.map((status) => ({
         label: status.label,
-        value:
-            status.value === 'terbit'
-                ? Math.max(status.count - terbitMundur, 0)
-                : status.count,
+        value: status.count,
         dot: ISBN_COLORS[status.value as keyof typeof ISBN_COLORS] ?? '#94a3b8',
         icon:
             ISBN_ICONS[status.value as keyof typeof ISBN_ICONS] ?? Hourglass,
@@ -246,19 +173,14 @@ export default function RekapFakultas({
     const metrics: Array<{
         key: keyof Pick<
             FacultyRow,
-            | 'total'
-            | 'sedang_proses'
-            | 'selesai'
-            | 'mundur'
-            | 'isbn_terbit'
+            'total' | 'sedang_proses' | 'mundur' | 'terbit'
         >;
         label: string;
     }> = [
-        { key: 'total', label: 'Total' },
+        { key: 'total', label: 'Total Pengajuan' },
         { key: 'sedang_proses', label: 'Sedang Diproses' },
-        { key: 'selesai', label: 'Selesai' },
+        { key: 'terbit', label: 'Terbit' },
         { key: 'mundur', label: 'Penulis Mundur' },
-        { key: 'isbn_terbit', label: 'ISBN Terbit' },
     ];
 
     function exportCsv() {
@@ -308,7 +230,7 @@ export default function RekapFakultas({
                         config={naskahChartConfig}
                         data={naskahChartData}
                         centerValue={overall.total}
-                        centerLabel="Total Naskah"
+                        centerLabel="Total Pengajuan"
                         legend={naskahLegend}
                     />
                     <DonutStatCard
@@ -326,8 +248,9 @@ export default function RekapFakultas({
                     <CardHeader>
                         <CardTitle>Rekap per Fakultas</CardTitle>
                         <CardDescription>
-                            Total naskah, status aktif/penulis mundur, dan ISBN
-                            yang sudah terbit untuk setiap fakultas.
+                            Total pengajuan, naskah yang sedang diproses,
+                            penulis mundur, dan ISBN yang sudah terbit untuk
+                            setiap fakultas.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -373,37 +296,24 @@ export default function RekapFakultas({
                                                     key={metric.key}
                                                     className="px-3 py-3 text-center"
                                                 >
-                                                    {metric.key ===
-                                                    'isbn_terbit' ? (
-                                                        <SegmentedCount
-                                                            aktif={
-                                                                row.isbn_terbit_aktif
-                                                            }
-                                                            mundur={
-                                                                row.isbn_terbit_mundur
-                                                            }
-                                                            title={`ISBN terbit pada naskah aktif: ${row.isbn_terbit_aktif}; pada naskah yang kemudian mundur: ${row.isbn_terbit_mundur}.`}
-                                                        />
-                                                    ) : (
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="min-w-8 justify-center font-medium"
-                                                        >
-                                                            {row[metric.key]}
-                                                        </Badge>
-                                                    )}
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="min-w-8 justify-center font-medium"
+                                                    >
+                                                        {row[metric.key]}
+                                                    </Badge>
                                                 </td>
                                             ))}
                                         </tr>
                                     ))}
                                     {faculties.length === 0 && (
                                         <tr>
-                                            <td
-                                                colSpan={6}
-                                                className="px-3 py-10 text-center text-muted-foreground"
-                                            >
-                                                Belum ada data naskah.
-                                            </td>
+                                        <td
+                                            colSpan={5}
+                                            className="px-3 py-10 text-center text-muted-foreground"
+                                        >
+                                            Belum ada data naskah.
+                                        </td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -413,19 +323,12 @@ export default function RekapFakultas({
                             Klik nama fakultas untuk melihat daftar naskahnya.
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Sedang Diproses + Selesai + Penulis Mundur = Total.
-                            Badge ISBN Terbit
-                            dipecah jadi{' '}
-                            <span className="inline-flex h-3.5 items-center rounded-sm bg-emerald-500 px-1 text-[10px] font-semibold text-white">
-                                hijau
-                            </span>{' '}
-                            = terbit pada naskah yang masih aktif dan{' '}
-                            <span className="inline-flex h-3.5 items-center rounded-sm bg-rose-500 px-1 text-[10px] font-semibold text-white">
-                                merah
-                            </span>{' '}
-                            = terbit pada naskah yang kemudian penulis mundur;
-                            bisa merujuk naskah yang sama, tidak ditambahkan ke
-                            Total.
+                            Total Pengajuan = Sedang Diproses + Terbit +
+                            Penulis Mundur. Naskah yang ISBN-nya sudah pernah
+                            terbit tetap dihitung sebagai Terbit meskipun
+                            penulisnya kemudian mundur; kolom Penulis Mundur
+                            hanya menghitung naskah yang mundur sebelum ISBN-nya
+                            terbit.
                         </p>
                     </CardContent>
                 </Card>
@@ -451,8 +354,11 @@ export default function RekapFakultas({
                                           (row.total / overall.total) * 100,
                                       )
                                     : 0;
-                                const pctAktif = overall.total
-                                    ? (row.aktif / overall.total) * 100
+                                const pctProses = overall.total
+                                    ? (row.sedang_proses / overall.total) * 100
+                                    : 0;
+                                const pctTerbit = overall.total
+                                    ? (row.terbit / overall.total) * 100
                                     : 0;
                                 const pctMundur = overall.total
                                     ? (row.mundur / overall.total) * 100
@@ -478,21 +384,27 @@ export default function RekapFakultas({
                                             <div className="h-4 flex-1 overflow-hidden rounded-sm bg-muted">
                                                 <div className="flex h-full gap-px">
                                                     <div
-                                                        className={cn(
-                                                            'h-full transition-all duration-500',
-                                                            BAR_COLORS.aktif,
-                                                        )}
+                                                        className="h-full transition-all duration-500"
                                                         style={{
-                                                            width: `${pctAktif}%`,
+                                                            width: `${pctProses}%`,
+                                                            backgroundColor:
+                                                                BAR_COLORS.proses,
                                                         }}
                                                     />
                                                     <div
-                                                        className={cn(
-                                                            'h-full transition-all duration-500',
-                                                            BAR_COLORS.mundur,
-                                                        )}
+                                                        className="h-full transition-all duration-500"
+                                                        style={{
+                                                            width: `${pctTerbit}%`,
+                                                            backgroundColor:
+                                                                BAR_COLORS.terbit,
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="h-full transition-all duration-500"
                                                         style={{
                                                             width: `${pctMundur}%`,
+                                                            backgroundColor:
+                                                                BAR_COLORS.mundur,
                                                         }}
                                                     />
                                                 </div>
@@ -524,19 +436,28 @@ export default function RekapFakultas({
                         <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1.5">
                                 <span
-                                    className={cn(
-                                        'h-2.5 w-2.5 rounded-sm',
-                                        BAR_COLORS.aktif,
-                                    )}
+                                    className="h-2.5 w-2.5 rounded-sm"
+                                    style={{
+                                        backgroundColor: BAR_COLORS.proses,
+                                    }}
                                 />
-                                Aktif
+                                Sedang Diproses
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span
-                                    className={cn(
-                                        'h-2.5 w-2.5 rounded-sm',
-                                        BAR_COLORS.mundur,
-                                    )}
+                                    className="h-2.5 w-2.5 rounded-sm"
+                                    style={{
+                                        backgroundColor: BAR_COLORS.terbit,
+                                    }}
+                                />
+                                Terbit
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <span
+                                    className="h-2.5 w-2.5 rounded-sm"
+                                    style={{
+                                        backgroundColor: BAR_COLORS.mundur,
+                                    }}
                                 />
                                 Penulis Mundur
                             </span>
