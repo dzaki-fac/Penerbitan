@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +45,15 @@ type Props = {
     };
 };
 
+const COVER_ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const COVER_MAX_SIZE_BYTES = 2 * 1024 * 1024;
+
 export default function NaskahEdit({ naskah }: Props) {
+    const [coverPreview, setCoverPreview] = useState<string | null>(
+        naskah.link_cover,
+    );
+    const [coverName, setCoverName] = useState<string | null>(null);
+    const [coverError, setCoverError] = useState<string | null>(null);
     const form = useForm({
         nama: naskah.penulis.nama,
         email: naskah.penulis.email ?? '',
@@ -54,7 +63,7 @@ export default function NaskahEdit({ naskah }: Props) {
         nomor_whatsapp: naskah.penulis.nomor_whatsapp ?? '',
         penulis_tambahan: naskah.penulis.penulis_tambahan ?? '',
         judul: naskah.judul,
-        link_cover: naskah.link_cover ?? '',
+        link_cover: null as File | null,
         tanggal_pengajuan: naskah.tanggal_pengajuan,
         sumber_form: naskah.sumber_form ?? '',
         kebijakan_akses: naskah.kebijakan_akses ?? '',
@@ -68,6 +77,48 @@ export default function NaskahEdit({ naskah }: Props) {
         link_surat_keaslian: naskah.link_surat_keaslian ?? '',
         link_surat_penerbitan: naskah.link_surat_penerbitan ?? '',
     });
+
+    function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0] ?? null;
+
+        if (!file) {
+            form.setData('link_cover', null);
+            setCoverPreview(naskah.link_cover);
+            setCoverName(null);
+            setCoverError(null);
+
+            return;
+        }
+
+        if (!COVER_ACCEPTED_MIME_TYPES.includes(file.type)) {
+            e.target.value = '';
+            form.setData('link_cover', null);
+            setCoverPreview(naskah.link_cover);
+            setCoverName(null);
+            setCoverError(
+                'Cover harus berupa file gambar JPG, JPEG, PNG, atau WEBP.',
+            );
+
+            return;
+        }
+
+        if (file.size > COVER_MAX_SIZE_BYTES) {
+            e.target.value = '';
+            form.setData('link_cover', null);
+            setCoverPreview(naskah.link_cover);
+            setCoverName(null);
+            setCoverError('Cover maksimal berukuran 2 MB.');
+
+            return;
+        }
+
+        // Jangan reset e.target.value pada file valid agar native input
+        // tetap menampilkan nama file yang dipilih.
+        setCoverError(null);
+        setCoverName(file.name);
+        setCoverPreview(URL.createObjectURL(file));
+        form.setData('link_cover', file);
+    }
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -232,19 +283,31 @@ export default function NaskahEdit({ naskah }: Props) {
                                 <InputError message={form.errors.judul} />
                             </div>
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="link_cover">Link Cover</Label>
+                                <Label htmlFor="link_cover">Cover</Label>
                                 <Input
                                     id="link_cover"
-                                    type="url"
-                                    value={form.data.link_cover}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'link_cover',
-                                            e.target.value,
-                                        )
-                                    }
-                                                                        placeholder="URL sampul/cover buku (mis. Google Drive)"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                                    onChange={handleCoverChange}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Format: JPG, JPEG, PNG, WEBP · Maksimal 2 MB
+                                </p>
+                                {coverName && (
+                                    <p className="text-xs text-muted-foreground">
+                                        File dipilih: {coverName}
+                                    </p>
+                                )}
+                                {coverPreview && (
+                                    <img
+                                        src={coverPreview}
+                                        alt="Preview cover"
+                                        className="aspect-[15.5/23] w-40 rounded-md border border-border object-cover"
+                                    />
+                                )}
+                                {coverError && (
+                                    <InputError message={coverError} />
+                                )}
                                 <InputError message={form.errors.link_cover} />
                             </div>
                             <div className="grid gap-2">
