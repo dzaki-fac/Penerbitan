@@ -7,6 +7,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { asset } from '@/lib/asset';
 import { tracking } from '@/routes';
 
 export default function AuthCardLayout({
@@ -26,7 +27,7 @@ export default function AuthCardLayout({
                     className="flex items-center gap-2 self-center font-medium"
                 >
                     <div className="flex h-16 w-16 items-center justify-center">
-                        <img src="/images/logo-upt.png" alt="" className="h-16 w-auto" />
+                        <img src={asset('assets/logo-upt.png')} alt="" className="h-16 w-auto" />
                     </div>
                 </Link>
 

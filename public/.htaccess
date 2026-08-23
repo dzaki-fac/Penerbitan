@@ -4,6 +4,10 @@
     </IfModule>
 
     RewriteEngine On
+    # Base for subfolder Alias /penerbitan -> handle both IP alias and penerbitan.test virtualhost
+    # Jika akses via 10.137.153.7/penerbitan, base harus /penerbitan/ ; jika via penerbitan.test, base adalah /
+    # RewriteBase dinamis tidak bisa, jadi kita pakai 2 aturan kondisional:
+    # Untuk penerbitan.test, REQUEST_URI tidak diawali /penerbitan
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -19,6 +23,13 @@
     RewriteRule ^ %1 [L,R=301]
 
     # Send Requests To Front Controller...
+    # Untuk akses via IP alias 10.137.153.7/penerbitan/* atau localhost/penerbitan/* (case-insensitive)
+    RewriteCond %{REQUEST_URI} ^/penerbitan/ [NC]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ /penerbitan/index.php [L]
+
+    # Untuk akses via virtualhost penerbitan.test (REQUEST_URI tidak pakai prefix)
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]

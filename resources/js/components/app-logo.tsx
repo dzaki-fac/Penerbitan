@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { asset } from '@/lib/asset';
 import { cn } from '@/lib/utils';
 
 const logoSize = {
@@ -28,7 +29,7 @@ export default function AppLogo({
         <>
             <div className={cn('flex items-center', gapClass, className)}>
                 <img
-                    src="/assets/logo_undip.png"
+                    src={asset('assets/logo_undip.png')}
                     alt="Logo UNDIP"
                     className={cn(imgClass, 'w-auto shrink-0')}
                 />
@@ -36,12 +37,12 @@ export default function AppLogo({
                     <span className="h-2/3 w-px shrink-0 bg-border" aria-hidden />
                 )}
                 <img
-                    src="/assets/logo-dpupk.png"
+                    src={asset('assets/logo-dpupk.png')}
                     alt="Logo DPUPK"
                     className={cn(imgClass, 'w-auto shrink-0')}
                 />
                 <img
-                    src="/assets/logo_undip_press.png"
+                    src={asset('assets/logo_undip_press.png')}
                     alt="Logo UNDIP Press"
                     className={cn(imgClass, 'w-auto shrink-0')}
                 />
