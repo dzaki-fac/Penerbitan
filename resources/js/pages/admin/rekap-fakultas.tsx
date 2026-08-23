@@ -32,9 +32,7 @@ type FacultyRow = {
     mundur: number;
     sedang_proses: number;
     selesai: number;
-    isbn_terbit: number;
-    isbn_terbit_aktif: number;
-    isbn_terbit_mundur: number;
+    terbit: number;
 };
 
 type Filters = {
@@ -113,47 +111,6 @@ const isbnChartConfig = {
         color: ISBN_COLORS.terbit_mundur,
     },
 } satisfies ChartConfig;
-
-function SegmentedCount({
-    aktif,
-    mundur,
-    title,
-    size = 'sm',
-}: {
-    aktif: number;
-    mundur: number;
-    title: string;
-    size?: 'sm' | 'lg';
-}) {
-    if (aktif + mundur === 0) {
-        return <Badge variant="secondary">0</Badge>;
-    }
-
-    const segment =
-        size === 'lg'
-            ? 'px-3 py-1 text-2xl'
-            : 'px-1.5 py-0.5 text-xs';
-
-    return (
-        <span
-            title={title}
-            className="inline-flex items-stretch overflow-hidden rounded-md border font-semibold tabular-nums"
-        >
-            {aktif > 0 && (
-                <span
-                    className={`bg-emerald-500 ${segment} text-white`}
-                >
-                    {aktif}
-                </span>
-            )}
-            {mundur > 0 && (
-                <span className={`bg-rose-500 ${segment} text-white`}>
-                    {mundur}
-                </span>
-            )}
-        </span>
-    );
-}
 
 export default function RekapFakultas({
     overall,
@@ -246,19 +203,14 @@ export default function RekapFakultas({
     const metrics: Array<{
         key: keyof Pick<
             FacultyRow,
-            | 'total'
-            | 'sedang_proses'
-            | 'selesai'
-            | 'mundur'
-            | 'isbn_terbit'
+            'total' | 'sedang_proses' | 'terbit' | 'mundur'
         >;
         label: string;
     }> = [
         { key: 'total', label: 'Total' },
         { key: 'sedang_proses', label: 'Sedang Diproses' },
-        { key: 'selesai', label: 'Selesai' },
+        { key: 'terbit', label: 'Terbit' },
         { key: 'mundur', label: 'Penulis Mundur' },
-        { key: 'isbn_terbit', label: 'ISBN Terbit' },
     ];
 
     function exportCsv() {
@@ -326,8 +278,8 @@ export default function RekapFakultas({
                     <CardHeader>
                         <CardTitle>Rekap per Fakultas</CardTitle>
                         <CardDescription>
-                            Total naskah, status aktif/penulis mundur, dan ISBN
-                            yang sudah terbit untuk setiap fakultas.
+                            Total naskah, sedang diproses, terbit, dan penulis
+                            mundur untuk setiap fakultas.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -373,25 +325,12 @@ export default function RekapFakultas({
                                                     key={metric.key}
                                                     className="px-3 py-3 text-center"
                                                 >
-                                                    {metric.key ===
-                                                    'isbn_terbit' ? (
-                                                        <SegmentedCount
-                                                            aktif={
-                                                                row.isbn_terbit_aktif
-                                                            }
-                                                            mundur={
-                                                                row.isbn_terbit_mundur
-                                                            }
-                                                            title={`ISBN terbit pada naskah aktif: ${row.isbn_terbit_aktif}; pada naskah yang kemudian mundur: ${row.isbn_terbit_mundur}.`}
-                                                        />
-                                                    ) : (
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="min-w-8 justify-center font-medium"
-                                                        >
-                                                            {row[metric.key]}
-                                                        </Badge>
-                                                    )}
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="min-w-8 justify-center font-medium"
+                                                    >
+                                                        {row[metric.key]}
+                                                    </Badge>
                                                 </td>
                                             ))}
                                         </tr>
@@ -399,7 +338,7 @@ export default function RekapFakultas({
                                     {faculties.length === 0 && (
                                         <tr>
                                             <td
-                                                colSpan={6}
+                                                colSpan={5}
                                                 className="px-3 py-10 text-center text-muted-foreground"
                                             >
                                                 Belum ada data naskah.
@@ -413,19 +352,9 @@ export default function RekapFakultas({
                             Klik nama fakultas untuk melihat daftar naskahnya.
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Sedang Diproses + Selesai + Penulis Mundur = Total.
-                            Badge ISBN Terbit
-                            dipecah jadi{' '}
-                            <span className="inline-flex h-3.5 items-center rounded-sm bg-emerald-500 px-1 text-[10px] font-semibold text-white">
-                                hijau
-                            </span>{' '}
-                            = terbit pada naskah yang masih aktif dan{' '}
-                            <span className="inline-flex h-3.5 items-center rounded-sm bg-rose-500 px-1 text-[10px] font-semibold text-white">
-                                merah
-                            </span>{' '}
-                            = terbit pada naskah yang kemudian penulis mundur;
-                            bisa merujuk naskah yang sama, tidak ditambahkan ke
-                            Total.
+                            Terbit = naskah yang sudah mencapai tahap ISBN Terbit
+                            (pernah terbit), dapat tumpang tindih dengan Sedang
+                            Diproses.
                         </p>
                     </CardContent>
                 </Card>

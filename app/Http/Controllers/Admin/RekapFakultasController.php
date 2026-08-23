@@ -33,9 +33,7 @@ class RekapFakultasController extends Controller
             'mundur' => (int) $row->mundur,
             'sedang_proses' => (int) $row->sedang_proses,
             'selesai' => (int) $row->selesai,
-            'isbn_terbit' => (int) $row->isbn_terbit,
-            'isbn_terbit_aktif' => (int) $row->isbn_terbit_aktif,
-            'isbn_terbit_mundur' => (int) $row->isbn_terbit_mundur,
+            'terbit' => (int) $row->terbit,
         ]);
 
         $overall = $this->summarize($rows);
@@ -121,9 +119,8 @@ class RekapFakultasController extends Controller
             fputcsv($handle, ['Periode', $periode]);
 
             fputcsv($handle, [
-                'Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Selesai',
-                'Penulis Mundur', 'ISBN Terbit (Aktif)',
-                'ISBN Terbit (Mundur)', 'ISBN Terbit',
+                'Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Terbit',
+                'Penulis Mundur',
             ]);
 
             foreach ($rows as $row) {
@@ -131,11 +128,8 @@ class RekapFakultasController extends Controller
                     $row->fakultas_sekolah ?? 'Belum terisi',
                     (int) $row->total,
                     (int) $row->sedang_proses,
-                    (int) $row->selesai,
+                    (int) $row->terbit,
                     (int) $row->mundur,
-                    (int) $row->isbn_terbit_aktif,
-                    (int) $row->isbn_terbit_mundur,
-                    (int) $row->isbn_terbit,
                 ]);
             }
 
@@ -143,11 +137,8 @@ class RekapFakultasController extends Controller
                 'TOTAL',
                 $overall['total'],
                 $overall['sedang_proses'],
-                $overall['selesai'],
+                $overall['terbit'],
                 $overall['mundur'],
-                $overall['isbn_terbit_aktif'],
-                $overall['isbn_terbit_mundur'],
-                $overall['isbn_terbit'],
             ]);
 
             fclose($handle);
@@ -190,9 +181,7 @@ class RekapFakultasController extends Controller
                 DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as mundur"),
                 DB::raw("COUNT(CASE WHEN naskahs.status NOT IN ('".NaskahStatus::Selesai->value."', '".NaskahStatus::PenulisMundur->value."') THEN 1 END) as sedang_proses"),
                 DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::Selesai->value."' THEN 1 END) as selesai"),
-                DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_aktif"),
-                DB::raw("COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL AND naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as isbn_terbit_mundur"),
-                DB::raw('COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL THEN 1 END) as isbn_terbit'),
+                DB::raw('COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL THEN 1 END) as terbit'),
             )
             ->groupBy('authors.fakultas_sekolah')
             ->orderByDesc('total')
@@ -200,7 +189,7 @@ class RekapFakultasController extends Controller
     }
 
     /**
-     * @return array{total: int, aktif: int, mundur: int, sedang_proses: int, selesai: int, isbn_terbit: int, isbn_terbit_aktif: int, isbn_terbit_mundur: int}
+     * @return array{total: int, aktif: int, mundur: int, sedang_proses: int, selesai: int, terbit: int}
      */
     private function summarize(Collection $rows): array
     {
@@ -210,9 +199,7 @@ class RekapFakultasController extends Controller
             'mundur' => (int) $rows->sum('mundur'),
             'sedang_proses' => (int) $rows->sum('sedang_proses'),
             'selesai' => (int) $rows->sum('selesai'),
-            'isbn_terbit' => (int) $rows->sum('isbn_terbit'),
-            'isbn_terbit_aktif' => (int) $rows->sum('isbn_terbit_aktif'),
-            'isbn_terbit_mundur' => (int) $rows->sum('isbn_terbit_mundur'),
+            'terbit' => (int) $rows->sum('terbit'),
         ];
     }
 
