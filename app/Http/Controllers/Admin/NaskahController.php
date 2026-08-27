@@ -109,7 +109,7 @@ class NaskahController extends Controller
             ->through(fn (Naskah $naskah) => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'link_cover' => $naskah->link_cover,
+                'link_cover' => $naskah->link_cover_url,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
@@ -173,7 +173,9 @@ class NaskahController extends Controller
         $naskah = Naskah::create([
             'author_id' => $author->id,
             'judul' => $data['judul'],
-            'link_cover' => $data['link_cover'] ?? null,
+            'link_cover' => $request->hasFile('link_cover')
+                ? $request->file('link_cover')->store('covers', 'public')
+                : null,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
             'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
@@ -211,7 +213,7 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'link_cover' => $naskah->link_cover,
+                'link_cover' => $naskah->link_cover_url,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d\TH:i'),
                 'sumber_form' => $naskah->sumber_form,
                 'kebijakan_akses' => $naskah->kebijakan_akses,
@@ -256,9 +258,15 @@ class NaskahController extends Controller
             'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
         ]);
 
+        // Cover hanya diganti bila admin memilih file baru; tanpa file baru
+        // cover lama tetap digunakan.
+        if ($request->hasFile('link_cover')) {
+            $data['link_cover'] = $request->file('link_cover')->store('covers', 'public');
+        }
+
         $naskah->update([
             'judul' => $data['judul'],
-            'link_cover' => $data['link_cover'] ?? null,
+            'link_cover' => $data['link_cover'] ?? $naskah->link_cover,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
             'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
@@ -296,7 +304,7 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'link_cover' => $naskah->link_cover,
+                'link_cover' => $naskah->link_cover_url,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
