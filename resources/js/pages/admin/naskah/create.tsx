@@ -56,6 +56,16 @@ export default function NaskahCreate() {
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
+
+        if (!form.data.fakultas_sekolah.trim()) {
+            form.setError(
+                'fakultas_sekolah',
+                'Fakultas/Sekolah wajib diisi.',
+            );
+
+            return;
+        }
+
         form.post(store.url());
     }
 
@@ -92,6 +102,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="jenis_identitas">
                                     Jenis Identitas
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {(['nim', 'nip'] as const).map((jenis) => (
@@ -119,6 +130,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="nomor_identitas">
                                     Nomor Identitas
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <Input
                                     id="nomor_identitas"
@@ -136,7 +148,10 @@ export default function NaskahCreate() {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="nama">Nama Penulis</Label>
+                                <Label htmlFor="nama">
+                                    Nama Penulis
+                                    <span className="text-destructive"> *</span>
+                                </Label>
                                 <Input
                                     id="nama"
                                     value={form.data.nama}
@@ -173,6 +188,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="fakultas_sekolah">
                                     Fakultas / Sekolah
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <Combobox
                                     id="fakultas_sekolah"
@@ -249,7 +265,10 @@ export default function NaskahCreate() {
                         </CardHeader>
                         <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="judul">Judul Naskah</Label>
+                                <Label htmlFor="judul">
+                                    Judul Naskah
+                                    <span className="text-destructive"> *</span>
+                                </Label>
                                 <Input
                                     id="judul"
                                     value={form.data.judul}
@@ -278,6 +297,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="tanggal_pengajuan">
                                     Tanggal Pengajuan
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <DatetimeInput
                                     id="tanggal_pengajuan"

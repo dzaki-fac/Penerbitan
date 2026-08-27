@@ -107,20 +107,28 @@ class DashboardController extends Controller
     }
 
     /**
-     * @return array{total: int, selesai: int, penulis_mundur: int, sedang_proses: int}
+     * @return array{total: int, terbit: int, penulis_mundur: int, sedang_proses: int}
      */
     private function stats(?Carbon $from, ?Carbon $to): array
     {
         $query = $this->naskahQuery($from, $to);
 
+        $terbitQuery = (clone $query)->whereHas('histories', fn ($history) => $history
+            ->where('ke_status', NaskahStatus::IsbnTerbit->value));
+
         return [
             'total' => (clone $query)->count(),
-            'selesai' => (clone $query)->where('status', NaskahStatus::Selesai->value)->count(),
-            'penulis_mundur' => (clone $query)->where('status', NaskahStatus::PenulisMundur->value)->count(),
-            'sedang_proses' => (clone $query)->whereNotIn('status', [
-                NaskahStatus::Selesai->value,
-                NaskahStatus::PenulisMundur->value,
-            ])->count(),
+            'terbit' => $terbitQuery->count(),
+            'penulis_mundur' => (clone $query)
+                ->where('status', NaskahStatus::PenulisMundur->value)
+                ->whereDoesntHave('histories', fn ($history) => $history
+                    ->where('ke_status', NaskahStatus::IsbnTerbit->value))
+                ->count(),
+            'sedang_proses' => (clone $query)
+                ->where('status', '<>', NaskahStatus::PenulisMundur->value)
+                ->whereDoesntHave('histories', fn ($history) => $history
+                    ->where('ke_status', NaskahStatus::IsbnTerbit->value))
+                ->count(),
         ];
     }
 
@@ -159,14 +167,6 @@ class DashboardController extends Controller
                 'value' => $status->value,
                 'label' => $status->label(),
                 'count' => $this->isbnQuery($status->value, $from, $to)->count(),
-            ])
-            ->push([
-                'value' => 'terbit_mundur',
-                'label' => 'Terbit (Penulis Mundur)',
-                'count' => $this->isbnQuery(IsbnStatus::Terbit->value, $from, $to)
-                    ->whereHas('naskah', fn ($query) => $query
-                        ->where('status', NaskahStatus::PenulisMundur->value))
-                    ->count(),
             ])
             ->all();
     }

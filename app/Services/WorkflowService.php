@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Enums\AktorType;
+use App\Enums\IsbnStatus;
 use App\Enums\NaskahStatus;
 use App\Exceptions\WorkflowConflictException;
+use App\Models\Isbn;
 use App\Models\Naskah;
 use App\Models\NaskahCatatan;
 use App\Models\User;
@@ -136,6 +138,20 @@ class WorkflowService
             $naskah->status = $to;
             $naskah->progress = $to->progress();
             $naskah->save();
+
+            // Pastikan naskah yang mencapai tahap ISBN terbit memiliki record
+            // ISBN berstatus terbit, agar rekap "Terbit" selaras dengan chart
+            // "ISBN per Status" yang menghitung record ISBN.
+            if ($to === NaskahStatus::IsbnTerbit) {
+                $isbn = $naskah->isbn;
+
+                if ($isbn === null) {
+                    $naskah->isbn()->create(['status' => IsbnStatus::Terbit]);
+                } elseif ($isbn->status !== IsbnStatus::Terbit) {
+                    $isbn->status = IsbnStatus::Terbit;
+                    $isbn->save();
+                }
+            }
 
             WorkflowHistory::create([
                 'naskah_id' => $naskah->id,

@@ -62,12 +62,44 @@ if (! function_exists('normalizeFakultasSekolah')) {
             return null;
         }
 
-        $normalized = mb_convert_case(
-            preg_replace('/\s+/u', ' ', trim($value)) ?: '',
-            MB_CASE_TITLE,
-            'UTF-8',
-        );
+        $trimmed = preg_replace('/\s+/u', ' ', trim($value)) ?: '';
 
-        return $normalized === '' ? null : $normalized;
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (mb_strtolower($trimmed, 'UTF-8') === 'belum terisi') {
+            return null;
+        }
+
+        // Hilangkan singkatan di dalam kurung, mis. " (Fsm)".
+        $base = preg_replace('/\s*\([^)]*\)\s*$/u', '', $trimmed);
+        $base = preg_replace('/\s+/u', ' ', trim($base)) ?: '';
+
+        $canonical = [
+            'Fakultas Ekonomika dan Bisnis',
+            'Fakultas Hukum',
+            'Fakultas Ilmu Budaya',
+            'Fakultas Ilmu Sosial dan Ilmu Politik',
+            'Fakultas Kedokteran',
+            'Fakultas Kesehatan Masyarakat',
+            'Fakultas Perikanan dan Ilmu Kelautan',
+            'Fakultas Peternakan dan Pertanian',
+            'Fakultas Sains dan Matematika',
+            'Fakultas Teknik',
+            'Fakultas Psikologi',
+            'Sekolah Pascasarjana',
+            'Sekolah Vokasi',
+            'Lainnya',
+        ];
+
+        foreach ($canonical as $option) {
+            if (mb_strtolower($base, 'UTF-8') === mb_strtolower($option, 'UTF-8')) {
+                return $option;
+            }
+        }
+
+        // Bukan opsi baku: pertahankan nilai asli tanpa ubah kapitalisasi.
+        return $trimmed;
     }
 }

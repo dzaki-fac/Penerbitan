@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NaskahController extends Controller
 {
@@ -54,8 +55,18 @@ class NaskahController extends Controller
         }
 
         if ($fakultas = $request->string('fakultas')->trim()->toString()) {
-            $query->whereHas('author', fn ($author) => $author
-                ->whereRaw('LOWER(fakultas_sekolah) = ?', [mb_strtolower($fakultas)]));
+            $query->whereHas('author', function ($author) use ($fakultas) {
+                if (mb_strtolower($fakultas) === 'belum terisi') {
+                    $author
+                        ->whereNull('fakultas_sekolah')
+                        ->orWhere('fakultas_sekolah', '');
+                } else {
+                    $author->whereRaw(
+                        'LOWER(fakultas_sekolah) = ?',
+                        [mb_strtolower($fakultas)],
+                    );
+                }
+            });
         }
 
         if ($dateFrom = $request->string('date_from')->trim()->toString()) {
@@ -385,7 +396,7 @@ class NaskahController extends Controller
     /**
      * Export naskah ke CSV.
      */
-    public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function export(Request $request): StreamedResponse
     {
         $query = Naskah::query()->with(['author']);
 
@@ -487,6 +498,7 @@ class NaskahController extends Controller
 
         if ($handle === false) {
             flashError(__('Gagal membaca file CSV.'));
+
             return to_route('admin.naskah.index');
         }
 
@@ -497,6 +509,7 @@ class NaskahController extends Controller
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 4) {
                 $skipped++;
+
                 continue;
             }
 
@@ -504,8 +517,9 @@ class NaskahController extends Controller
             $nomorIdentitas = trim($row[3] ?? '');
             $judul = trim($row[0] ?? '');
 
-            if (!$judul || !$nomorIdentitas || !in_array($jenisIdentitas, ['nim', 'nip'])) {
+            if (! $judul || ! $nomorIdentitas || ! in_array($jenisIdentitas, ['nim', 'nip'])) {
                 $skipped++;
+
                 continue;
             }
 
