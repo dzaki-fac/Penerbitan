@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +28,13 @@ function toLocalDatetimeLocal(date: Date): string {
     ].join('T');
 }
 
+const COVER_ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const COVER_MAX_SIZE_BYTES = 2 * 1024 * 1024;
+
 export default function NaskahCreate() {
+    const [coverPreview, setCoverPreview] = useState<string | null>(null);
+    const [coverName, setCoverName] = useState<string | null>(null);
+    const [coverError, setCoverError] = useState<string | null>(null);
     const form = useForm({
         jenis_identitas: 'nim',
         nomor_identitas: '',
@@ -39,7 +46,7 @@ export default function NaskahCreate() {
         nomor_whatsapp: '',
         penulis_tambahan: '',
         judul: '',
-        link_cover: '',
+        link_cover: null as File | null,
         tanggal_pengajuan: toLocalDatetimeLocal(new Date()),
         sumber_form: '',
         kebijakan_akses: '',
@@ -54,8 +61,60 @@ export default function NaskahCreate() {
         link_surat_penerbitan: '',
     });
 
+    function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0] ?? null;
+
+        if (!file) {
+            form.setData('link_cover', null);
+            setCoverPreview(null);
+            setCoverName(null);
+            setCoverError(null);
+
+            return;
+        }
+
+        if (!COVER_ACCEPTED_MIME_TYPES.includes(file.type)) {
+            e.target.value = '';
+            form.setData('link_cover', null);
+            setCoverPreview(null);
+            setCoverName(null);
+            setCoverError(
+                'Cover harus berupa file gambar JPG, JPEG, PNG, atau WEBP.',
+            );
+
+            return;
+        }
+
+        if (file.size > COVER_MAX_SIZE_BYTES) {
+            e.target.value = '';
+            form.setData('link_cover', null);
+            setCoverPreview(null);
+            setCoverName(null);
+            setCoverError('Cover maksimal berukuran 2 MB.');
+
+            return;
+        }
+
+        // Jangan reset e.target.value pada file valid agar native input
+        // tetap menampilkan nama file yang dipilih.
+        setCoverError(null);
+        setCoverName(file.name);
+        setCoverPreview(URL.createObjectURL(file));
+        form.setData('link_cover', file);
+    }
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
+
+        if (!form.data.fakultas_sekolah.trim()) {
+            form.setError(
+                'fakultas_sekolah',
+                'Fakultas/Sekolah wajib diisi.',
+            );
+
+            return;
+        }
+
         form.post(store.url());
     }
 
@@ -92,6 +151,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="jenis_identitas">
                                     Jenis Identitas
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {(['nim', 'nip'] as const).map((jenis) => (
@@ -119,6 +179,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="nomor_identitas">
                                     Nomor Identitas
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <Input
                                     id="nomor_identitas"
@@ -136,7 +197,10 @@ export default function NaskahCreate() {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="nama">Nama Penulis</Label>
+                                <Label htmlFor="nama">
+                                    Nama Penulis
+                                    <span className="text-destructive"> *</span>
+                                </Label>
                                 <Input
                                     id="nama"
                                     value={form.data.nama}
@@ -173,6 +237,7 @@ export default function NaskahCreate() {
                             <div className="grid gap-2">
                                 <Label htmlFor="fakultas_sekolah">
                                     Fakultas / Sekolah
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <Combobox
                                     id="fakultas_sekolah"
@@ -249,7 +314,10 @@ export default function NaskahCreate() {
                         </CardHeader>
                         <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="judul">Judul Naskah</Label>
+                                <Label htmlFor="judul">
+                                    Judul Naskah
+                                    <span className="text-destructive"> *</span>
+                                </Label>
                                 <Input
                                     id="judul"
                                     value={form.data.judul}
@@ -260,24 +328,37 @@ export default function NaskahCreate() {
                                 <InputError message={form.errors.judul} />
                             </div>
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="link_cover">Link Cover</Label>
+                                <Label htmlFor="link_cover">Cover</Label>
                                 <Input
                                     id="link_cover"
-                                    type="url"
-                                    value={form.data.link_cover}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'link_cover',
-                                            e.target.value,
-                                        )
-                                    }
-                                                                        placeholder="URL sampul/cover buku (mis. Google Drive)"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                                    onChange={handleCoverChange}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Format: JPG, JPEG, PNG, WEBP · Maksimal 2 MB
+                                </p>
+                                {coverName && (
+                                    <p className="text-xs text-muted-foreground">
+                                        File dipilih: {coverName}
+                                    </p>
+                                )}
+                                {coverPreview && (
+                                    <img
+                                        src={coverPreview}
+                                        alt="Preview cover"
+                                        className="aspect-[15.5/23] w-40 rounded-md border border-border object-cover"
+                                    />
+                                )}
+                                {coverError && (
+                                    <InputError message={coverError} />
+                                )}
                                 <InputError message={form.errors.link_cover} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="tanggal_pengajuan">
                                     Tanggal Pengajuan
+                                    <span className="text-destructive"> *</span>
                                 </Label>
                                 <DatetimeInput
                                     id="tanggal_pengajuan"

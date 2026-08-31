@@ -29,10 +29,8 @@ class RekapFakultasController extends Controller
         $mapped = $rows->map(fn ($row) => [
             'fakultas' => $row->fakultas_sekolah ?? 'Belum terisi',
             'total' => (int) $row->total,
-            'aktif' => (int) $row->aktif,
-            'mundur' => (int) $row->mundur,
             'sedang_proses' => (int) $row->sedang_proses,
-            'selesai' => (int) $row->selesai,
+            'mundur' => (int) $row->mundur,
             'terbit' => (int) $row->terbit,
         ]);
 
@@ -54,27 +52,6 @@ class RekapFakultasController extends Controller
             return [
                 'value' => $status->value,
                 'label' => $status->label(),
-                'count' => $query->count(),
-            ];
-        })->push(function () use ($from, $to) {
-            $query = Isbn::query()
-                ->where('status', IsbnStatus::Terbit->value)
-                ->whereHas('naskah', fn ($naskah) => $naskah
-                    ->where('status', NaskahStatus::PenulisMundur->value));
-
-            if ($from) {
-                $query->whereHas('naskah', fn ($naskah) => $naskah
-                    ->where('tanggal_pengajuan', '>=', $from));
-            }
-
-            if ($to) {
-                $query->whereHas('naskah', fn ($naskah) => $naskah
-                    ->where('tanggal_pengajuan', '<=', $to));
-            }
-
-            return [
-                'value' => 'terbit_mundur',
-                'label' => 'Terbit (Penulis Mundur)',
                 'count' => $query->count(),
             ];
         });
@@ -119,8 +96,8 @@ class RekapFakultasController extends Controller
             fputcsv($handle, ['Periode', $periode]);
 
             fputcsv($handle, [
-                'Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Terbit',
-                'Penulis Mundur',
+                'Fakultas/Sekolah', 'Total Pengajuan', 'Sedang Diproses',
+                'Penulis Mundur', 'Terbit',
             ]);
 
             foreach ($rows as $row) {
@@ -128,8 +105,8 @@ class RekapFakultasController extends Controller
                     $row->fakultas_sekolah ?? 'Belum terisi',
                     (int) $row->total,
                     (int) $row->sedang_proses,
-                    (int) $row->terbit,
                     (int) $row->mundur,
+                    (int) $row->terbit,
                 ]);
             }
 
@@ -137,8 +114,8 @@ class RekapFakultasController extends Controller
                 'TOTAL',
                 $overall['total'],
                 $overall['sedang_proses'],
-                $overall['terbit'],
                 $overall['mundur'],
+                $overall['terbit'],
             ]);
 
             fclose($handle);
@@ -177,11 +154,9 @@ class RekapFakultasController extends Controller
             ->select(
                 'authors.fakultas_sekolah',
                 DB::raw('COUNT(naskahs.id) as total'),
-                DB::raw("COUNT(CASE WHEN naskahs.status <> '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as aktif"),
-                DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::PenulisMundur->value."' THEN 1 END) as mundur"),
-                DB::raw("COUNT(CASE WHEN naskahs.status NOT IN ('".NaskahStatus::Selesai->value."', '".NaskahStatus::PenulisMundur->value."') THEN 1 END) as sedang_proses"),
-                DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::Selesai->value."' THEN 1 END) as selesai"),
                 DB::raw('COUNT(CASE WHEN terbit_histories.naskah_id IS NOT NULL THEN 1 END) as terbit'),
+                DB::raw("COUNT(CASE WHEN naskahs.status = '".NaskahStatus::PenulisMundur->value."' AND terbit_histories.naskah_id IS NULL THEN 1 END) as mundur"),
+                DB::raw("COUNT(CASE WHEN naskahs.status <> '".NaskahStatus::PenulisMundur->value."' AND terbit_histories.naskah_id IS NULL THEN 1 END) as sedang_proses"),
             )
             ->groupBy('authors.fakultas_sekolah')
             ->orderByDesc('total')
@@ -189,16 +164,14 @@ class RekapFakultasController extends Controller
     }
 
     /**
-     * @return array{total: int, aktif: int, mundur: int, sedang_proses: int, selesai: int, terbit: int}
+     * @return array{total: int, sedang_proses: int, mundur: int, terbit: int}
      */
     private function summarize(Collection $rows): array
     {
         return [
             'total' => (int) $rows->sum('total'),
-            'aktif' => (int) $rows->sum('aktif'),
-            'mundur' => (int) $rows->sum('mundur'),
             'sedang_proses' => (int) $rows->sum('sedang_proses'),
-            'selesai' => (int) $rows->sum('selesai'),
+            'mundur' => (int) $rows->sum('mundur'),
             'terbit' => (int) $rows->sum('terbit'),
         ];
     }

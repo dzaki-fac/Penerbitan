@@ -59,24 +59,20 @@ test('rekap fakultas aggregates naskah per fakultas', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/rekap-fakultas')
             ->where('overall.total', 4)
-            ->where('overall.aktif', 3)
+            ->where('overall.sedang_proses', 2)
             ->where('overall.mundur', 1)
             ->where('overall.terbit', 1)
-            ->has('isbnStatuses', 4)
+            ->has('isbnStatuses', 3)
             ->where('isbnStatuses.0.count', 0)
             ->where('isbnStatuses.2.count', 1)
-            ->where('isbnStatuses.3.value', 'terbit_mundur')
-            ->where('isbnStatuses.3.count', 0)
             ->has('faculties', 2)
             ->has(
                 'faculties.0',
                 fn (Assert $faculties) => $faculties
                     ->where('fakultas', 'Fakultas Teknik')
                     ->where('total', 3)
-                    ->where('aktif', 2)
+                    ->where('sedang_proses', 1)
                     ->where('mundur', 1)
-                    ->where('sedang_proses', 0)
-                    ->where('selesai', 2)
                     ->where('terbit', 1),
             ),
         );
@@ -85,6 +81,10 @@ test('rekap fakultas aggregates naskah per fakultas', function () {
 test('rekap fakultas isbn status counts respect tanggal pengajuan filter', function () {
     $admin = User::factory()->create();
     $teknik = Author::factory()->create(['fakultas_sekolah' => 'Fakultas Teknik']);
+
+    Naskah::query()->delete();
+    Isbn::query()->delete();
+    WorkflowHistory::query()->delete();
 
     $inside = Naskah::factory()->create([
         'author_id' => $teknik->id,
@@ -111,11 +111,10 @@ test('rekap fakultas isbn status counts respect tanggal pengajuan filter', funct
         ]))
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/rekap-fakultas')
-            ->has('isbnStatuses', 4)
+            ->has('isbnStatuses', 3)
             ->where('isbnStatuses.0.count', 0)
             ->where('isbnStatuses.1.count', 0)
-            ->where('isbnStatuses.2.count', 1)
-            ->where('isbnStatuses.3.count', 0));
+            ->where('isbnStatuses.2.count', 1));
 });
 
 test('rekap fakultas counts naskah that ever had isbn published even if author withdrew', function () {
@@ -146,19 +145,17 @@ test('rekap fakultas counts naskah that ever had isbn published even if author w
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/rekap-fakultas')
             ->where('overall.terbit', 1)
+            ->where('overall.sedang_proses', 0)
+            ->where('overall.mundur', 0)
             ->where('isbnStatuses.2.value', 'terbit')
             ->where('isbnStatuses.2.count', 1)
-            ->where('isbnStatuses.3.value', 'terbit_mundur')
-            ->where('isbnStatuses.3.count', 1)
             ->has(
                 'faculties.0',
                 fn (Assert $faculties) => $faculties
                     ->where('fakultas', 'Fakultas Teknik')
                     ->where('total', 1)
-                    ->where('aktif', 0)
-                    ->where('mundur', 1)
                     ->where('sedang_proses', 0)
-                    ->where('selesai', 0)
+                    ->where('mundur', 0)
                     ->where('terbit', 1),
             ));
 });
@@ -230,10 +227,10 @@ test('rekap fakultas export downloads csv respecting tanggal filter', function (
 
     expect(count($lines))->toBe(4)
         ->and($lines[0])->toStartWith('Periode,')
-        ->and($lines[1])->toContain('Fakultas/Sekolah', 'Total', 'Sedang Diproses', 'Terbit', 'Penulis Mundur')
+        ->and($lines[1])->toContain('Fakultas/Sekolah', 'Total Pengajuan', 'Sedang Diproses', 'Penulis Mundur', 'Terbit')
         ->and($lines[2])->toContain('Fakultas Teknik')
-        ->and($lines[2])->toContain(',1,0,0,0')
-        ->and($lines[3])->toStartWith('TOTAL,1,0,0,0');
+        ->and($lines[2])->toContain(',1,1,0,0')
+        ->and($lines[3])->toStartWith('TOTAL,1,1,0,0');
 });
 
 test('guests cannot access rekap fakultas export', function () {
