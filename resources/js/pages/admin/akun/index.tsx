@@ -5,7 +5,6 @@ import {
     ChevronUp,
     Pencil,
     Plus,
-    ShieldCheck,
     Trash2,
     UserRoundCog,
 } from 'lucide-react';
@@ -65,7 +64,6 @@ type AkunUser = {
     nama_lengkap: string;
     nickname: string;
     email: string;
-    verified: boolean;
     created_at: string;
 };
 
@@ -107,8 +105,8 @@ function CreateAkunDialog() {
                 <DialogHeader>
                     <DialogTitle>Tambah Akun Admin</DialogTitle>
                     <DialogDescription>
-                        Akun baru langsung terverifikasi dan dapat login
-                        menggunakan email serta kata sandi ini.
+                        Akun baru dapat langsung login menggunakan email serta
+                        kata sandi ini.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="space-y-4">
@@ -407,23 +405,6 @@ function DeleteAkunDialog({
     );
 }
 
-function StatusBadge({ verified }: { verified: boolean }) {
-    if (verified) {
-        return (
-            <Badge variant="secondary" className="gap-1">
-                <ShieldCheck className="size-3" />
-                Terverifikasi
-            </Badge>
-        );
-    }
-
-    return (
-        <Badge variant="outline" className="gap-1">
-            Belum verifikasi
-        </Badge>
-    );
-}
-
 type SortKey = 'name' | 'created_at';
 
 function SortableTh({
@@ -472,7 +453,6 @@ function SortableTh({
 export default function AkunIndex({ users, currentUserId }: Props) {
     const getInitials = useInitials();
     const [search, setSearch] = useState('');
-    const [status, setStatus] = useState('all');
     const [sortKey, setSortKey] = useState<SortKey | null>(null);
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -480,15 +460,11 @@ export default function AkunIndex({ users, currentUserId }: Props) {
         const query = search.trim().toLowerCase();
 
         let result = users.filter((user) => {
-            const matchesSearch =
+            return (
                 !query ||
                 user.nama_lengkap.toLowerCase().startsWith(query) ||
-                user.email.toLowerCase().startsWith(query);
-            const matchesStatus =
-                status === 'all' ||
-                (status === 'verified' ? user.verified : !user.verified);
-
-            return matchesSearch && matchesStatus;
+                user.email.toLowerCase().startsWith(query)
+            );
         });
 
         if (sortKey) {
@@ -508,7 +484,7 @@ export default function AkunIndex({ users, currentUserId }: Props) {
         }
 
         return result;
-    }, [users, search, status, sortKey, sortDir]);
+    }, [users, search, sortKey, sortDir]);
 
     function toggleSort(key: SortKey) {
         if (sortKey === key) {
@@ -521,7 +497,6 @@ export default function AkunIndex({ users, currentUserId }: Props) {
 
     function resetFilters() {
         setSearch('');
-        setStatus('all');
     }
 
     return (
@@ -554,39 +529,15 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                 <Input
                                     id="search"
                                     value={search}
-                                    onChange={(e) =>
-                                        setSearch(e.target.value)
-                                    }
+                                    onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Nama atau email..."
                                     className="w-72"
                                 />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Label className="shrink-0">Status</Label>
-                                <Select
-                                    value={status}
-                                    onValueChange={setStatus}
-                                >
-                                    <SelectTrigger className="w-44">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            Semua
-                                        </SelectItem>
-                                        <SelectItem value="verified">
-                                            Terverifikasi
-                                        </SelectItem>
-                                        <SelectItem value="unverified">
-                                            Belum verifikasi
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
                             <Button
                                 variant="ghost"
                                 onClick={resetFilters}
-                                disabled={!search && status === 'all'}
+                                disabled={!search}
                             >
                                 Reset
                             </Button>
@@ -625,7 +576,7 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                             </Select>
                         </div>
                         <CardDescription>
-                            {search || status !== 'all'
+                            {search
                                 ? `${visibleUsers.length} dari ${users.length} akun ditampilkan.`
                                 : `${users.length} akun admin terdaftar.`}
                         </CardDescription>
@@ -645,9 +596,6 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                         />
                                         <th className="px-4 py-3 font-medium">
                                             Email
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Status
                                         </th>
                                         <SortableTh
                                             label="Dibuat"
@@ -713,11 +661,6 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     {user.email}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <StatusBadge
-                                                        verified={user.verified}
-                                                    />
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                                     {user.created_at}
@@ -812,14 +755,9 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                         <p className="mt-2 text-sm break-words text-muted-foreground">
                                             {user.email}
                                         </p>
-                                        <div className="mt-2 flex items-center justify-between gap-2">
-                                            <StatusBadge
-                                                verified={user.verified}
-                                            />
-                                            <span className="text-xs text-muted-foreground">
-                                                {user.created_at}
-                                            </span>
-                                        </div>
+                                        <p className="mt-2 text-xs text-muted-foreground">
+                                            {user.created_at}
+                                        </p>
                                     </div>
                                 );
                             })}

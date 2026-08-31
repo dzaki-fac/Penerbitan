@@ -16,13 +16,12 @@ use Illuminate\Support\Carbon;
  * @property string $nama_lengkap
  * @property string|null $nickname
  * @property string $email
- * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['nama_lengkap', 'nickname', 'email', 'password', 'email_verified_at'])]
+#[Fillable(['nama_lengkap', 'nickname', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -37,7 +36,6 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

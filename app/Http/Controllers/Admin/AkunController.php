@@ -26,7 +26,6 @@ class AkunController extends Controller
                 'nama_lengkap' => $user->nama_lengkap,
                 'nickname' => $user->nickname,
                 'email' => $user->email,
-                'verified' => $user->email_verified_at !== null,
                 'created_at' => $user->created_at->format('d M Y'),
             ]);
 
@@ -46,7 +45,6 @@ class AkunController extends Controller
             'nickname' => $request->validated('nickname'),
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
-            'email_verified_at' => now(),
         ]);
 
         flashSuccess(__('Akun admin berhasil dibuat.'));
@@ -65,7 +63,6 @@ class AkunController extends Controller
             $akun->password = $password;
         }
 
-        $akun->email_verified_at ??= now();
         $akun->save();
 
         flashSuccess(__('Akun admin berhasil diperbarui.'));
