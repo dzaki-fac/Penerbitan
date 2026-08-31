@@ -161,13 +161,13 @@ export default function TrackingIndex() {
                                 Silahkan hubungi admin penerbitan.
                             </p>
                             <a
-                                href="https://wa.me/6281326627285?text=Halo%2C%20saya%20ingin%20bertanya"
+                                href="https://wa.me/6282322277844?text=Halo%2C%20saya%20ingin%20bertanya"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-[#1B3A6B] hover:text-[#0f2547]"
                             >
                                 <Phone className="size-3.5" />
-                                0813-2662-7285
+                                0823-2227-7844
                             </a>
                         </div>
                     </form>
