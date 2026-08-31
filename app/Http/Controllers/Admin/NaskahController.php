@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NaskahController extends Controller
 {
@@ -54,8 +55,18 @@ class NaskahController extends Controller
         }
 
         if ($fakultas = $request->string('fakultas')->trim()->toString()) {
-            $query->whereHas('author', fn ($author) => $author
-                ->whereRaw('LOWER(fakultas_sekolah) = ?', [mb_strtolower($fakultas)]));
+            $query->whereHas('author', function ($author) use ($fakultas) {
+                if (mb_strtolower($fakultas) === 'belum terisi') {
+                    $author
+                        ->whereNull('fakultas_sekolah')
+                        ->orWhere('fakultas_sekolah', '');
+                } else {
+                    $author->whereRaw(
+                        'LOWER(fakultas_sekolah) = ?',
+                        [mb_strtolower($fakultas)],
+                    );
+                }
+            });
         }
 
         if ($dateFrom = $request->string('date_from')->trim()->toString()) {
@@ -98,7 +109,7 @@ class NaskahController extends Controller
             ->through(fn (Naskah $naskah) => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'link_cover' => $naskah->link_cover,
+                'link_cover' => $naskah->link_cover_url,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
@@ -162,7 +173,9 @@ class NaskahController extends Controller
         $naskah = Naskah::create([
             'author_id' => $author->id,
             'judul' => $data['judul'],
-            'link_cover' => $data['link_cover'] ?? null,
+            'link_cover' => $request->hasFile('link_cover')
+                ? $request->file('link_cover')->store('covers', 'public')
+                : null,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
             'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
@@ -200,7 +213,7 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'link_cover' => $naskah->link_cover,
+                'link_cover' => $naskah->link_cover_url,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('Y-m-d\TH:i'),
                 'sumber_form' => $naskah->sumber_form,
                 'kebijakan_akses' => $naskah->kebijakan_akses,
@@ -245,9 +258,15 @@ class NaskahController extends Controller
             'penulis_tambahan' => $data['penulis_tambahan'] ?? null,
         ]);
 
+        // Cover hanya diganti bila admin memilih file baru; tanpa file baru
+        // cover lama tetap digunakan.
+        if ($request->hasFile('link_cover')) {
+            $data['link_cover'] = $request->file('link_cover')->store('covers', 'public');
+        }
+
         $naskah->update([
             'judul' => $data['judul'],
-            'link_cover' => $data['link_cover'] ?? null,
+            'link_cover' => $data['link_cover'] ?? $naskah->link_cover,
             'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'sumber_form' => $data['sumber_form'] ?? null,
             'kebijakan_akses' => $data['kebijakan_akses'] ?? null,
@@ -285,7 +304,7 @@ class NaskahController extends Controller
             'naskah' => [
                 'id' => $naskah->id,
                 'judul' => $naskah->judul,
-                'link_cover' => $naskah->link_cover,
+                'link_cover' => $naskah->link_cover_url,
                 'status' => ['value' => $naskah->status->value, 'label' => $naskah->status->label(), 'stage' => $naskah->status->stage()],
                 'progress' => $naskah->progress,
                 'tanggal_pengajuan' => $naskah->tanggal_pengajuan->format('d M Y H:i'),
@@ -385,7 +404,7 @@ class NaskahController extends Controller
     /**
      * Export naskah ke CSV.
      */
-    public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function export(Request $request): StreamedResponse
     {
         $query = Naskah::query()->with(['author']);
 
@@ -487,6 +506,7 @@ class NaskahController extends Controller
 
         if ($handle === false) {
             flashError(__('Gagal membaca file CSV.'));
+
             return to_route('admin.naskah.index');
         }
 
@@ -497,6 +517,7 @@ class NaskahController extends Controller
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 4) {
                 $skipped++;
+
                 continue;
             }
 
@@ -504,8 +525,9 @@ class NaskahController extends Controller
             $nomorIdentitas = trim($row[3] ?? '');
             $judul = trim($row[0] ?? '');
 
-            if (!$judul || !$nomorIdentitas || !in_array($jenisIdentitas, ['nim', 'nip'])) {
+            if (! $judul || ! $nomorIdentitas || ! in_array($jenisIdentitas, ['nim', 'nip'])) {
                 $skipped++;
+
                 continue;
             }
 

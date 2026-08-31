@@ -23,7 +23,7 @@ class NaskahUpdateRequest extends FormRequest
             'nomor_whatsapp' => ['nullable', 'string', 'max:255'],
             'penulis_tambahan' => ['nullable', 'string', 'max:500'],
             'judul' => ['required', 'string', 'max:255'],
-            'link_cover' => ['nullable', 'url', 'max:500'],
+            'link_cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'tanggal_pengajuan' => ['required', 'date'],
             'sumber_form' => ['nullable', 'string', 'max:255'],
             'kebijakan_akses' => ['nullable', 'string', 'max:500'],
@@ -36,6 +36,20 @@ class NaskahUpdateRequest extends FormRequest
             'link_dummy_word' => ['nullable', 'url', 'max:2000'],
             'link_surat_keaslian' => ['nullable', 'url', 'max:2000'],
             'link_surat_penerbitan' => ['nullable', 'url', 'max:2000'],
+        ];
+    }
+
+    /**
+     * Get the custom error messages for the request.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'link_cover.image' => 'Cover harus berupa file gambar JPG, JPEG, PNG, atau WEBP.',
+            'link_cover.mimes' => 'Cover harus berupa file gambar JPG, JPEG, PNG, atau WEBP.',
+            'link_cover.max' => 'Cover maksimal berukuran 2 MB.',
         ];
     }
 }

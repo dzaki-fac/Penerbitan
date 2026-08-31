@@ -15,19 +15,14 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
-    DateRangePicker,
-    dateToQueryString,
-    queryStringToDate,
-} from '@/components/ui/date-range-picker';
+    Card,
+    CardContent,
+} from '@/components/ui/card';
+import { DateRangePicker, dateToQueryString, queryStringToDate } from '@/components/ui/date-range-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -146,16 +141,16 @@ function FilterPanel({
         const filters: string[] = [];
 
         if (fakultas) {
-            filters.push('fakultas');
-        }
+filters.push('fakultas');
+}
 
         if (status) {
-            filters.push('status');
-        }
+filters.push('status');
+}
 
         if (sortBy) {
-            filters.push('sort');
-        }
+filters.push('sort');
+}
 
         return filters;
     });
@@ -174,12 +169,12 @@ function FilterPanel({
         setActiveFilters((prev) => prev.filter((f) => f !== key));
 
         if (key === 'fakultas') {
-            onFakultasChange('');
-        }
+onFakultasChange('');
+}
 
         if (key === 'status') {
-            onStatusChange('');
-        }
+onStatusChange('');
+}
 
         if (key === 'sort') {
             onSortByChange('');
@@ -295,13 +290,12 @@ function FilterPanel({
                                         <Select
                                             value={sortBy || 'all'}
                                             onValueChange={(v) => {
-                                                const val =
-                                                    v === 'all' ? '' : v;
+                                                const val = v === 'all' ? '' : v;
                                                 onSortByChange(val);
 
                                                 if (val && !sortDir) {
-                                                    onSortDirChange('asc');
-                                                }
+onSortDirChange('asc');
+}
                                             }}
                                         >
                                             <SelectTrigger className="h-8 flex-1 text-xs">
@@ -328,9 +322,7 @@ function FilterPanel({
                                             disabled={!sortBy}
                                             onClick={() =>
                                                 onSortDirChange(
-                                                    sortDir === 'asc'
-                                                        ? 'desc'
-                                                        : 'asc',
+                                                    sortDir === 'asc' ? 'desc' : 'asc',
                                                 )
                                             }
                                         >
@@ -345,7 +337,10 @@ function FilterPanel({
 
                 {availableFilters.length > 0 && (
                     <div className="border-t p-3">
-                        <Select value="" onValueChange={addFilter}>
+                        <Select
+                            value=""
+                            onValueChange={addFilter}
+                        >
                             <SelectTrigger className="h-8 w-full border-dashed text-xs">
                                 <SelectValue placeholder="+ Tambah filter" />
                             </SelectTrigger>
@@ -390,7 +385,11 @@ function FilterRow({
     );
 }
 
-export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
+export default function NaskahIndex({
+    naskahs,
+    filters,
+    statuses,
+}: Props) {
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
     const [fakultas, setFakultas] = useState(filters.fakultas);
@@ -511,8 +510,8 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
         const params = new URLSearchParams();
         Object.entries(applied.current).forEach(([k, v]) => {
             if (v && v !== 'all') {
-                params.set(k, String(v));
-            }
+params.set(k, String(v));
+}
         });
         const qs = params.toString();
         window.location.href = admin.naskah.export.url() + (qs ? `?${qs}` : '');
@@ -522,8 +521,8 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
         const file = e.target.files?.[0];
 
         if (!file) {
-            return;
-        }
+return;
+}
 
         const formData = new FormData();
         formData.append('file', file);
@@ -531,8 +530,8 @@ export default function NaskahIndex({ naskahs, filters, statuses }: Props) {
             preserveState: true,
             onFinish: () => {
                 if (importRef.current) {
-                    importRef.current.value = '';
-                }
+importRef.current.value = '';
+}
             },
         });
     }

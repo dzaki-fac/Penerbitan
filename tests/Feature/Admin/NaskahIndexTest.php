@@ -174,3 +174,25 @@ test('sorting naskah by status orders by workflow progress not alphabetically', 
         ->assertInertia(fn (Assert $page) => $page
             ->where('naskahs.data.0.status.value', 'selesai'));
 });
+
+test('filtering naskah by fakultas "Belum terisi" shows naskah with empty author faculty', function () {
+    $admin = User::factory()->create();
+    $tanpaFakultas = Author::factory()->create(['fakultas_sekolah' => null]);
+    $denganFakultas = Author::factory()->create([
+        'fakultas_sekolah' => 'Fakultas Teknik',
+    ]);
+
+    Naskah::factory()->create(['author_id' => $tanpaFakultas->id]);
+    Naskah::factory()->create(['author_id' => $denganFakultas->id]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.naskah.index', ['fakultas' => 'Belum terisi']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/naskah/index')
+            ->where('naskahs.total', 1));
+
+    $this->actingAs($admin)
+        ->get(route('admin.naskah.index', ['fakultas' => 'Fakultas Teknik']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('naskahs.total', 1));
+});

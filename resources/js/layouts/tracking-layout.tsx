@@ -12,9 +12,23 @@ export default function TrackingLayout({
     children: React.ReactNode;
     className?: string;
 }) {
-    const { auth } = usePage().props as {
+    const { auth, component } = usePage().props as unknown as {
         auth: { user: { nama_lengkap: string } | null };
-    };
+    } & { component?: string };
+
+    // Halaman form pencarian (foto + card besar) render header & bg sendiri —
+    // jangan dobelin dengan header bar layout ini.
+    const currentComponent = usePage().component;
+    const hideHeader = currentComponent === 'tracking/index';
+
+    if (hideHeader) {
+        return (
+            <div className="flex min-h-screen flex-col bg-background text-foreground">
+                <main className={`flex-1 ${className}`}>{children}</main>
+                {!auth.user && <WhatsAppButton />}
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -25,12 +39,6 @@ export default function TrackingLayout({
                         className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2.5"
                     >
                         <AppLogo size="sm" showName={false} className="shrink-0" />
-                        <span className="truncate text-sm font-semibold tracking-[0.004em] sm:text-lg">
-                            <span className="sm:hidden">Penerbitan</span>
-                            <span className="hidden sm:inline">
-                                Sistem Penerbitan
-                            </span>
-                        </span>
                     </Link>
                     <nav className="flex shrink-0 items-center gap-2">
                         {auth.user && (

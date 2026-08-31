@@ -11,12 +11,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
  * @property int $author_id
  * @property string $judul
  * @property string|null $link_cover
+ * @property-read string|null $link_cover_url
  * @property Carbon $tanggal_pengajuan
  * @property string|null $sumber_form
  * @property string|null $kebijakan_akses
@@ -49,6 +52,24 @@ class Naskah extends Model
             'status' => NaskahStatus::class,
             'tanggal_pengajuan' => 'datetime',
         ];
+    }
+
+    /**
+     * URL cover untuk ditampilkan: nilai lama berupa URL eksternal
+     * dipakai apa adanya, sedangkan path file hasil upload diubah
+     * menjadi URL disk public.
+     */
+    public function getLinkCoverUrlAttribute(): ?string
+    {
+        if (! $this->link_cover) {
+            return null;
+        }
+
+        if (Str::startsWith($this->link_cover, ['http://', 'https://'])) {
+            return $this->link_cover;
+        }
+
+        return Storage::disk('public')->url($this->link_cover);
     }
 
     /**

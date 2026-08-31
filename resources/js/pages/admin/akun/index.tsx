@@ -5,7 +5,6 @@ import {
     ChevronUp,
     Pencil,
     Plus,
-    Search,
     ShieldCheck,
     Trash2,
     UserRoundCog,
@@ -545,38 +544,30 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                     </div>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filter</CardTitle>
-                        <CardDescription>
-                            {visibleUsers.length} dari {users.length} akun
-                            ditampilkan.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-                            <div className="grid min-w-56 flex-1 gap-2">
-                                <Label htmlFor="search">Cari</Label>
-                                <div className="relative">
-                                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                    <Input
-                                        id="search"
-                                        value={search}
-                                        onChange={(e) =>
-                                            setSearch(e.target.value)
-                                        }
-                                        placeholder="Nama atau email..."
-                                        className="pl-9"
-                                    />
-                                </div>
+                <Card className="py-4">
+                    <CardContent className="px-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="search" className="shrink-0">
+                                    Cari
+                                </Label>
+                                <Input
+                                    id="search"
+                                    value={search}
+                                    onChange={(e) =>
+                                        setSearch(e.target.value)
+                                    }
+                                    placeholder="Nama atau email..."
+                                    className="w-72"
+                                />
                             </div>
-                            <div className="grid min-w-40 gap-2">
-                                <Label>Status</Label>
+                            <div className="flex items-center gap-2">
+                                <Label className="shrink-0">Status</Label>
                                 <Select
                                     value={status}
                                     onValueChange={setStatus}
                                 >
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className="w-44">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -596,7 +587,6 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                                 variant="ghost"
                                 onClick={resetFilters}
                                 disabled={!search && status === 'all'}
-                                className="self-start sm:self-auto"
                             >
                                 Reset
                             </Button>
@@ -635,7 +625,9 @@ export default function AkunIndex({ users, currentUserId }: Props) {
                             </Select>
                         </div>
                         <CardDescription>
-                            {users.length} akun admin terdaftar.
+                            {search || status !== 'all'
+                                ? `${visibleUsers.length} dari ${users.length} akun ditampilkan.`
+                                : `${users.length} akun admin terdaftar.`}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">

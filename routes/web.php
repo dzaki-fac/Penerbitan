@@ -31,6 +31,7 @@ Route::post('tracking/{naskah}/diambil', [TrackingController::class, 'markDiambi
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('export', [DashboardController::class, 'export'])->name('dashboard.export');
         Route::get('rekap-fakultas', [RekapFakultasController::class, 'index'])->name('rekap-fakultas');
         Route::get('rekap-fakultas/export', [RekapFakultasController::class, 'export'])->name('rekap-fakultas.export');
 
