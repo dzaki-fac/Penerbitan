@@ -16,7 +16,7 @@ return new class extends Migration
      * @var array<string, list<string>>
      */
     private const COLUMNS = [
-        'users' => ['created_at', 'updated_at', 'email_verified_at'],
+        'users' => ['created_at', 'updated_at'],
         'password_reset_tokens' => ['created_at'],
         'authors' => ['created_at', 'updated_at'],
         'naskahs' => ['created_at', 'updated_at'],

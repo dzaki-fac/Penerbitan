@@ -18,7 +18,8 @@ test('admin can create a new akun', function () {
     $admin = User::factory()->create();
 
     $response = $this->actingAs($admin)->post(route('admin.akun.store'), [
-        'name' => 'Admin Baru',
+        'nama_lengkap' => 'Admin Baru',
+        'nickname' => 'adminbaru',
         'email' => 'baru@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
@@ -29,8 +30,7 @@ test('admin can create a new akun', function () {
     $user = User::where('email', 'baru@example.com')->first();
 
     expect($user)->not->toBeNull()
-        ->and($user->name)->toBe('Admin Baru')
-        ->and($user->email_verified_at)->not->toBeNull();
+        ->and($user->nama_lengkap)->toBe('Admin Baru');
 });
 
 test('admin can update an akun', function () {

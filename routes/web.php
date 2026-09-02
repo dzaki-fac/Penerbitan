@@ -28,7 +28,7 @@ Route::post('tracking/{naskah}/proof-reading/approve', [TrackingController::clas
 Route::post('tracking/{naskah}/proof-reading/reject', [TrackingController::class, 'rejectProofReading'])->name('tracking.proofreading.reject');
 Route::post('tracking/{naskah}/diambil', [TrackingController::class, 'markDiambil'])->name('tracking.diambil');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('export', [DashboardController::class, 'export'])->name('dashboard.export');

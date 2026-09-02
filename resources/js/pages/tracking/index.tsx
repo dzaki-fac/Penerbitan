@@ -1,5 +1,5 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Phone, Search } from 'lucide-react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { LayoutDashboard, Phone, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,9 @@ const BG_IMAGE_URL =
     'https://fisika.fsm.undip.ac.id/v2/wp-content/uploads/2025/10/perpus.jpg';
 
 export default function TrackingIndex() {
+    const { auth } = usePage().props as unknown as {
+        auth: { user: { nama_lengkap: string } | null };
+    };
     const { data, setData, post, errors, processing } = useForm({
         jenis_identitas: 'nim' as 'nim' | 'nip' | 'email',
         nomor_identitas: '',
@@ -53,6 +56,15 @@ export default function TrackingIndex() {
             </Head>
 
             <div className="relative flex min-h-svh items-center justify-center px-4 py-14 sm:py-20">
+                {auth.user && (
+                    <Link
+                        href="/admin"
+                        className="absolute top-4 right-4 z-20 inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-[#1B3A6B] shadow-md transition-colors hover:bg-slate-50"
+                    >
+                        <LayoutDashboard className="size-4" />
+                        <span>Dashboard</span>
+                    </Link>
+                )}
                 <div
                     aria-hidden
                     className="fixed inset-0 bg-cover bg-center"
@@ -85,13 +97,15 @@ export default function TrackingIndex() {
 
                     <form onSubmit={submit} className="mt-8 space-y-5">
                         <div className="grid gap-2">
-                            <Label htmlFor="jenis_identitas" className="text-slate-800">
+                            <Label
+                                htmlFor="jenis_identitas"
+                                className="text-slate-800"
+                            >
                                 Cari Berdasarkan
                             </Label>
                             <div className="inline-flex w-full rounded-lg bg-slate-100 p-1">
                                 {METODE.map(({ key, label }) => {
-                                    const active =
-                                        data.jenis_identitas === key;
+                                    const active = data.jenis_identitas === key;
 
                                     return (
                                         <button
@@ -118,7 +132,10 @@ export default function TrackingIndex() {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="nomor_identitas" className="text-slate-800">
+                            <Label
+                                htmlFor="nomor_identitas"
+                                className="text-slate-800"
+                            >
                                 {data.jenis_identitas === 'email'
                                     ? 'Alamat Email'
                                     : 'Nomor Identitas'}
@@ -157,17 +174,17 @@ export default function TrackingIndex() {
 
                         <div className="text-center">
                             <p className="text-xs text-slate-500">
-                                Kesulitan menemukan data Anda?
-                                Silahkan hubungi admin penerbitan.
+                                Kesulitan menemukan data Anda? Silahkan hubungi
+                                admin penerbitan.
                             </p>
                             <a
-                                href="https://wa.me/6281326627285?text=Halo%2C%20saya%20ingin%20bertanya"
+                                href="https://wa.me/6282322277844?text=Halo%2C%20saya%20ingin%20bertanya"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-[#1B3A6B] hover:text-[#0f2547]"
                             >
                                 <Phone className="size-3.5" />
-                                0813-2662-7285
+                                0823-2227-7844
                             </a>
                         </div>
                     </form>
